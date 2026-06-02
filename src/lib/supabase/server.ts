@@ -1,13 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { getSupabasePublicEnv, getSupabaseServiceEnv } from "./env";
 
 // For auth checks in server components (reads session from cookies)
 export async function createServerSupabaseClient() {
+  const { url, anonKey } = getSupabasePublicEnv();
   const cookieStore = await cookies();
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         getAll() { return cookieStore.getAll(); },
@@ -25,9 +27,10 @@ export async function createServerSupabaseClient() {
 
 // For admin-only database operations (bypasses RLS)
 export function createDbClient() {
+  const { url, serviceKey } = getSupabaseServiceEnv();
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    url,
+    serviceKey,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { Lock, Mail } from "lucide-react";
 
 export default function LoginPage() {
@@ -12,14 +12,26 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(true);
+  const [configured, setConfigured] = useState(true);
 
   useEffect(() => {
     async function checkSession() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: role } = await supabase.rpc("get_user_role", { user_id: user.id });
-        router.replace(role === "admin" ? "/admin/dashboard" : "/dashboard/sales");
+      setConfigured(isSupabaseConfigured());
+
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        const data = await res.json();
+        if (!data.configured) {
+          setConfigured(false);
+          setChecking(false);
+          return;
+        }
+        if (data.user && data.role) {
+          router.replace(data.role === "admin" ? "/admin/dashboard" : "/dashboard/sales");
+          return;
+        }
+      } catch {
+        setError("Cannot reach server. Check your connection or redeploy Vercel.");
       }
       setChecking(false);
     }
@@ -32,20 +44,30 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
-      const { data, error: loginError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
       });
 
-      if (loginError) throw loginError;
-      if (!data.user) throw new Error("No user returned");
+      const data = await res.json();
 
-      const { data: role } = await supabase.rpc("get_user_role", { user_id: data.user.id });
-      router.replace(role === "admin" ? "/admin/dashboard" : "/dashboard/sales");
+      if (!res.ok) {
+        throw new Error(data.error || "Login failed");
+      }
+
+      router.replace(data.role === "admin" ? "/admin/dashboard" : "/dashboard/sales");
+      router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login failed";
-      setError(message);
+      if (message === "Failed to fetch") {
+        setError(
+          "Cannot connect to server. If this is the live site, open /api/health — Supabase env may be missing on Vercel."
+        );
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -77,6 +99,13 @@ export default function LoginPage() {
             <h2 className="text-xl font-bold text-slate-900">Sign In</h2>
             <p className="text-sm text-slate-500 mt-1">Access your dashboard</p>
           </div>
+
+          {!configured && (
+            <div className="alert-error">
+              Supabase not configured on this deployment. In Vercel → Settings → Environment
+              Variables, add the 3 Supabase keys, then <strong>Redeploy</strong>.
+            </div>
+          )}
 
           {error && <div className="alert-error">{error}</div>}
 
@@ -116,7 +145,11 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className="btn-primary-solid w-full py-3.5">
+          <button
+            type="submit"
+            disabled={loading || !configured}
+            className="btn-primary-solid w-full py-3.5 disabled:opacity-50"
+          >
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>

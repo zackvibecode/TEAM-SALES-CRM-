@@ -1,41 +1,51 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 export async function middleware(request: NextRequest) {
+  const { url, anonKey, valid } = getSupabasePublicEnv();
+  const pathname = request.nextUrl.pathname;
+
+  if (!valid) {
+    if (pathname.startsWith("/api/health") || pathname === "/") {
+      return NextResponse.next();
+    }
+    const home = request.nextUrl.clone();
+    home.pathname = "/";
+    return NextResponse.redirect(home);
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
+  const supabase = createServerClient(url, anonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
       },
-    }
-  );
+      setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value)
+        );
+        supabaseResponse = NextResponse.next({
+          request,
+        });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        );
+      },
+    },
+  });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    return supabaseResponse;
+  }
 
-  const pathname = request.nextUrl.pathname;
-
-  // Public routes
   if (
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/_next") ||
@@ -44,52 +54,52 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Redirect to login if not authenticated
   if (!user && pathname !== "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    return NextResponse.redirect(redirectUrl);
   }
 
   if (user) {
     let role: string | null = null;
-    const { data: roleFromRpc } = await supabase.rpc("get_user_role", { user_id: user.id });
-    role = roleFromRpc as string | null;
+    try {
+      const { data: roleFromRpc } = await supabase.rpc("get_user_role", { user_id: user.id });
+      role = (roleFromRpc as string) || null;
 
-    if (!role) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-      role = profile?.role ?? null;
+      if (!role) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+        role = profile?.role ?? null;
+      }
+    } catch {
+      return supabaseResponse;
     }
 
     if (!role) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/";
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // Protect admin routes
     if (pathname.startsWith("/admin") && role !== "admin") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/dashboard/sales";
-      return NextResponse.redirect(url);
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/dashboard/sales";
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // Protect sales routes
     if (pathname.startsWith("/dashboard/sales") && role !== "sales") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin/dashboard";
-      return NextResponse.redirect(url);
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/admin/dashboard";
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // If logged in and on home page, redirect to appropriate dashboard
     if (pathname === "/") {
-      const url = request.nextUrl.clone();
-      url.pathname = role === "admin" ? "/admin/dashboard" : "/dashboard/sales";
-      return NextResponse.redirect(url);
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = role === "admin" ? "/admin/dashboard" : "/dashboard/sales";
+      return NextResponse.redirect(redirectUrl);
     }
   }
 
