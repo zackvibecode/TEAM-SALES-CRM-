@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS daily_follow_up_goal INTEGER NOT NULL DEFAULT 50;
