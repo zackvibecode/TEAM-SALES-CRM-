@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { Lock, Mail } from "lucide-react";
 
 export default function LoginPage() {
@@ -11,27 +10,43 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [configHint, setConfigHint] = useState("");
   const [checking, setChecking] = useState(true);
-  const [configured, setConfigured] = useState(true);
+  const [serverOk, setServerOk] = useState(false);
 
   useEffect(() => {
     async function checkSession() {
-      setConfigured(isSupabaseConfigured());
+      setError("");
+      setConfigHint("");
 
       try {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
-        const data = await res.json();
-        if (!data.configured) {
-          setConfigured(false);
+        const healthRes = await fetch("/api/health", { cache: "no-store" });
+        const health = await healthRes.json();
+        setServerOk(health.ok === true);
+
+        if (!health.ok) {
+          const msg =
+            health.hints?.join(" ") ||
+            health.hint ||
+            "Supabase env missing on Vercel. Add 3 keys (Legacy anon + service_role), then Redeploy.";
+          setConfigHint(msg);
           setChecking(false);
           return;
         }
+
+        const res = await fetch("/api/auth/me", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const data = await res.json();
+
         if (data.user && data.role) {
           router.replace(data.role === "admin" ? "/admin/dashboard" : "/dashboard/sales");
           return;
         }
       } catch {
-        setError("Cannot reach server. Check your connection or redeploy Vercel.");
+        setError("Cannot reach server. Wait for Vercel deploy to finish, then refresh.");
+        setServerOk(false);
       }
       setChecking(false);
     }
@@ -61,13 +76,7 @@ export default function LoginPage() {
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login failed";
-      if (message === "Failed to fetch") {
-        setError(
-          "Cannot connect to server. If this is the live site, open /api/health — Supabase env may be missing on Vercel."
-        );
-      } else {
-        setError(message);
-      }
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -100,10 +109,9 @@ export default function LoginPage() {
             <p className="text-sm text-slate-500 mt-1">Access your dashboard</p>
           </div>
 
-          {!configured && (
-            <div className="alert-error">
-              Supabase not configured on this deployment. In Vercel → Settings → Environment
-              Variables, add the 3 Supabase keys, then <strong>Redeploy</strong>.
+          {configHint && (
+            <div className="alert-error text-sm leading-relaxed">
+              <strong>Setup Vercel:</strong> {configHint}
             </div>
           )}
 
@@ -121,7 +129,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="you@example.com"
+                placeholder="admin@nusatravel.com"
                 className="input-field pl-10"
               />
             </div>
@@ -147,11 +155,15 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading || !configured}
+            disabled={loading || !serverOk}
             className="btn-primary-solid w-full py-3.5 disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
+
+          {serverOk && (
+            <p className="text-xs text-emerald-700 text-center">Server connected — you can sign in.</p>
+          )}
         </form>
 
         <p className="text-center text-slate-400 text-xs mt-8">Internal use only · Zaqone CRM</p>
