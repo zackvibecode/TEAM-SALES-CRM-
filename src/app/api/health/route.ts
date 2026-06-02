@@ -7,19 +7,16 @@ export async function GET() {
 
   const hints: string[] = [];
   if (!pub.url) hints.push("Missing NEXT_PUBLIC_SUPABASE_URL in Vercel.");
-  else if (!pub.urlOk) hints.push("NEXT_PUBLIC_SUPABASE_URL must start with https:// and contain supabase.");
+  else if (!pub.urlOk) hints.push("NEXT_PUBLIC_SUPABASE_URL must be https://....supabase.co");
   if (!pub.anonKey) hints.push("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel.");
-  else if (pub.anonKey.startsWith("sb_publishable"))
-    hints.push("Use Legacy anon key (eyJ...), not Publishable (sb_publishable_).");
-  else if (!pub.anonOk) hints.push("NEXT_PUBLIC_SUPABASE_ANON_KEY must be the Legacy anon JWT (starts with eyJ).");
+  else if (!pub.anonOk)
+    hints.push("ANON key must be Legacy (eyJ...) or Publishable (sb_publishable_).");
   if (!svc.serviceKey) hints.push("Missing SUPABASE_SERVICE_ROLE_KEY in Vercel.");
-  else if (svc.serviceKey.startsWith("sb_secret"))
-    hints.push("Use Legacy service_role key (eyJ...), not Secret (sb_secret_).");
   else if (!svc.serviceOk)
-    hints.push("SUPABASE_SERVICE_ROLE_KEY must be Legacy service_role JWT (starts with eyJ).");
+    hints.push("SERVICE key must be Legacy (eyJ...) or Secret (sb_secret_).");
 
   if (hints.length > 0) {
-    hints.push("After fixing: Vercel → Deployments → Redeploy.");
+    hints.push("Vercel → Deployments → Redeploy after saving.");
   }
 
   return NextResponse.json({
@@ -27,9 +24,7 @@ export async function GET() {
     supabase: {
       hasUrl: Boolean(pub.url),
       hasAnonKey: Boolean(pub.anonKey),
-      anonLooksLegacy: pub.anonKey.startsWith("eyJ"),
       hasServiceKey: Boolean(svc.serviceKey),
-      serviceLooksLegacy: svc.serviceKey.startsWith("eyJ"),
     },
     hints: hints.length > 0 ? hints : undefined,
     hint: hints[0],
