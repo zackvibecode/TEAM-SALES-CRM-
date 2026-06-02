@@ -1,15 +1,29 @@
 function isAnonKey(key: string) {
+  const k = key.trim();
   return (
-    key.length > 20 &&
-    (key.startsWith("eyJ") || key.startsWith("sb_publishable_"))
+    k.length > 20 &&
+    (k.startsWith("eyJ") || k.startsWith("sb_publishable_"))
   );
 }
 
 function isServiceKey(key: string) {
+  const k = key.trim();
   return (
-    key.length > 20 &&
-    (key.startsWith("eyJ") || key.startsWith("sb_secret_"))
+    k.length > 20 &&
+    (k.startsWith("eyJ") || k.startsWith("sb_secret_"))
   );
+}
+
+/** Safe hint for /api/health — never returns the key itself. */
+export function describeKeyFormat(key: string): string {
+  const k = key.trim();
+  if (!k) return "missing";
+  if (k.startsWith("eyJ")) return "legacy_jwt";
+  if (k.startsWith("sb_publishable_")) return "publishable";
+  if (k.startsWith("sb_secret_")) return "secret_in_wrong_slot";
+  if (k.startsWith("sb_")) return "unknown_sb_prefix";
+  if (k.includes("supabase.com/dashboard")) return "dashboard_url_not_key";
+  return "unrecognized";
 }
 
 export function getSupabasePublicEnv() {

@@ -22,9 +22,10 @@ export default function LoginPage() {
       try {
         const healthRes = await fetch("/api/health", { cache: "no-store" });
         const health = await healthRes.json();
-        setServerOk(health.ok === true);
+        const canLogin = health.loginOk === true || health.ok === true;
+        setServerOk(canLogin);
 
-        if (!health.ok) {
+        if (!canLogin) {
           const msg =
             health.hints?.join(" ") ||
             health.hint ||
