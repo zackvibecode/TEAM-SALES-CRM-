@@ -31,16 +31,16 @@ export function StatCard({ label, value, icon: Icon, accent, color, subtext }: S
   const tint = iconTint[accent ?? accentFromLegacy(color)];
 
   return (
-    <div className="glass-strong rounded-3xl p-5 transition duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-glass-lg)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1 min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-          <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">{value}</p>
-          {subtext && <p className="text-xs text-slate-500">{subtext}</p>}
+    <div className="glass-strong rounded-3xl p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-glass-lg)]">
+      <div className="flex items-start justify-between gap-2.5">
+        <div className="space-y-0.5 min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+          <p className="text-xl sm:text-2xl font-bold text-slate-900 tabular-nums tracking-tight">{value}</p>
+          {subtext && <p className="text-[11px] text-slate-500">{subtext}</p>}
         </div>
         {Icon && (
           <div className={cn("icon-stat", tint)}>
-            <Icon className="w-5 h-5" />
+            <Icon />
           </div>
         )}
       </div>

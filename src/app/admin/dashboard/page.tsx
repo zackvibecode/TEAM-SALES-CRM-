@@ -78,11 +78,12 @@ export default async function AdminDashboardPage() {
 
   return (
     <AppLayout role="admin">
-      <div className="space-y-6">
+      <div className="dashboard-shell">
         <PageHeader
           badge="Admin"
           title="Admin Dashboard"
           subtitle="Overview of all sales activity — live KPIs and team performance"
+          compact
         />
 
         <AdminDashboardClient

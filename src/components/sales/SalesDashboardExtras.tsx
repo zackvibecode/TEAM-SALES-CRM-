@@ -30,10 +30,10 @@ export function SalesDashboardExtras({
   const activeBatches = batches.filter((b) => !b.label.startsWith("[archived]")).slice(0, 6);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {newBatchCount > 0 && (
-        <div className="alert-success flex items-center gap-2">
-          <ListChecks className="w-5 h-5 shrink-0" />
+        <div className="alert-success flex items-center gap-2 text-xs px-3 py-2.5">
+          <ListChecks className="w-4 h-4 shrink-0" />
           <span>
             <strong>{newBatchCount}</strong> new batch(es) assigned in the last 7 days.{" "}
             <Link href="/dashboard/sales/customers" className="underline font-medium">
@@ -44,9 +44,9 @@ export function SalesDashboardExtras({
       )}
 
       {kpiClicks != null && kpiClicks > 0 && (
-        <div className="card-padded">
-          <h2 className="font-semibold text-slate-900 flex items-center gap-2 mb-4">
-            <Target className="w-4 h-4 text-primary" />
+        <div className="card-padded-sm">
+          <h2 className="font-semibold text-slate-900 flex items-center gap-2 mb-3 text-sm">
+            <Target className="w-3.5 h-3.5 text-primary" />
             Monthly click target
           </h2>
           <div>
@@ -62,14 +62,14 @@ export function SalesDashboardExtras({
       )}
 
       {activeBatches.length > 0 && (
-        <div className="card-padded">
-          <h2 className="font-semibold text-slate-900 mb-4">My assigned batches</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
+        <div className="card-padded-sm">
+          <h2 className="font-semibold text-slate-900 mb-3 text-sm">My assigned batches</h2>
+          <div className="grid sm:grid-cols-2 gap-3">
             {activeBatches.map((b) => (
               <Link
                 key={b.id}
                 href="/dashboard/sales/customers"
-                className="block p-4 rounded-2xl glass hover:shadow-[var(--shadow-glass-lg)] transition"
+                className="block p-3 rounded-xl glass hover:shadow-[var(--shadow-glass-lg)] transition"
               >
                 <div className="font-medium text-slate-800 text-sm">{b.label}</div>
                 {b.source_tag && (

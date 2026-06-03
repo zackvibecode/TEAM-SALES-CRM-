@@ -57,7 +57,7 @@ export function DailyGoalPanel({ onGoalReached }: { onGoalReached?: () => void }
 
   if (loading || !stats) {
     return (
-      <div className="glass-card animate-pulse h-36 rounded-2xl" />
+      <div className="glass-card animate-pulse h-28 rounded-2xl" />
     );
   }
 
@@ -65,22 +65,22 @@ export function DailyGoalPanel({ onGoalReached }: { onGoalReached?: () => void }
 
   return (
     <>
-      <div className="glass-strong relative overflow-hidden rounded-3xl p-6">
-        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-blue-200/40 blur-2xl" />
-        <div className="relative flex flex-col md:flex-row md:items-center gap-6">
-          <div className="flex-1 space-y-3">
+      <div className="glass-strong relative overflow-hidden rounded-2xl p-4">
+        <div className="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-blue-200/40 blur-2xl" />
+        <div className="relative flex flex-col md:flex-row md:items-center gap-4">
+          <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2 text-primary">
-              <Target className="w-5 h-5" />
-              <span className="text-sm font-semibold uppercase tracking-wide">Today&apos;s mission</span>
+              <Target className="w-4 h-4" />
+              <span className="text-xs font-semibold uppercase tracking-wide">Today&apos;s mission</span>
             </div>
-            <p className="text-3xl font-bold text-slate-900 tabular-nums">
+            <p className="text-2xl font-bold text-slate-900 tabular-nums">
               {stats.todayCompleted}
-              <span className="text-lg text-slate-400 font-medium"> / {stats.goal} follow-ups</span>
+              <span className="text-base text-slate-400 font-medium"> / {stats.goal} follow-ups</span>
             </p>
-            <p className="text-sm text-slate-500">
+            <p className="text-xs text-slate-500">
               {stats.pendingLeads.toLocaleString()} pending in your book · {stats.totalLeads.toLocaleString()} total leads
             </p>
-            <div className="h-3 bg-blue-100 rounded-full overflow-hidden">
+            <div className="h-2.5 bg-blue-100 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 transition-all duration-500"
                 style={{ width: `${pct}%` }}

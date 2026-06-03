@@ -6,7 +6,7 @@ import { AlertTriangle, RotateCcw, X } from "lucide-react";
 
 const CONFIRM_PHRASE = "RESET ALL";
 
-export function AdminResetData() {
+export function AdminResetData({ variant = "panel" }: { variant?: "panel" | "sidebar" }) {
   const router = useRouter();
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [phrase, setPhrase] = useState("");
@@ -48,28 +48,39 @@ export function AdminResetData() {
 
   return (
     <>
-      <div className="rounded-3xl border border-red-100 glass p-5 flex flex-col sm:flex-row sm:items-center gap-4 bg-red-50/40">
-        <div className="flex items-start gap-3 flex-1">
-          <div className="p-2 rounded-xl bg-red-100 text-red-600 shrink-0">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-red-900 text-sm">Danger zone</h3>
-            <p className="text-xs text-red-700/90 mt-1 leading-relaxed max-w-xl">
-              Permanently delete all leads, campaigns (uploaded files), activity logs, and audit history.
-              Sales user accounts are kept. This cannot be undone.
-            </p>
-          </div>
-        </div>
+      {variant === "sidebar" ? (
         <button
           type="button"
           onClick={() => setStep(1)}
-          className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+          className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-2xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
         >
           <RotateCcw className="w-4 h-4" />
           Reset all CRM data
         </button>
-      </div>
+      ) : (
+        <div className="rounded-3xl border border-red-100 glass p-5 flex flex-col sm:flex-row sm:items-center gap-4 bg-red-50/40">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="p-2 rounded-xl bg-red-100 text-red-600 shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-red-900 text-sm">Danger zone</h3>
+              <p className="text-xs text-red-700/90 mt-1 leading-relaxed max-w-xl">
+                Permanently delete all leads, campaigns (uploaded files), activity logs, and audit history.
+                Sales user accounts are kept. This cannot be undone.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reset all CRM data
+          </button>
+        </div>
+      )}
 
       {step >= 1 && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">

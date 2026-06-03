@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { StatCard } from "@/components/shared/StatCard";
+import { DashboardMetricSection, DashboardMetricTile } from "@/components/shared/DashboardMetricTile";
 import { CalendarClock, AlertTriangle, ListChecks } from "lucide-react";
 import type { FollowUpKpiStats } from "@/lib/follow-up/types";
 
@@ -19,15 +19,11 @@ export function FollowUpKpiCards({ compact }: { compact?: boolean }) {
 
   if (!kpis) return null;
 
-  const grid = compact
-    ? "grid grid-cols-1 sm:grid-cols-3 gap-3"
-    : "grid grid-cols-1 sm:grid-cols-3 gap-4";
-
   return (
-    <div className={grid}>
-      <StatCard label="Follow Up Today" value={kpis.today} icon={CalendarClock} accent="sky" />
-      <StatCard label="Overdue Follow Ups" value={kpis.overdue} icon={AlertTriangle} accent="blue" />
-      <StatCard label="Total Follow Ups" value={kpis.total} icon={ListChecks} accent="sky" />
-    </div>
+    <DashboardMetricSection title={compact ? undefined : "Follow ups"} columns={3}>
+      <DashboardMetricTile label="Follow Up Today" value={kpis.today} icon={CalendarClock} accent="sky" />
+      <DashboardMetricTile label="Overdue" value={kpis.overdue} icon={AlertTriangle} accent="amber" />
+      <DashboardMetricTile label="Total Follow Ups" value={kpis.total} icon={ListChecks} accent="blue" />
+    </DashboardMetricSection>
   );
 }

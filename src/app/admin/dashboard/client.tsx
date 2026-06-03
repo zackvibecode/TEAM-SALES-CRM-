@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { StatCard } from "@/components/shared/StatCard";
-import { AdminResetData } from "@/components/admin/AdminResetData";
-import { FollowUpKpiCards } from "@/components/follow-up/FollowUpKpiCards";
-import { Users, FileText, List, MousePointerClick, Clock, TrendingUp, Trophy } from "lucide-react";
+import { AdminDashboardOverview } from "@/components/admin/AdminDashboardOverview";
+import { SalesClickPerformanceChart } from "@/components/admin/SalesClickPerformanceChart";
+import { Trophy } from "lucide-react";
 
 interface SalesProfile {
   id: string;
@@ -78,47 +77,47 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
 
   return (
     <>
-      <div className="flex items-center gap-3 glass-strong rounded-3xl px-4 py-3">
-        <span className="text-sm font-medium text-slate-600 shrink-0">Viewing:</span>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 glass-strong rounded-2xl px-3 py-2">
+        <span className="text-xs font-medium text-slate-600 shrink-0">Viewing:</span>
         <select
           value={selectedUserId}
           onChange={(e) => setSelectedUserId(e.target.value)}
-          className="input-field max-w-xs py-2"
+          className="input-field max-w-xs py-1.5 text-sm sm:flex-1 sm:max-w-sm"
         >
           <option value="all">All Sales Users</option>
           {salesProfiles.map((sp) => (
             <option key={sp.id} value={sp.id}>{sp.full_name} ({sp.email})</option>
           ))}
         </select>
-        <span className="text-xs text-slate-400 ml-auto hidden sm:inline">
-          {selectedUserId === "all" ? `${salesProfiles.length} users` : "Individual view"}
+        <span className="text-[11px] text-slate-400 sm:ml-auto">
+          {selectedUserId === "all" ? `${salesProfiles.length} sales users` : "Individual view"}
         </span>
       </div>
 
-      <FollowUpKpiCards />
+      <AdminDashboardOverview
+        stats={currentStats}
+        showWorkspace={selectedUserId === "all"}
+        viewingLabel={
+          selectedUserId === "all"
+            ? "Team-wide metrics"
+            : `Metrics for ${selectedUserName}`
+        }
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Sales Users" value={currentStats.salesUsers} icon={Users} accent="sky" />
-        <StatCard label="Uploaded Files" value={currentStats.files} icon={FileText} accent="blue" />
-        <StatCard label="Total Leads" value={currentStats.leads} icon={List} accent="blue" />
-        <StatCard label="Total Clicked" value={currentStats.clicked} icon={MousePointerClick} accent="mint" />
-        <StatCard label="Pending" value={currentStats.pending} icon={Clock} accent="amber" />
-        <StatCard label="Today Clicks" value={currentStats.clicksToday} icon={TrendingUp} accent="sky" />
-        <StatCard label="This Week Clicks" value={currentStats.clicksWeek} icon={TrendingUp} accent="blue" />
-      </div>
+      <SalesClickPerformanceChart />
 
       {leaderboard.length > 0 && selectedUserId === "all" && (
-        <div className="card-padded">
-          <h2 className="font-bold text-slate-900 flex items-center gap-2 mb-4">
+        <div className="card-padded-sm">
+          <h2 className="font-bold text-slate-900 flex items-center gap-2 mb-3 text-sm">
             <span className="icon-stat text-amber-600">
-              <Trophy className="w-4 h-4" />
+              <Trophy />
             </span>
             Leaderboard (by WhatsApp clicks & follow-ups)
           </h2>
-          <ol className="space-y-2">
+          <ol className="space-y-1.5">
             {leaderboard.map((p, i) => (
-              <li key={p.id} className="flex items-center gap-3 text-sm rounded-2xl px-3 py-2.5 glass">
-                <span className="w-7 h-7 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center">
+              <li key={p.id} className="flex items-center gap-2.5 text-xs rounded-xl px-2.5 py-2 glass">
+                <span className="w-6 h-6 rounded-full bg-slate-800 text-white font-bold text-[10px] flex items-center justify-center">
                   {i + 1}
                 </span>
                 <span className="font-medium flex-1">{p.full_name}</span>
@@ -130,11 +129,9 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
         </div>
       )}
 
-      <AdminResetData />
-
       <div className="table-shell">
-        <div className="px-6 py-4 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-900">Sales Performance — {selectedUserName}</h2>
+        <div className="px-4 py-3 border-b border-slate-100">
+          <h2 className="font-semibold text-slate-900 text-sm">Sales Performance — {selectedUserName}</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
