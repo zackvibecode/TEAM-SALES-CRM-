@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 CREATE TABLE IF NOT EXISTS public.uploaded_files (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   file_name TEXT NOT NULL,
-  uploaded_by_admin_id UUID REFERENCES public.profiles(id) NOT NULL,
-  owner_user_id UUID REFERENCES public.profiles(id) NOT NULL,
+  uploaded_by_admin_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  owner_user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   total_rows INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS public.leads (
   notes TEXT DEFAULT '',
   status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Clicked', 'Follow Up', 'Interested', 'Not Interested', 'No Response', 'Converted')),
   clicked_at TIMESTAMPTZ,
-  clicked_by UUID REFERENCES public.profiles(id),
+  clicked_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );

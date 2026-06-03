@@ -9,6 +9,7 @@ interface WhatsAppButtonProps {
   whatsapp: string;
   customerName?: string;
   messageTemplate?: string;
+  clickedFrom?: "lead_card" | "follow_up_queue";
   onSuccess?: (leadId: string) => void;
   onError?: (message: string) => void;
   className?: string;
@@ -20,6 +21,7 @@ export function WhatsAppButton({
   whatsapp,
   customerName,
   messageTemplate,
+  clickedFrom = "lead_card",
   onSuccess,
   onError,
   className,
@@ -35,7 +37,7 @@ export function WhatsAppButton({
       const res = await fetch("/api/sales/whatsapp-click", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadId }),
+        body: JSON.stringify({ leadId, clickedFrom }),
       });
 
       const result = await res.json();

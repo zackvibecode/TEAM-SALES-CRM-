@@ -4,6 +4,7 @@ import Link from "next/link";
 import { DailyGoalPanel } from "./DailyGoalPanel";
 import { SalesDashboardExtras, type SalesBatchCard } from "./SalesDashboardExtras";
 import { StatCard } from "@/components/shared/StatCard";
+import { FollowUpKpiCards } from "@/components/follow-up/FollowUpKpiCards";
 import {
   List,
   Clock,
@@ -56,6 +57,8 @@ export function SalesPremiumDashboard(props: Props) {
           </Link>
         </div>
       </section>
+
+      <FollowUpKpiCards compact />
 
       <DailyGoalPanel />
 

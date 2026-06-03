@@ -10,6 +10,7 @@ interface ActivityItem {
   lead_name: string;
   lead_whatsapp: string;
   activity_type: string;
+  message?: string;
   old_status: string | null;
   new_status: string | null;
   notes: string | null;
@@ -70,7 +71,8 @@ export function ActivityClient({ initialActivities }: { initialActivities: Activ
       result = result.filter((a) =>
         a.sales_name.toLowerCase().includes(s) ||
         a.lead_name.toLowerCase().includes(s) ||
-        a.activity_type.toLowerCase().includes(s)
+        a.activity_type.toLowerCase().includes(s) ||
+        (a.message?.toLowerCase().includes(s) ?? false)
       );
     }
 
@@ -196,7 +198,7 @@ export function ActivityClient({ initialActivities }: { initialActivities: Activ
                         )}
                       </div>
                     ) : (
-                      <span className="text-slate-400 text-xs">-</span>
+                      <span className="text-slate-600 text-xs">{a.message || a.notes || "—"}</span>
                     )}
                   </td>
                   <td className="px-3 py-3 text-slate-500 text-xs">

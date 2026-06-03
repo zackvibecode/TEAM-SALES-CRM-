@@ -24,8 +24,13 @@ export async function GET() {
     }
   }
   if (!svc.serviceKey) hints.push("Missing SUPABASE_SERVICE_ROLE_KEY in Vercel.");
-  else if (!svc.serviceOk)
-    hints.push("SERVICE key must be Legacy (eyJ...) or Secret (sb_secret_).");
+  else if (svc.anonInServiceSlot) {
+    hints.push(
+      "SERVICE slot has the anon key. Paste service_role (Legacy eyJ... or sb_secret_) from Supabase API settings."
+    );
+  } else if (!svc.serviceOk) {
+    hints.push("SERVICE key must be service_role (Legacy eyJ...) or Secret (sb_secret_).");
+  }
 
   if (hints.length > 0) {
     hints.push("Vercel → Deployments → Redeploy after saving.");
@@ -42,6 +47,8 @@ export async function GET() {
       hasServiceKey: Boolean(svc.serviceKey),
       anonKeyFormat: pub.anonKey ? describeKeyFormat(pub.anonKey) : "missing",
       serviceKeyFormat: svc.serviceKey ? describeKeyFormat(svc.serviceKey) : "missing",
+      serviceKeyRole: svc.serviceKeyRole ?? undefined,
+      anonInServiceSlot: svc.anonInServiceSlot || undefined,
     },
     hints: hints.length > 0 ? hints : undefined,
     hint: hints[0],

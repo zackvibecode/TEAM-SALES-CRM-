@@ -12,6 +12,7 @@ import {
   List,
   Activity,
   ClipboardList,
+  CalendarClock,
   LogOut,
   Menu,
   X,
@@ -31,12 +32,14 @@ const adminNavItems: NavItem[] = [
   { label: "Campaigns", href: "/admin/files", icon: <FileText className="w-4 h-4" /> },
   { label: "All Leads", href: "/admin/leads", icon: <List className="w-4 h-4" /> },
   { label: "Activity Log", href: "/admin/activity", icon: <Activity className="w-4 h-4" /> },
+  { label: "Follow Up Queue", href: "/admin/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
   { label: "Audit Log", href: "/admin/audit", icon: <ClipboardList className="w-4 h-4" /> },
 ];
 
 const salesNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard/sales", icon: <LayoutDashboard className="w-4 h-4" /> },
   { label: "My Tasks", href: "/dashboard/sales/customers", icon: <List className="w-4 h-4" /> },
+  { label: "Follow Up Queue", href: "/dashboard/sales/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
 ];
 
 function BrandMark() {

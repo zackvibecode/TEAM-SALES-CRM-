@@ -37,12 +37,22 @@ export interface Lead {
   owner_user_id: string;
   name: string;
   whatsapp: string;
+  email?: string | null;
   package_interest: string;
   notes: string;
   status: LeadStatus;
   clicked_at: string | null;
   clicked_by: string | null;
   follow_up_at?: string | null;
+  campaign_name?: string | null;
+  assigned_sales_user_name?: string | null;
+  whatsapp_click_count?: number;
+  follow_up_count?: number;
+  last_contacted_at?: string | null;
+  last_followed_up_at?: string | null;
+  next_follow_up_date?: string | null;
+  follow_up_status?: "none" | "pending" | "completed" | "overdue";
+  follow_up_notes?: string | null;
   created_at: string;
   updated_at: string;
 }

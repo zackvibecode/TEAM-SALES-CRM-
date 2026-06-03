@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { StatCard } from "@/components/shared/StatCard";
 import { AdminResetData } from "@/components/admin/AdminResetData";
+import { FollowUpKpiCards } from "@/components/follow-up/FollowUpKpiCards";
 import { Users, FileText, List, MousePointerClick, Clock, TrendingUp, Trophy } from "lucide-react";
 
 interface SalesProfile {
@@ -93,6 +94,8 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
           {selectedUserId === "all" ? `${salesProfiles.length} users` : "Individual view"}
         </span>
       </div>
+
+      <FollowUpKpiCards />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Sales Users" value={currentStats.salesUsers} icon={Users} accent="sky" />
