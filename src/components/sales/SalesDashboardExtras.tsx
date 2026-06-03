@@ -30,9 +30,9 @@ export function SalesDashboardExtras({
   const activeBatches = batches.filter((b) => !b.label.startsWith("[archived]")).slice(0, 6);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {newBatchCount > 0 && (
-        <div className="alert-success flex items-center gap-2 text-xs px-3 py-2.5">
+        <div className="alert-success flex items-center gap-2 text-xs">
           <ListChecks className="w-4 h-4 shrink-0" />
           <span>
             <strong>{newBatchCount}</strong> new batch(es) assigned in the last 7 days.{" "}
@@ -45,45 +45,43 @@ export function SalesDashboardExtras({
 
       {kpiClicks != null && kpiClicks > 0 && (
         <div className="card-padded-sm">
-          <h2 className="font-semibold text-slate-900 flex items-center gap-2 mb-3 text-sm">
-            <Target className="w-3.5 h-3.5 text-primary" />
+          <h2 className="font-semibold flex items-center gap-2 mb-3 text-sm" style={{ color: "var(--text-primary)" }}>
+            <Target className="w-4 h-4 text-[#3b66ff]" />
             Monthly click target
           </h2>
           <div>
-            <p className="text-xs text-slate-500 mb-1">Clicks target: {kpiClicks}</p>
+            <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>Clicks target: {kpiClicks}</p>
             <BatchProgressBar
               progress={Math.min(100, Math.round((monthClicks / kpiClicks) * 100))}
               pending={Math.max(0, kpiClicks - monthClicks)}
               total={kpiClicks}
             />
-            <p className="text-xs text-slate-500 mt-1">{monthClicks} clicks this month</p>
+            <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{monthClicks} clicks this month</p>
           </div>
         </div>
       )}
 
       {activeBatches.length > 0 && (
         <div className="card-padded-sm">
-          <h2 className="font-semibold text-slate-900 mb-3 text-sm">My assigned batches</h2>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <h2 className="font-semibold mb-4 text-sm" style={{ color: "var(--text-primary)" }}>
+            My assigned batches
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-4">
             {activeBatches.map((b) => (
               <Link
                 key={b.id}
                 href="/dashboard/sales/customers"
-                className="block p-3 rounded-xl glass hover:shadow-[var(--shadow-glass-lg)] transition"
+                className="block p-4 rounded-xl border transition hover:shadow-md"
+                style={{ background: "var(--surface-card)", borderColor: "var(--border-color)" }}
               >
-                <div className="font-medium text-slate-800 text-sm">{b.label}</div>
+                <div className="font-medium text-sm" style={{ color: "var(--text-primary)" }}>{b.label}</div>
                 {b.source_tag && (
-                  <span className="text-xs text-slate-400">{b.source_tag}</span>
+                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>{b.source_tag}</span>
                 )}
                 <div className="mt-3">
-                  <BatchProgressBar
-                    progress={b.progress}
-                    pending={b.pending}
-                    total={b.total}
-                    compact
-                  />
+                  <BatchProgressBar progress={b.progress} pending={b.pending} total={b.total} compact />
                 </div>
-                <p className="text-xs text-blue-600 mt-2 font-semibold">{b.pending} pending → work now</p>
+                <p className="text-xs text-[#3b66ff] mt-2 font-semibold">{b.pending} pending → work now</p>
               </Link>
             ))}
           </div>

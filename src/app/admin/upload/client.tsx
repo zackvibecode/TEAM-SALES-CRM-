@@ -201,13 +201,13 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="card-padded space-y-5">
-        <h2 className="font-semibold text-slate-900">Assign Campaign / Upload</h2>
+        <h2 className="font-semibold" style={{ color: "var(--text-primary)" }}>Assign Campaign / Upload</h2>
 
         {error && <div className="alert-error">{error}</div>}
         {success && <div className="alert-success">{success}</div>}
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Campaign name</label>
+          <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>Campaign name</label>
           <input
             type="text"
             value={campaignName}
@@ -218,7 +218,7 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Lead source</label>
+          <label style={{ color: "var(--text-secondary)" }}>Lead source</label>
           <select value={sourceTag} onChange={(e) => setSourceTag(e.target.value)} className="input-field">
             <option value="">— Select source —</option>
             {SOURCE_TAGS.map((t) => (
@@ -228,15 +228,15 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Assignment mode</label>
+          <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>Assignment mode</label>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setAssignMode("single")}
               className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium border transition ${
                 assignMode === "single"
-                  ? "bg-primary text-white border-primary"
-                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                  ? "filter-pill-active"
+                  : "filter-pill"
               }`}
             >
               Single user
@@ -246,8 +246,8 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
               onClick={() => setAssignMode("round_robin")}
               className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium border transition flex items-center justify-center gap-1.5 ${
                 assignMode === "round_robin"
-                  ? "bg-primary text-white border-primary"
-                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                  ? "filter-pill-active"
+                  : "filter-pill"
               }`}
             >
               <Users className="w-4 h-4" />
@@ -258,7 +258,7 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
 
         {assignMode === "single" ? (
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Assign to sales user</label>
+            <label style={{ color: "var(--text-secondary)" }}>Assign to sales user</label>
             <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="input-field">
               <option value="">— Select sales user —</option>
               {salesUsers.map((u) => (
@@ -268,10 +268,10 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
           </div>
         ) : (
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
               Select 2+ users (leads split evenly)
             </label>
-            <div className="space-y-2 max-h-40 overflow-y-auto border border-slate-200 rounded-xl p-3">
+            <div className="space-y-2 max-h-40 overflow-y-auto rounded-xl p-3" style={{ border: "1px solid var(--border-color)" }}>
               {salesUsers.map((u) => (
                 <label key={u.id} className="flex items-center gap-2 text-sm cursor-pointer">
                   <input
@@ -288,13 +288,16 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Excel/CSV file</label>
-          <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-primary hover:bg-primary-light/30 transition cursor-pointer bg-slate-50/50">
+          <label style={{ color: "var(--text-secondary)" }}>Excel/CSV file</label>
+          <div
+            className="border-2 border-dashed rounded-xl p-8 text-center transition cursor-pointer"
+            style={{ borderColor: "var(--border-color)", background: "var(--surface-muted)" }}
+          >
             <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} className="hidden" id="file-upload" />
             <label htmlFor="file-upload" className="cursor-pointer">
-              <FileSpreadsheet className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-              <p className="text-sm text-slate-600 font-medium">{file ? file.name : "Click to select file"}</p>
-              <p className="text-xs text-slate-400 mt-1">Existing numbers transfer to selected sales user</p>
+              <FileSpreadsheet className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--text-muted)" }} />
+              <p className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>{file ? file.name : "Click to select file"}</p>
+              <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Existing numbers transfer to selected sales user</p>
             </label>
           </div>
         </div>
@@ -306,7 +309,7 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
       </div>
 
       <div className="card-padded">
-        <h2 className="font-semibold text-slate-900 mb-4">Preview</h2>
+        <h2 className="font-semibold mb-4" style={{ color: "var(--text-primary)" }}>Preview</h2>
         {preview.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -323,7 +326,7 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
                   <tr key={idx} className="table-row">
                     <td className="px-3 py-2 font-medium">{row.clientName || "-"}</td>
                     <td className="px-3 py-2 font-mono text-xs">{row.whatsappNumber || "-"}</td>
-                    <td className="px-3 py-2 text-slate-600">{row.packageInterest || "-"}</td>
+                    <td className="px-3 py-2" style={{ color: "var(--text-secondary)" }}>{row.packageInterest || "-"}</td>
                     <td className="px-3 py-2 text-center">
                       {row.whatsappNumber ? (
                         <a href={getWhatsAppLink(row.whatsappNumber)} target="_blank" rel="noopener noreferrer" className="btn-whatsapp px-2 py-1">
@@ -337,12 +340,12 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
                 ))}
               </tbody>
             </table>
-            <p className="text-xs text-slate-400 mt-3">
+            <p className="text-xs mt-3" style={{ color: "var(--text-muted)" }}>
               Showing {preview.length} of {previewTotal} valid rows
             </p>
           </div>
         ) : (
-          <p className="text-sm text-slate-400 py-8 text-center">Select a file to preview</p>
+          <p className="text-sm py-8 text-center" style={{ color: "var(--text-muted)" }}>Select a file to preview</p>
         )}
       </div>
     </div>

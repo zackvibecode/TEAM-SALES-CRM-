@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createDbClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, kpiMonthlyClicks, kpiMonthlyConverts, adminId } = await request.json();
+    const auth = await requireAdmin();
+    if (auth.error) return auth.error;
+
+    const { userId, kpiMonthlyClicks, kpiMonthlyConverts } = await request.json();
     if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
 
-    const db = createDbClient();
+    const db = auth.db;
     await db
       .from("profiles")
       .update({
@@ -16,15 +19,13 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", userId);
 
-    if (adminId) {
-      await logAudit({
-        actorId: adminId,
-        action: "update_kpi",
-        entityType: "profiles",
-        entityId: userId,
-        details: { kpiMonthlyClicks, kpiMonthlyConverts },
-      });
-    }
+    await logAudit({
+      actorId: auth.user.id,
+      action: "update_kpi",
+      entityType: "profiles",
+      entityId: userId,
+      details: { kpiMonthlyClicks, kpiMonthlyConverts },
+    });
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {

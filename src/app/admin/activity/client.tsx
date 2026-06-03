@@ -149,7 +149,7 @@ export function ActivityClient({ initialActivities }: { initialActivities: Activ
           )}
         </div>
 
-        <span className="text-xs text-slate-500">{filtered.length} activities</span>
+        <span className="text-xs" style={{ color: "var(--text-muted)" }}>{filtered.length} activities</span>
       </div>
 
       {/* Table */}
@@ -157,21 +157,21 @@ export function ActivityClient({ initialActivities }: { initialActivities: Activ
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50">
-                <th className="text-left px-3 py-3 font-medium text-slate-600">Sales User</th>
-                <th className="text-left px-3 py-3 font-medium text-slate-600">Customer</th>
-                <th className="text-left px-3 py-3 font-medium text-slate-600">Type</th>
-                <th className="text-left px-3 py-3 font-medium text-slate-600">Change</th>
-                <th className="text-left px-3 py-3 font-medium text-slate-600">Time</th>
+              <tr className="table-head">
+                <th className="table-th">Sales User</th>
+                <th className="table-th">Customer</th>
+                <th className="table-th">Type</th>
+                <th className="table-th">Change</th>
+                <th className="table-th">Time</th>
               </tr>
             </thead>
             <tbody>
               {paginated.map((a) => (
-                <tr key={a.id} className="border-b border-slate-50 hover:bg-slate-50/50">
-                  <td className="px-3 py-3 text-slate-700">{a.sales_name}</td>
-                  <td className="px-3 py-3">
-                    <div className="font-medium text-slate-800">{a.lead_name}</div>
-                    <div className="text-xs text-slate-400">{a.lead_whatsapp}</div>
+                <tr key={a.id} className="table-row">
+                  <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>{a.sales_name}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium" style={{ color: "var(--text-primary)" }}>{a.lead_name}</div>
+                    <div className="text-xs" style={{ color: "var(--text-muted)" }}>{a.lead_whatsapp}</div>
                   </td>
                   <td className="px-3 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -182,32 +182,32 @@ export function ActivityClient({ initialActivities }: { initialActivities: Activ
                       {a.activity_type.replace("_", " ")}
                     </span>
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-4 py-3">
                     {(a.old_status || a.new_status) ? (
                       <div className="flex items-center gap-1.5 text-xs">
                         {a.old_status ? (
                           <StatusBadge status={a.old_status as "Pending" | "Clicked" | "Follow Up" | "Interested" | "Not Interested" | "No Response" | "Converted"} />
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <span style={{ color: "var(--text-muted)" }}>-</span>
                         )}
-                        <ArrowRight className="w-3 h-3 text-slate-400" />
+                        <ArrowRight className="w-3 h-3" style={{ color: "var(--text-muted)" }} />
                         {a.new_status ? (
                           <StatusBadge status={a.new_status as "Pending" | "Clicked" | "Follow Up" | "Interested" | "Not Interested" | "No Response" | "Converted"} />
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <span style={{ color: "var(--text-muted)" }}>-</span>
                         )}
                       </div>
                     ) : (
-                      <span className="text-slate-600 text-xs">{a.message || a.notes || "—"}</span>
+                      <span className="text-xs" style={{ color: "var(--text-secondary)" }}>{a.message || a.notes || "—"}</span>
                     )}
                   </td>
-                  <td className="px-3 py-3 text-slate-500 text-xs">
+                  <td className="px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
                     {new Date(a.created_at).toLocaleString("en-MY")}
                   </td>
                 </tr>
               ))}
               {paginated.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400">No activities found for this period.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-12 text-center" style={{ color: "var(--text-muted)" }}>No activities found for this period.</td></tr>
               )}
             </tbody>
           </table>
@@ -216,11 +216,11 @@ export function ActivityClient({ initialActivities }: { initialActivities: Activ
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-slate-500">
+        <div className="flex items-center justify-between text-sm" style={{ color: "var(--text-muted)" }}>
           <span>Showing {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}</span>
           <div className="flex gap-2">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40">Prev</button>
-            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40">Next</button>
+            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="btn-secondary px-3 py-1.5 disabled:opacity-40">Prev</button>
+            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="btn-secondary px-3 py-1.5 disabled:opacity-40">Next</button>
           </div>
         </div>
       )}

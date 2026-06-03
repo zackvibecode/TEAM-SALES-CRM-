@@ -200,7 +200,7 @@ function CustomersClientInner({ initialLeads, pendingCount, totalCount, userEmai
         <button
           type="button"
           onClick={() => { setQueueMode(true); setStatusFilter(""); setPage(1); }}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
+          className={`px-3 py-2 text-sm font-semibold border ${
             queueMode && !statusFilter ? "filter-pill-active" : "filter-pill"
           }`}
         >
@@ -209,18 +209,30 @@ function CustomersClientInner({ initialLeads, pendingCount, totalCount, userEmai
         </button>
         <button
           type="button"
-          onClick={() => { setQueueMode(false); setPage(1); }}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
-            !queueMode ? "filter-pill-active" : "filter-pill"
+          onClick={() => { setQueueMode(false); setStatusFilter(""); setPage(1); }}
+          className={`px-3 py-2 text-sm font-semibold border ${
+            !queueMode && !statusFilter ? "filter-pill-active" : "filter-pill"
           }`}
         >
           All leads
         </button>
+        {TASK_STATUSES.map((s) => (
+          <button
+            key={s.value}
+            type="button"
+            onClick={() => { setStatusFilter(s.value); setQueueMode(false); setPage(1); }}
+            className={`px-3 py-2 text-sm font-semibold border ${
+              statusFilter === s.value ? "filter-pill-active" : "filter-pill"
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
           <input
             type="text"
             placeholder="Search name or WhatsApp..."
@@ -229,22 +241,13 @@ function CustomersClientInner({ initialLeads, pendingCount, totalCount, userEmai
             className="input-field pl-10 py-2"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setQueueMode(false); setPage(1); }}
-          className="input-field py-2 max-w-[180px]"
-        >
-          <option value="">All task types</option>
-          {TASK_STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </select>
-        <span className="text-sm text-slate-500 self-center ml-auto">
+        <span className="text-sm self-center ml-auto" style={{ color: "var(--text-muted)" }}>
           {filtered.length} customers
         </span>
       </div>
 
-      <div className="table-shell">
+      {/* Desktop table */}
+      <div className="table-shell hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -297,6 +300,41 @@ function CustomersClientInner({ initialLeads, pendingCount, totalCount, userEmai
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {paginated.map((lead) => (
+          <div key={lead.id} className="card-padded-sm space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-semibold" style={{ color: "var(--text-primary)" }}>{lead.name || "-"}</p>
+                <p className="text-xs font-mono mt-1" style={{ color: "var(--text-muted)" }}>{lead.whatsapp || "-"}</p>
+              </div>
+              <StatusBadge status={lead.status as LeadStatus} />
+            </div>
+            <div className="flex gap-2">
+              <WhatsAppButton
+                leadId={lead.id}
+                whatsapp={lead.whatsapp}
+                customerName={lead.name}
+                messageTemplate={whatsappMessage(lead.name)}
+                onSuccess={handleWhatsAppSuccess}
+                className="btn-whatsapp px-3 py-2 flex-1 min-h-[44px] disabled:opacity-60"
+              >
+                WhatsApp
+              </WhatsAppButton>
+              <button onClick={() => openEditor(lead)} className="btn-secondary text-xs px-3 py-2">
+                Edit
+              </button>
+            </div>
+          </div>
+        ))}
+        {paginated.length === 0 && (
+          <div className="card-padded-sm text-center py-10" style={{ color: "var(--text-muted)" }}>
+            {queueMode ? "Queue clear — great job!" : "No customers found."}
+          </div>
+        )}
       </div>
 
       {totalPages > 1 && (

@@ -4,11 +4,11 @@ import { LucideIcon } from "lucide-react";
 export type StatAccent = "blue" | "sky" | "slate" | "mint" | "amber";
 
 const iconTint: Record<StatAccent, string> = {
-  blue: "text-blue-600",
-  sky: "text-sky-600",
-  slate: "text-slate-600",
-  mint: "text-teal-600",
-  amber: "text-amber-600",
+  blue: "text-[#3b66ff]",
+  sky: "text-sky-500",
+  slate: "text-slate-500",
+  mint: "text-teal-500",
+  amber: "text-amber-500",
 };
 
 interface StatCardProps {
@@ -18,6 +18,7 @@ interface StatCardProps {
   accent?: StatAccent;
   color?: string;
   subtext?: string;
+  variant?: "default" | "primary";
 }
 
 function accentFromLegacy(color?: string): StatAccent {
@@ -27,19 +28,46 @@ function accentFromLegacy(color?: string): StatAccent {
   return "blue";
 }
 
-export function StatCard({ label, value, icon: Icon, accent, color, subtext }: StatCardProps) {
+export function StatCard({
+  label,
+  value,
+  icon: Icon,
+  accent,
+  color,
+  subtext,
+  variant = "default",
+}: StatCardProps) {
   const tint = iconTint[accent ?? accentFromLegacy(color)];
+  const isPrimary = variant === "primary";
 
   return (
-    <div className="glass-strong rounded-3xl p-4 transition duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-glass-lg)]">
-      <div className="flex items-start justify-between gap-2.5">
-        <div className="space-y-0.5 min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-          <p className="text-xl sm:text-2xl font-bold text-slate-900 tabular-nums tracking-tight">{value}</p>
-          {subtext && <p className="text-[11px] text-slate-500">{subtext}</p>}
+    <div
+      className={cn(
+        "rounded-2xl p-4 md:p-5 transition surface-card",
+        isPrimary && "stat-card-primary"
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1 min-w-0">
+          <p className={cn("stat-label text-xs font-medium", isPrimary ? "" : "text-[var(--text-muted)]")}>
+            {label}
+          </p>
+          <p
+            className={cn(
+              "stat-value text-2xl md:text-3xl font-bold tabular-nums tracking-tight",
+              isPrimary ? "" : "text-[var(--text-primary)]"
+            )}
+          >
+            {typeof value === "number" ? value.toLocaleString() : value}
+          </p>
+          {subtext && (
+            <p className={cn("text-xs", isPrimary ? "text-white/80" : "text-[var(--text-muted)]")}>
+              {subtext}
+            </p>
+          )}
         </div>
         {Icon && (
-          <div className={cn("icon-stat", tint)}>
+          <div className={cn("icon-stat", !isPrimary && tint)}>
             <Icon />
           </div>
         )}

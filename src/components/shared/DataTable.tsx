@@ -39,7 +39,7 @@ export function DataTable<T extends Record<string, unknown>>({
     <div className="space-y-4">
       {searchKeys.length > 0 && (
         <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
           <input
             type="text"
             placeholder={searchPlaceholder}
@@ -56,7 +56,8 @@ export function DataTable<T extends Record<string, unknown>>({
                 setSearch("");
                 setPage(1);
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 hover:opacity-80"
+              style={{ color: "var(--text-muted)" }}
             >
               <X className="w-4 h-4" />
             </button>
@@ -79,7 +80,7 @@ export function DataTable<T extends Record<string, unknown>>({
             <tbody>
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="px-4 py-14 text-center text-slate-400">
+                  <td colSpan={columns.length} className="px-4 py-14 text-center" style={{ color: "var(--text-muted)" }}>
                     {emptyMessage}
                   </td>
                 </tr>
@@ -87,7 +88,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 paginated.map((row, idx) => (
                   <tr key={idx} className="table-row">
                     {columns.map((col) => (
-                      <td key={col.key} className="px-4 py-3.5 whitespace-nowrap text-slate-700">
+                      <td key={col.key} className="px-4 py-3.5 whitespace-nowrap" style={{ color: "var(--text-secondary)" }}>
                         {col.render ? col.render(row) : String(row[col.key] ?? "")}
                       </td>
                     ))}
@@ -100,7 +101,7 @@ export function DataTable<T extends Record<string, unknown>>({
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-slate-500">
+        <div className="flex items-center justify-between text-sm" style={{ color: "var(--text-muted)" }}>
           <span>
             Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}
           </span>
@@ -108,14 +109,14 @@ export function DataTable<T extends Record<string, unknown>>({
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-white disabled:opacity-40 bg-white text-slate-700"
+              className="btn-secondary px-3 py-1.5 disabled:opacity-40"
             >
               Prev
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-white disabled:opacity-40 bg-white text-slate-700"
+              className="btn-secondary px-3 py-1.5 disabled:opacity-40"
             >
               Next
             </button>

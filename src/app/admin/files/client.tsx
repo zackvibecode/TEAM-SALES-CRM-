@@ -159,18 +159,16 @@ export function FilesClient({
 
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <a href="/api/admin/export-leads" className="btn-primary-solid text-sm">
-          Export all leads (CSV)
-        </a>
-      </div>
-
-      <h2 className="text-sm font-semibold text-slate-700 mb-2">Active batches</h2>
+      <h2 className="text-sm font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>
+        Active batches
+      </h2>
       {renderTable(active, true)}
 
       {archived.length > 0 && (
         <>
-          <h2 className="text-sm font-semibold text-slate-700 mb-2">Archived</h2>
+          <h2 className="text-sm font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>
+            Archived
+          </h2>
           {renderTable(archived, false)}
         </>
       )}

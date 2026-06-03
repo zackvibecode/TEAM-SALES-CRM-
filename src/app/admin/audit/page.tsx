@@ -35,21 +35,21 @@ export default async function AdminAuditPage() {
               <tbody>
                 {(logs || []).map((log) => (
                   <tr key={log.id} className="table-row">
-                    <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
                       {new Date(log.created_at).toLocaleString("en-MY")}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3" style={{ color: "var(--text-primary)" }}>
                       {(log.actor as { full_name?: string })?.full_name || "—"}
                     </td>
-                    <td className="px-4 py-3 font-medium">{log.action}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500 max-w-md truncate">
+                    <td className="px-4 py-3 font-medium" style={{ color: "var(--text-primary)" }}>{log.action}</td>
+                    <td className="px-4 py-3 text-xs max-w-md truncate" style={{ color: "var(--text-muted)" }}>
                       {JSON.stringify(log.details)}
                     </td>
                   </tr>
                 ))}
                 {(!logs || logs.length === 0) && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-slate-400">
+                    <td colSpan={4} className="px-4 py-12 text-center" style={{ color: "var(--text-muted)" }}>
                       No audit entries yet. Run database migration first if upload fails.
                     </td>
                   </tr>

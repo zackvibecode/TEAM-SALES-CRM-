@@ -76,7 +76,7 @@ export function AllLeadsClient({
         >
           Export CSV
         </a>
-        <span className="text-sm text-slate-500 ml-auto">{filtered.length} leads</span>
+        <span className="text-sm ml-auto" style={{ color: "var(--text-muted)" }}>{filtered.length} leads</span>
       </div>
 
       <DataTable

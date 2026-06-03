@@ -38,7 +38,7 @@ export function FollowUpFilters({
   onSalesUserChange?: (id: string) => void;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="card-padded-sm space-y-4">
       <div className="flex flex-wrap gap-2">
         {TABS.map((tab) => (
           <button
@@ -46,7 +46,7 @@ export function FollowUpFilters({
             type="button"
             onClick={() => onFilterChange(tab)}
             className={cn(
-              "px-3 py-1.5 text-xs font-semibold",
+              "px-3 py-2 text-xs font-semibold border transition",
               filter === tab ? "filter-pill-active" : "filter-pill"
             )}
           >
@@ -57,7 +57,9 @@ export function FollowUpFilters({
 
       {filter === "custom" && (
         <div className="flex flex-wrap items-center gap-2">
-          <label className="text-xs font-medium text-slate-600">Pick date:</label>
+          <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+            Pick date:
+          </label>
           <input
             type="date"
             value={customDate}

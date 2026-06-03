@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createDbClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
-    const { leadId, newOwnerUserId, adminId } = await request.json();
+    const auth = await requireAdmin();
+    if (auth.error) return auth.error;
+
+    const { leadId, newOwnerUserId } = await request.json();
     if (!leadId || !newOwnerUserId) {
       return NextResponse.json({ error: "Missing leadId or newOwnerUserId" }, { status: 400 });
     }
 
-    const db = createDbClient();
+    const db = auth.db;
 
     const { data: lead } = await db
       .from("leads")
@@ -21,15 +24,13 @@ export async function POST(request: NextRequest) {
 
     await db.from("leads").update({ owner_user_id: newOwnerUserId }).eq("id", leadId);
 
-    if (adminId) {
-      await logAudit({
-        actorId: adminId,
-        action: "reassign_lead",
-        entityType: "leads",
-        entityId: leadId,
-        details: { oldOwner: lead.owner_user_id, newOwner: newOwnerUserId, name: lead.name },
-      });
-    }
+    await logAudit({
+      actorId: auth.user.id,
+      action: "reassign_lead",
+      entityType: "leads",
+      entityId: leadId,
+      details: { oldOwner: lead.owner_user_id, newOwner: newOwnerUserId, name: lead.name },
+    });
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {

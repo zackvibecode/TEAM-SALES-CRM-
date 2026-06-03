@@ -1,6 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import { createDbClient } from "@/lib/supabase/server";
+import { resolveUserRole } from "@/lib/auth-context";
+
+function loginRedirect(request: NextRequest) {
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = "/";
+  return NextResponse.redirect(redirectUrl);
+}
+
+async function resolveRoleForUser(userId: string) {
+  const db = createDbClient();
+  return resolveUserRole(db, userId);
+}
 
 export async function middleware(request: NextRequest) {
   const { url, anonKey, valid } = getSupabasePublicEnv();
@@ -10,9 +23,7 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith("/api/health") || pathname === "/") {
       return NextResponse.next();
     }
-    const home = request.nextUrl.clone();
-    home.pathname = "/";
-    return NextResponse.redirect(home);
+    return loginRedirect(request);
   }
 
   let supabaseResponse = NextResponse.next({
@@ -43,6 +54,27 @@ export async function middleware(request: NextRequest) {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
+    if (pathname.startsWith("/api/admin/")) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+    if (pathname.startsWith("/api/")) {
+      return supabaseResponse;
+    }
+    return loginRedirect(request);
+  }
+
+  if (pathname.startsWith("/api/admin/")) {
+    if (!user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+    try {
+      const role = await resolveRoleForUser(user.id);
+      if (role !== "admin") {
+        return NextResponse.json({ error: "Admin only" }, { status: 403 });
+      }
+    } catch {
+      return NextResponse.json({ error: "Authorization failed" }, { status: 403 });
+    }
     return supabaseResponse;
   }
 
@@ -55,9 +87,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!user && pathname !== "/") {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/";
-    return NextResponse.redirect(redirectUrl);
+    return loginRedirect(request);
   }
 
   if (user) {
@@ -75,13 +105,11 @@ export async function middleware(request: NextRequest) {
         role = profile?.role ?? null;
       }
     } catch {
-      return supabaseResponse;
+      return loginRedirect(request);
     }
 
     if (!role) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/";
-      return NextResponse.redirect(redirectUrl);
+      return loginRedirect(request);
     }
 
     if (pathname.startsWith("/admin") && role !== "admin") {

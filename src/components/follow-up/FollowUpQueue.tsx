@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { FollowUpFilters } from "./FollowUpFilters";
-import { FollowUpCard, openWhatsApp } from "./FollowUpCard";
+import { FollowUpQueueCard, openWhatsApp } from "./FollowUpQueueCard";
 import { FollowUpModal } from "./FollowUpModal";
 import { FollowUpHistoryModal } from "./FollowUpHistoryModal";
 import { FollowUpKpiCards } from "./FollowUpKpiCards";
@@ -114,13 +114,13 @@ export function FollowUpQueue({
           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
         </div>
       ) : rows.length === 0 ? (
-        <div className="card rounded-2xl p-8 text-center text-slate-500 text-sm">
+        <div className="card-padded-sm text-center text-sm" style={{ color: "var(--text-muted)" }}>
           No follow ups in this view. Try another filter or contact leads via WhatsApp first.
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {rows.map((row) => (
-            <FollowUpCard
+            <FollowUpQueueCard
               key={row.id}
               row={row}
               showSalesUser={role === "admin"}

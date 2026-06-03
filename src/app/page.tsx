@@ -86,7 +86,7 @@ export default function LoginPage() {
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center app-shell">
-        <div className="w-10 h-10 rounded-full border-2 border-blue-400 border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-full border-2 border-[#3b66ff] border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -96,18 +96,22 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex mb-5">
-            <div className="w-20 h-20 rounded-3xl glass-strong flex items-center justify-center">
-              <span className="text-3xl font-extrabold text-blue-600">Z</span>
+            <div className="w-16 h-16 rounded-2xl bg-[#3b66ff] flex items-center justify-center shadow-lg">
+              <span className="text-2xl font-extrabold text-white">Z</span>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Zaqone CRM</h1>
-          <p className="text-slate-500 mt-2 text-sm font-medium">by Zack · Sales workspace</p>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+            Zaqone CRM
+          </h1>
+          <p className="mt-2 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
+            by Zack · Sales workspace
+          </p>
         </div>
 
-        <form onSubmit={handleLogin} className="glass-strong rounded-3xl p-8 space-y-5">
+        <form onSubmit={handleLogin} className="card-padded-sm space-y-5">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Sign In</h2>
-            <p className="text-sm text-slate-500 mt-1">Access your dashboard</p>
+            <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Sign In</h2>
+            <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>Access your dashboard</p>
           </div>
 
           {configHint && (
@@ -119,11 +123,11 @@ export default function LoginPage() {
           {error && <div className="alert-error">{error}</div>}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1.5">
+            <label htmlFor="email" className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text-secondary)" }}>
               Email
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#3b66ff]" />
               <input
                 id="email"
                 type="email"
@@ -137,11 +141,11 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-1.5">
+            <label htmlFor="password" className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text-secondary)" }}>
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#3b66ff]" />
               <input
                 id="password"
                 type="password"
@@ -163,11 +167,13 @@ export default function LoginPage() {
           </button>
 
           {serverOk && (
-            <p className="text-xs text-emerald-700 text-center">Server connected — you can sign in.</p>
+            <p className="text-xs text-emerald-600 text-center">Server connected — you can sign in.</p>
           )}
         </form>
 
-        <p className="text-center text-slate-400 text-xs mt-8">Internal use only · Zaqone CRM</p>
+        <p className="text-center text-xs mt-8" style={{ color: "var(--text-muted)" }}>
+          Internal use only · Zaqone CRM
+        </p>
       </div>
     </div>
   );

@@ -33,7 +33,16 @@ export default async function AdminFilesPage() {
   return (
     <AppLayout role="admin">
       <div className="space-y-6">
-        <PageHeader badge="Batches" title="Campaigns & Batches" subtitle="Track assignment progress per upload" />
+        <PageHeader
+          badge="Batches"
+          title="Campaigns & Batches"
+          subtitle="Track assignment progress per upload"
+          actions={
+            <a href="/api/admin/export-leads" className="btn-primary-solid text-sm">
+              Export all leads (CSV)
+            </a>
+          }
+        />
         <FilesClient
           salesUsers={salesUsers || []}
           initialFiles={(files || []).map((f) => {

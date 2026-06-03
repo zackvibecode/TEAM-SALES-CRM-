@@ -4,6 +4,7 @@ import Link from "next/link";
 import { DailyGoalPanel } from "./DailyGoalPanel";
 import { SalesDashboardExtras, type SalesBatchCard } from "./SalesDashboardExtras";
 import { SalesDashboardOverview } from "./SalesDashboardOverview";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { ArrowRight } from "lucide-react";
 
 interface Props {
@@ -26,23 +27,18 @@ export function SalesPremiumDashboard(props: Props) {
 
   return (
     <div className="dashboard-shell">
-      <section className="page-hero page-hero--compact">
-        <div className="page-hero-inner flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div>
-            <span className="page-hero-badge">Sales workspace</span>
-            <h1 className="page-hero-title">
-              {greeting}, {props.fullName || "Sales"}
-            </h1>
-            <p className="page-hero-subtitle">
-              Your lead book is synced. Set today&apos;s follow-up target and work your queue.
-            </p>
-          </div>
-          <Link href="/dashboard/sales/customers" className="btn-primary-solid shrink-0 gap-2 text-xs px-4 py-2">
+      <PageHeader
+        greeting={greeting}
+        title={props.fullName || "Sales"}
+        subtitle="Your lead book is synced. Set today's follow-up target and work your queue."
+        compact
+        actions={
+          <Link href="/dashboard/sales/customers" className="btn-primary-solid shrink-0 gap-2 text-sm">
             Open My Tasks
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-4 h-4" />
           </Link>
-        </div>
-      </section>
+        }
+      />
 
       <SalesDashboardOverview
         stats={{

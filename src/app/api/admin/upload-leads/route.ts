@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin-auth";
 import { createDbClient } from "@/lib/supabase/server";
 import { parseLeadRows } from "@/lib/parse-leads";
 import { formatWhatsAppNumber } from "@/lib/whatsapp";
@@ -149,6 +150,9 @@ async function insertBatchForOwner(
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdmin();
+    if (auth.error) return auth.error;
+
     const body = await request.json();
     const {
       leads,
@@ -156,7 +160,6 @@ export async function POST(request: NextRequest) {
       ownerUserId,
       ownerUserIds,
       assignMode = "single",
-      uploadedByAdminId,
       campaignName,
       sourceTag = "",
       reassignExisting = true,
@@ -165,10 +168,9 @@ export async function POST(request: NextRequest) {
     if (!leads || !Array.isArray(leads) || leads.length === 0) {
       return NextResponse.json({ error: "No leads data" }, { status: 400 });
     }
-    if (!uploadedByAdminId) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 400 });
-    }
 
+    const uploadedByAdminId = auth.user.id;
+    const db = auth.db;
     const normalized = parseLeadRows(leads as Record<string, unknown>[]);
 
     if (normalized.length === 0) {
@@ -184,7 +186,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = createDbClient();
     const campaign = (campaignName || fileName || "Campaign").trim();
     const source = String(sourceTag || "").trim();
 

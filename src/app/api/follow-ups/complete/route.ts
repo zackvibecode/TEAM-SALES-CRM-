@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
+import { getAuthenticatedContext } from "@/lib/auth-context";
 import { getProfileName, markFollowUpCompleted } from "@/lib/follow-up/service";
 
 export async function POST(request: NextRequest) {
   try {
-    const auth = await createServerSupabaseClient();
-    const {
-      data: { user },
-    } = await auth.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    const ctx = await getAuthenticatedContext();
+    if (!ctx) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
     const { followUpId } = await request.json();
     if (!followUpId) return NextResponse.json({ error: "Missing followUpId" }, { status: 400 });
 
-    const db = createDbClient();
-    const userName = await getProfileName(db, user.id);
-
-    const { data: fu } = await db
+    const { data: fu } = await ctx.db
       .from("follow_ups")
       .select("lead_id, sales_user_id")
       .eq("id", followUpId)
@@ -24,14 +18,16 @@ export async function POST(request: NextRequest) {
 
     if (!fu) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const { data: profile } = await db.from("profiles").select("role").eq("id", user.id).single();
-    if (profile?.role !== "admin" && fu.sales_user_id !== user.id) {
+    if (ctx.role !== "admin" && fu.sales_user_id !== ctx.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await markFollowUpCompleted(db, {
+    const actingUserId = ctx.role === "admin" ? fu.sales_user_id : ctx.user.id;
+    const userName = await getProfileName(ctx.db, actingUserId);
+
+    await markFollowUpCompleted(ctx.db, {
       followUpId,
-      userId: user.id,
+      userId: actingUserId,
       userName,
       updateLeadStatus: true,
     });

@@ -78,15 +78,14 @@ export default async function AdminDashboardPage() {
 
   return (
     <AppLayout role="admin">
-      <div className="dashboard-shell">
-        <PageHeader
-          badge="Admin"
-          title="Admin Dashboard"
-          subtitle="Overview of all sales activity — live KPIs and team performance"
-          compact
-        />
+      <PageHeader
+        badge="Admin"
+        title="Admin Dashboard"
+        subtitle="Overview of all sales activity — live KPIs and team performance"
+        compact
+      />
 
-        <AdminDashboardClient
+      <AdminDashboardClient
           salesProfiles={salesProfiles || []}
           performanceData={performanceData}
           aggregateStats={{
@@ -99,7 +98,6 @@ export default async function AdminDashboardPage() {
             clicksWeek: clicksWeek ?? 0,
           }}
         />
-      </div>
     </AppLayout>
   );
 }

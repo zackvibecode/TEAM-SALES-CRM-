@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createDbClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdmin();
+    if (auth.error) return auth.error;
+
     const { searchParams } = new URL(request.url);
     const ownerUserId = searchParams.get("ownerUserId");
     const fileId = searchParams.get("fileId");
 
-    const db = createDbClient();
+    const db = auth.db;
     let query = db
       .from("leads")
       .select("name, whatsapp, package_interest, status, notes, created_at, owner_user_id")

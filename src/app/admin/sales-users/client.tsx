@@ -87,7 +87,7 @@ export function SalesUsersClient({ initialUsers }: SalesUsersClientProps) {
   return (
     <>
       <div className="flex items-center justify-between mb-6">
-        <div className="text-sm text-slate-500">{users.length} sales users</div>
+        <div className="text-sm" style={{ color: "var(--text-muted)" }}>{users.length} sales users</div>
         <button onClick={() => setShowModal(true)} className="btn-primary-solid">
           <UserPlus className="w-4 h-4" />
           Add Sales User

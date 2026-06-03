@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 import type { LeadStatus } from "@/types";
 
+function parseFollowUpAt(value: unknown): string | null {
+  if (value == null || value === "") return null;
+  const parsed = new Date(String(value));
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed.toISOString();
+}
+
 const VALID_STATUSES: LeadStatus[] = [
   "Pending",
   "Clicked",
@@ -44,13 +53,17 @@ export async function POST(request: NextRequest) {
 
     const oldStatus = lead.status;
     const now = new Date().toISOString();
+    const parsedFollowUpAt = parseFollowUpAt(followUpAt);
+    if (followUpAt != null && followUpAt !== "" && parsedFollowUpAt === null) {
+      return NextResponse.json({ error: "Invalid followUpAt date" }, { status: 400 });
+    }
 
     const { data: updated, error: updateError } = await db
       .from("leads")
       .update({
         status,
         notes: notes ?? "",
-        follow_up_at: followUpAt ? new Date(followUpAt).toISOString() : null,
+        follow_up_at: parsedFollowUpAt,
         updated_at: now,
       })
       .eq("id", leadId)

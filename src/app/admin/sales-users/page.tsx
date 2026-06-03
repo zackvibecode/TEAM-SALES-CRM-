@@ -21,7 +21,11 @@ export default async function AdminSalesUsersPage() {
   return (
     <AppLayout role="admin">
       <div className="space-y-6">
-        <PageHeader badge="Team" title="Sales Users" subtitle="Manage sales team members and monthly KPI targets" />
+        <PageHeader
+          badge="Team"
+          title="Sales Users"
+          subtitle="Manage sales team members and monthly KPI targets"
+        />
         <SalesUsersClient initialUsers={salesUsers || []} />
       </div>
     </AppLayout>

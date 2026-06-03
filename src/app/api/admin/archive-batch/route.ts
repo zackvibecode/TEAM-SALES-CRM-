@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createDbClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
-    const { fileId, archived, adminId } = await request.json();
+    const auth = await requireAdmin();
+    if (auth.error) return auth.error;
+
+    const { fileId, archived } = await request.json();
     if (!fileId) return NextResponse.json({ error: "Missing fileId" }, { status: 400 });
 
-    const db = createDbClient();
+    const db = auth.db;
     await db
       .from("uploaded_files")
       .update({ is_archived: archived !== false })
       .eq("id", fileId);
 
-    if (adminId) {
-      await logAudit({
-        actorId: adminId,
-        action: "archive_batch",
-        entityType: "uploaded_files",
-        entityId: fileId,
-        details: { archived: archived !== false },
-      });
-    }
+    await logAudit({
+      actorId: auth.user.id,
+      action: "archive_batch",
+      entityType: "uploaded_files",
+      entityId: fileId,
+      details: { archived: archived !== false },
+    });
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
