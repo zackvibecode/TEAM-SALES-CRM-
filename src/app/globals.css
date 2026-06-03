@@ -66,6 +66,17 @@
 }
 
 @layer base {
+  html {
+    /* Match browser 80% zoom density — more KPIs/content visible without manual zoom */
+    zoom: 0.8;
+  }
+
+  @supports not (zoom: 1) {
+    html {
+      font-size: 80%;
+    }
+  }
+
   body {
     color: var(--text-primary);
     background: var(--surface-bg);
