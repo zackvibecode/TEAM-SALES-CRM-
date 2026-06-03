@@ -108,27 +108,65 @@
 
   .btn-primary-solid {
     @apply inline-flex items-center justify-center gap-2 font-semibold text-white text-sm rounded-2xl px-5 py-2.5 transition disabled:opacity-50 disabled:cursor-not-allowed;
-    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
-    box-shadow: 0 10px 28px -8px rgba(37, 99, 235, 0.45);
+    background: #2563eb;
+    border: 1px solid #1d4ed8;
+    box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.5);
   }
 
   .btn-primary-solid:hover:not(:disabled) {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: #1d4ed8;
+    box-shadow: 0 10px 24px -6px rgba(37, 99, 235, 0.55);
+  }
+
+  .btn-follow-up {
+    @apply inline-flex items-center justify-center gap-2 font-bold text-white text-base rounded-2xl px-5 py-3.5 transition disabled:opacity-50 disabled:cursor-not-allowed;
+    background: #2563eb;
+    border: 1px solid #1d4ed8;
+    box-shadow: 0 10px 24px -8px rgba(37, 99, 235, 0.5);
+    min-height: 52px;
+  }
+
+  .btn-follow-up:hover:not(:disabled) {
+    background: #1d4ed8;
+    box-shadow: 0 12px 28px -8px rgba(37, 99, 235, 0.6);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 font-semibold text-sm rounded-2xl px-4 py-2.5 transition disabled:opacity-50 disabled:cursor-not-allowed;
+    background: #f8fafc;
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
   }
 
   .btn-whatsapp {
     @apply inline-flex items-center justify-center gap-1.5 text-white font-semibold rounded-2xl transition text-xs whitespace-nowrap;
-    background: linear-gradient(135deg, #34d399, #10b981);
-    box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.4);
+    background: #16a34a;
+    border: 1px solid #15803d;
+    box-shadow: 0 6px 16px -6px rgba(22, 163, 74, 0.45);
+  }
+
+  .btn-whatsapp:hover:not(:disabled) {
+    background: #15803d;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-sm font-medium text-slate-600 transition;
+    @apply inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-sm font-medium transition;
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #e2e8f0;
   }
 
   .btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.7);
-    color: #2563eb;
+    background: #f1f5f9;
+    color: #1d4ed8;
+    border-color: #cbd5e1;
   }
 
   .page-title {

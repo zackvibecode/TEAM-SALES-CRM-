@@ -11,7 +11,6 @@ import {
   MousePointerClick,
   TrendingUp,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 
 interface Props {
@@ -20,17 +19,11 @@ interface Props {
   pending: number;
   clicked: number;
   todayClicks: number;
-  converted: number;
-  followUp: number;
-  interested: number;
-  notInt: number;
-  noResp: number;
+  weekClicks: number;
   batches: SalesBatchCard[];
   newBatchCount: number;
   kpiClicks: number | null;
-  kpiConverts: number | null;
   monthClicks: number;
-  monthConverts: number;
 }
 
 export function SalesPremiumDashboard(props: Props) {
@@ -63,35 +56,19 @@ export function SalesPremiumDashboard(props: Props) {
       <DailyGoalPanel />
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatCard label="Total in book" value={props.total} icon={List} accent="blue" />
-        <StatCard label="Pending queue" value={props.pending} icon={Clock} accent="amber" />
-        <StatCard label="Clicked" value={props.clicked} icon={MousePointerClick} accent="sky" />
-        <StatCard label="Today clicks" value={props.todayClicks} icon={TrendingUp} accent="blue" />
-        <StatCard label="Converted" value={props.converted} icon={Sparkles} accent="mint" />
+        <StatCard label="Total Leads" value={props.total} icon={List} accent="blue" />
+        <StatCard label="Pending Leads" value={props.pending} icon={Clock} accent="amber" />
+        <StatCard label="Total Clicked" value={props.clicked} icon={MousePointerClick} accent="sky" />
+        <StatCard label="Today Clicks" value={props.todayClicks} icon={TrendingUp} accent="blue" />
+        <StatCard label="This Week Clicks" value={props.weekClicks} icon={TrendingUp} accent="sky" />
       </div>
 
       <SalesDashboardExtras
         batches={props.batches}
         newBatchCount={props.newBatchCount}
         kpiClicks={props.kpiClicks}
-        kpiConverts={props.kpiConverts}
         monthClicks={props.monthClicks}
-        monthConverts={props.monthConverts}
       />
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "Follow Up", value: props.followUp },
-          { label: "Interested", value: props.interested },
-          { label: "Not Interested", value: props.notInt },
-          { label: "No Response", value: props.noResp },
-        ].map((s) => (
-          <div key={s.label} className="glass-strong rounded-3xl px-4 py-4 text-center">
-            <p className="text-2xl font-bold text-slate-900 tabular-nums">{s.value.toLocaleString()}</p>
-            <p className="text-xs text-slate-500 mt-1 font-medium">{s.label}</p>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

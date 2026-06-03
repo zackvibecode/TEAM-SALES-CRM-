@@ -2,9 +2,17 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { addDays, in3Days, nextWeek, tomorrow } from "@/lib/follow-up/dates";
 
 type Preset = "tomorrow" | "3days" | "week" | "custom" | "none";
+
+const PRESETS: { key: Preset; label: string }[] = [
+  { key: "tomorrow", label: "Tomorrow" },
+  { key: "3days", label: "In 3 days" },
+  { key: "week", label: "Next week" },
+  { key: "custom", label: "Custom date" },
+];
 
 export function FollowUpModal({
   open,
@@ -47,12 +55,16 @@ export function FollowUpModal({
     }
   };
 
+  const allPresets = showSkip
+    ? [...PRESETS, { key: "none" as Preset, label: "Skip for now" }]
+    : PRESETS;
+
   return (
     <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
       <div className="card rounded-2xl w-full max-w-md shadow-xl p-6">
-        <div className="flex justify-between mb-4">
+        <div className="flex justify-between mb-5">
           <div>
-            <h2 className="font-semibold text-slate-900">{title}</h2>
+            <h2 className="font-semibold text-slate-900 text-lg">{title}</h2>
             {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
           </div>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-700">
@@ -60,35 +72,29 @@ export function FollowUpModal({
           </button>
         </div>
 
-        <div className="space-y-2 mb-4">
-          {(
-            [
-              ["tomorrow", "Tomorrow"],
-              ["3days", "In 3 days"],
-              ["week", "Next week"],
-              ["custom", "Custom date"],
-              ...(showSkip ? [["none", "No next follow up"] as const] : []),
-            ] as const
-          ).map(([key, label]) => (
-            <label
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+          When to follow up
+        </p>
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {allPresets.map(({ key, label }) => (
+            <button
               key={key}
-              className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer"
+              type="button"
+              onClick={() => setPreset(key)}
+              className={cn(
+                "px-3 py-2.5 text-sm font-semibold rounded-xl border transition",
+                preset === key ? "filter-pill-active" : "filter-pill"
+              )}
             >
-              <input
-                type="radio"
-                name="preset"
-                checked={preset === key}
-                onChange={() => setPreset(key as Preset)}
-              />
               {label}
-            </label>
+            </button>
           ))}
         </div>
 
         {preset === "custom" && (
           <input
             type="date"
-            className="input-field mb-3"
+            className="input-field mb-4"
             value={customDate}
             onChange={(e) => setCustomDate(e.target.value)}
             min={addDays(new Date(), 0)}
@@ -96,23 +102,23 @@ export function FollowUpModal({
         )}
 
         <textarea
-          className="input-field mb-4 min-h-[80px]"
+          className="input-field mb-5 min-h-[80px]"
           placeholder="Note (optional)"
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
 
-        <div className="flex gap-2">
-          <button type="button" onClick={onClose} className="flex-1 border rounded-xl py-2 text-sm">
+        <div className="flex gap-3">
+          <button type="button" onClick={onClose} className="btn-secondary flex-1 py-2.5 text-sm">
             Cancel
           </button>
           <button
             type="button"
             disabled={loading || (preset === "custom" && !customDate)}
             onClick={handleSubmit}
-            className="flex-1 btn-primary-solid"
+            className="btn-primary-solid flex-1 py-2.5 disabled:opacity-50"
           >
-            {loading ? "..." : "Save"}
+            {loading ? "Saving..." : "Save"}
           </button>
         </div>
       </div>

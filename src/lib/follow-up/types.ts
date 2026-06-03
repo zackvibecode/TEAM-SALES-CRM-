@@ -29,6 +29,7 @@ export interface FollowUpRow {
     owner_user_id: string;
     assigned_sales_user_name: string | null;
     last_contacted_at: string | null;
+    last_followed_up_at: string | null;
     whatsapp_click_count: number;
     follow_up_count: number;
     follow_up_status: LeadFollowUpStatus;
@@ -58,6 +59,6 @@ export interface FollowUpKpiStats {
 
 export type FollowUpSortKey =
   | "follow_up_date"
-  | "last_contacted"
-  | "follow_up_number"
-  | "sales_user";
+  | "last_followed_up"
+  | "latest_activity"
+  | "oldest_follow_up";

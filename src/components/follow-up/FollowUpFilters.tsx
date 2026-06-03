@@ -8,29 +8,32 @@ import type { FollowUpSortKey } from "@/lib/follow-up/types";
 const TABS: FollowUpFilterTab[] = [
   "today",
   "tomorrow",
-  "overdue",
   "yesterday",
   "week",
-  "completed",
+  "custom",
   "all",
 ];
 
 export function FollowUpFilters({
   filter,
+  customDate,
   sort,
   salesUserFilter,
   salesUsers,
   showSalesFilter,
   onFilterChange,
+  onCustomDateChange,
   onSortChange,
   onSalesUserChange,
 }: {
   filter: FollowUpFilterTab;
+  customDate: string;
   sort: FollowUpSortKey;
   salesUserFilter: string;
   salesUsers?: { id: string; full_name: string }[];
   showSalesFilter?: boolean;
   onFilterChange: (f: FollowUpFilterTab) => void;
+  onCustomDateChange: (date: string) => void;
   onSortChange: (s: FollowUpSortKey) => void;
   onSalesUserChange?: (id: string) => void;
 }) {
@@ -52,16 +55,28 @@ export function FollowUpFilters({
         ))}
       </div>
 
+      {filter === "custom" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-xs font-medium text-slate-600">Pick date:</label>
+          <input
+            type="date"
+            value={customDate}
+            onChange={(e) => onCustomDateChange(e.target.value)}
+            className="input-field max-w-[180px] py-2 text-xs"
+          />
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-3 items-center">
         <select
-          className="input-field max-w-[220px] py-2 text-xs"
+          className="input-field max-w-[240px] py-2 text-xs"
           value={sort}
           onChange={(e) => onSortChange(e.target.value as FollowUpSortKey)}
         >
           <option value="follow_up_date">Sort: Next follow up date</option>
-          <option value="last_contacted">Sort: Last contacted</option>
-          <option value="follow_up_number">Sort: Follow up number</option>
-          <option value="sales_user">Sort: Sales user</option>
+          <option value="last_followed_up">Sort: Last follow up date</option>
+          <option value="latest_activity">Sort: Latest activity</option>
+          <option value="oldest_follow_up">Sort: Oldest follow up</option>
         </select>
 
         {showSalesFilter && salesUsers && onSalesUserChange && (

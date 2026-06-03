@@ -1,30 +1,20 @@
 "use client";
 
 import { useState, useCallback, useMemo, Suspense, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
-import { WHATSAPP_TEMPLATES, applyTemplate } from "@/lib/whatsapp-templates";
+import { BRAND_WHATSAPP_INTRO } from "@/lib/brand";
 import { Search, X, Clock } from "lucide-react";
 import type { Lead, LeadActivity, LeadStatus } from "@/types";
 
-const ALL_STATUSES: LeadStatus[] = [
-  "Pending",
-  "Clicked",
-  "Follow Up",
-  "Interested",
-  "Not Interested",
-  "No Response",
-  "Converted",
+const TASK_STATUSES: { value: LeadStatus; label: string }[] = [
+  { value: "Pending", label: "Pending" },
+  { value: "Clicked", label: "Clicker" },
+  { value: "Follow Up", label: "Follow Up" },
 ];
 
-const NOTES_REQUIRED: LeadStatus[] = ["Follow Up", "Interested", "Converted"];
-
-interface BatchOption {
-  id: string;
-  label: string;
-}
+const NOTES_REQUIRED: LeadStatus[] = ["Follow Up"];
 
 interface CustomersClientProps {
   initialLeads: Lead[];
@@ -34,16 +24,16 @@ interface CustomersClientProps {
   userEmail: string;
 }
 
-function CustomersClientInner({ initialLeads, batches, pendingCount, totalCount, userEmail }: CustomersClientProps) {
-  const searchParams = useSearchParams();
-  const batchFromUrl = searchParams.get("batch") || "";
+interface BatchOption {
+  id: string;
+  label: string;
+}
 
+function CustomersClientInner({ initialLeads, pendingCount, totalCount, userEmail }: CustomersClientProps) {
   const [leads, setLeads] = useState(initialLeads);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [batchFilter, setBatchFilter] = useState(batchFromUrl);
   const [queueMode, setQueueMode] = useState(false);
-  const [templateId, setTemplateId] = useState(WHATSAPP_TEMPLATES[0].id);
   const [page, setPage] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState<LeadStatus>("Pending");
@@ -55,11 +45,14 @@ function CustomersClientInner({ initialLeads, batches, pendingCount, totalCount,
   const [loadingLeads, setLoadingLeads] = useState(true);
   const pageSize = 20;
 
+  const whatsappMessage = useCallback(
+    (name: string) => BRAND_WHATSAPP_INTRO.replace(/\{name\}/gi, name.trim() || "Tuan/Puan"),
+    []
+  );
+
   const patchLead = useCallback((leadId: string, patch: Partial<Lead>) => {
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, ...patch } : l)));
   }, []);
-
-  const selectedTemplate = WHATSAPP_TEMPLATES.find((t) => t.id === templateId) || WHATSAPP_TEMPLATES[0];
 
   const refreshData = useCallback(async () => {
     try {
@@ -85,13 +78,8 @@ function CustomersClientInner({ initialLeads, batches, pendingCount, totalCount,
       Pending: 0,
       Clicked: 1,
       "Follow Up": 2,
-      Interested: 3,
-      "No Response": 4,
-      "Not Interested": 5,
-      Converted: 6,
     };
     let list = leads.filter((l) => {
-      if (batchFilter && l.source_file_id !== batchFilter) return false;
       if (queueMode && statusFilter === "" && l.status !== "Pending") return false;
       if (search) {
         const s = search.toLowerCase();
@@ -105,7 +93,7 @@ function CustomersClientInner({ initialLeads, batches, pendingCount, totalCount,
       list = [...list].sort((a, b) => (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9));
     }
     return list;
-  }, [leads, search, statusFilter, batchFilter, queueMode]);
+  }, [leads, search, statusFilter, queueMode]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -242,33 +230,13 @@ function CustomersClientInner({ initialLeads, batches, pendingCount, totalCount,
           />
         </div>
         <select
-          value={batchFilter}
-          onChange={(e) => { setBatchFilter(e.target.value); setPage(1); }}
-          className="input-field py-2 max-w-[220px]"
-        >
-          <option value="">All batches</option>
-          {batches.map((b) => (
-            <option key={b.id} value={b.id}>{b.label}</option>
-          ))}
-        </select>
-        <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setQueueMode(false); setPage(1); }}
           className="input-field py-2 max-w-[180px]"
         >
-          <option value="">All statuses</option>
-          {ALL_STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-        <select
-          value={templateId}
-          onChange={(e) => setTemplateId(e.target.value)}
-          className="input-field py-2 max-w-[200px]"
-          title="WhatsApp message template"
-        >
-          {WHATSAPP_TEMPLATES.map((t) => (
-            <option key={t.id} value={t.id}>{t.label}</option>
+          <option value="">All task types</option>
+          {TASK_STATUSES.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
           ))}
         </select>
         <span className="text-sm text-slate-500 self-center ml-auto">
@@ -303,7 +271,7 @@ function CustomersClientInner({ initialLeads, batches, pendingCount, totalCount,
                         leadId={lead.id}
                         whatsapp={lead.whatsapp}
                         customerName={lead.name}
-                        messageTemplate={applyTemplate(selectedTemplate.message, lead.name)}
+                        messageTemplate={whatsappMessage(lead.name)}
                         onSuccess={handleWhatsAppSuccess}
                         className="btn-whatsapp px-3 py-2 shadow-sm min-h-[40px] disabled:opacity-60"
                       >
@@ -311,7 +279,7 @@ function CustomersClientInner({ initialLeads, batches, pendingCount, totalCount,
                       </WhatsAppButton>
                       <button
                         onClick={() => openEditor(lead)}
-                        className="text-xs text-slate-500 hover:text-primary px-2 py-2 rounded-lg border border-slate-200"
+                        className="btn-secondary text-xs px-3 py-2"
                       >
                         Edit
                       </button>
@@ -340,14 +308,14 @@ function CustomersClientInner({ initialLeads, batches, pendingCount, totalCount,
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 border border-slate-300 rounded-lg disabled:opacity-40"
+              className="btn-secondary px-3 py-1.5 disabled:opacity-40"
             >
               Prev
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 border border-slate-300 rounded-lg disabled:opacity-40"
+              className="btn-secondary px-3 py-1.5 disabled:opacity-40"
             >
               Next
             </button>
@@ -375,8 +343,8 @@ function CustomersClientInner({ initialLeads, batches, pendingCount, totalCount,
                   onChange={(e) => setEditStatus(e.target.value as LeadStatus)}
                   className="input-field"
                 >
-                  {ALL_STATUSES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                  {TASK_STATUSES.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
                 </select>
               </div>
@@ -417,7 +385,7 @@ function CustomersClientInner({ initialLeads, batches, pendingCount, totalCount,
                 </div>
               )}
               <div className="flex gap-3">
-                <button onClick={() => setEditingId(null)} className="flex-1 border rounded-xl py-2.5 text-sm">
+                <button onClick={() => setEditingId(null)} className="btn-secondary flex-1 py-2.5 text-sm">
                   Cancel
                 </button>
                 <button

@@ -18,18 +18,14 @@ interface Props {
   batches: SalesBatchCard[];
   newBatchCount: number;
   kpiClicks: number | null;
-  kpiConverts: number | null;
   monthClicks: number;
-  monthConverts: number;
 }
 
 export function SalesDashboardExtras({
   batches,
   newBatchCount,
   kpiClicks,
-  kpiConverts,
   monthClicks,
-  monthConverts,
 }: Props) {
   const activeBatches = batches.filter((b) => !b.label.startsWith("[archived]")).slice(0, 6);
 
@@ -47,35 +43,20 @@ export function SalesDashboardExtras({
         </div>
       )}
 
-      {(kpiClicks || kpiConverts) && (
+      {kpiClicks != null && kpiClicks > 0 && (
         <div className="card-padded">
           <h2 className="font-semibold text-slate-900 flex items-center gap-2 mb-4">
             <Target className="w-4 h-4 text-primary" />
-            Monthly KPI
+            Monthly click target
           </h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {kpiClicks != null && kpiClicks > 0 && (
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Clicks target: {kpiClicks}</p>
-                <BatchProgressBar
-                  progress={Math.min(100, Math.round((monthClicks / kpiClicks) * 100))}
-                  pending={Math.max(0, kpiClicks - monthClicks)}
-                  total={kpiClicks}
-                />
-                <p className="text-xs text-slate-500 mt-1">{monthClicks} clicks this month</p>
-              </div>
-            )}
-            {kpiConverts != null && kpiConverts > 0 && (
-              <div>
-                <p className="text-xs text-slate-500 mb-1">Converts target: {kpiConverts}</p>
-                <BatchProgressBar
-                  progress={Math.min(100, Math.round((monthConverts / kpiConverts) * 100))}
-                  pending={Math.max(0, kpiConverts - monthConverts)}
-                  total={kpiConverts}
-                />
-                <p className="text-xs text-slate-500 mt-1">{monthConverts} converted this month</p>
-              </div>
-            )}
+          <div>
+            <p className="text-xs text-slate-500 mb-1">Clicks target: {kpiClicks}</p>
+            <BatchProgressBar
+              progress={Math.min(100, Math.round((monthClicks / kpiClicks) * 100))}
+              pending={Math.max(0, kpiClicks - monthClicks)}
+              total={kpiClicks}
+            />
+            <p className="text-xs text-slate-500 mt-1">{monthClicks} clicks this month</p>
           </div>
         </div>
       )}
@@ -87,7 +68,7 @@ export function SalesDashboardExtras({
             {activeBatches.map((b) => (
               <Link
                 key={b.id}
-                href={`/dashboard/sales/customers?batch=${b.id}`}
+                href="/dashboard/sales/customers"
                 className="block p-4 rounded-2xl glass hover:shadow-[var(--shadow-glass-lg)] transition"
               >
                 <div className="font-medium text-slate-800 text-sm">{b.label}</div>

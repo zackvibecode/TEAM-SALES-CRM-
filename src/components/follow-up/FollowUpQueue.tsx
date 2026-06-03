@@ -7,6 +7,7 @@ import { FollowUpModal } from "./FollowUpModal";
 import { FollowUpHistoryModal } from "./FollowUpHistoryModal";
 import { FollowUpKpiCards } from "./FollowUpKpiCards";
 import type { FollowUpFilterTab } from "@/lib/follow-up/dates";
+import { toDateString } from "@/lib/follow-up/dates";
 import type { FollowUpRow, FollowUpSortKey } from "@/lib/follow-up/types";
 import { Loader2 } from "lucide-react";
 
@@ -18,6 +19,7 @@ export function FollowUpQueue({
   salesUsers?: { id: string; full_name: string }[];
 }) {
   const [filter, setFilter] = useState<FollowUpFilterTab>("today");
+  const [customDate, setCustomDate] = useState(toDateString());
   const [sort, setSort] = useState<FollowUpSortKey>("follow_up_date");
   const [salesUserFilter, setSalesUserFilter] = useState("all");
   const [rows, setRows] = useState<FollowUpRow[]>([]);
@@ -36,6 +38,9 @@ export function FollowUpQueue({
     setLoading(true);
     try {
       const params = new URLSearchParams({ filter, sort });
+      if (filter === "custom" && customDate) {
+        params.set("customDate", customDate);
+      }
       if (role === "admin" && salesUserFilter !== "all") {
         params.set("salesUser", salesUserFilter);
       }
@@ -45,7 +50,7 @@ export function FollowUpQueue({
     } finally {
       setLoading(false);
     }
-  }, [filter, sort, salesUserFilter, role]);
+  }, [filter, sort, customDate, salesUserFilter, role]);
 
   useEffect(() => {
     load();
@@ -65,24 +70,6 @@ export function FollowUpQueue({
 
       openWhatsApp(data.whatsapp, row.lead.name);
       setPostWaTarget({ leadId: row.lead.id, leadName: row.lead.name });
-      await load();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleMarkCompleted = async (row: FollowUpRow) => {
-    setBusy(true);
-    try {
-      const res = await fetch("/api/follow-ups/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ followUpId: row.id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
       await load();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
@@ -111,11 +98,13 @@ export function FollowUpQueue({
 
       <FollowUpFilters
         filter={filter}
+        customDate={customDate}
         sort={sort}
         salesUserFilter={salesUserFilter}
         salesUsers={salesUsers}
         showSalesFilter={role === "admin"}
         onFilterChange={setFilter}
+        onCustomDateChange={setCustomDate}
         onSortChange={setSort}
         onSalesUserChange={setSalesUserFilter}
       />
@@ -134,9 +123,9 @@ export function FollowUpQueue({
             <FollowUpCard
               key={row.id}
               row={row}
+              showSalesUser={role === "admin"}
               busy={busy}
               onFollowUpWhatsApp={handleFollowUpWhatsApp}
-              onMarkCompleted={handleMarkCompleted}
               onSchedule={setScheduleTarget}
               onViewHistory={(r) =>
                 setHistoryTarget({

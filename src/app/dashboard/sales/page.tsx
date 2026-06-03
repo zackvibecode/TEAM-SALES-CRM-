@@ -19,14 +19,9 @@ export default async function SalesDashboardPage() {
     { count: total },
     { count: pending },
     { count: clicked },
-    { count: followUp },
-    { count: interested },
-    { count: notInt },
-    { count: noResp },
-    { count: converted },
     { count: todayClicks },
+    { count: weekClicks },
     { count: monthClicks },
-    { count: monthConverts },
     { data: profile },
     { data: files },
     { data: fileLeads },
@@ -35,15 +30,10 @@ export default async function SalesDashboardPage() {
     auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id),
     auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Pending"),
     auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Clicked"),
-    auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Follow Up"),
-    auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Interested"),
-    auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Not Interested"),
-    auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "No Response"),
-    auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Converted"),
     auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Clicked").gte("clicked_at", todayStart),
+    auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Clicked").gte("clicked_at", sevenDaysAgo),
     auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Clicked").gte("clicked_at", monthStart),
-    auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Converted").gte("updated_at", monthStart),
-    auth.from("profiles").select("full_name, kpi_monthly_clicks, kpi_monthly_converts").eq("id", user.id).single(),
+    auth.from("profiles").select("full_name, kpi_monthly_clicks").eq("id", user.id).single(),
     auth.from("uploaded_files").select("id, campaign_name, file_name, source_tag, is_archived, created_at").eq("owner_user_id", user.id).order("created_at", { ascending: false }),
     auth.from("leads").select("source_file_id, status").eq("owner_user_id", user.id),
     auth.from("uploaded_files").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).gte("created_at", sevenDaysAgo),
@@ -80,17 +70,11 @@ export default async function SalesDashboardPage() {
         pending={pending ?? 0}
         clicked={clicked ?? 0}
         todayClicks={todayClicks ?? 0}
-        converted={converted ?? 0}
-        followUp={followUp ?? 0}
-        interested={interested ?? 0}
-        notInt={notInt ?? 0}
-        noResp={noResp ?? 0}
+        weekClicks={weekClicks ?? 0}
         batches={batchCards}
         newBatchCount={newBatches ?? 0}
         kpiClicks={profile?.kpi_monthly_clicks ?? null}
-        kpiConverts={profile?.kpi_monthly_converts ?? null}
         monthClicks={monthClicks ?? 0}
-        monthConverts={monthConverts ?? 0}
       />
     </AppLayout>
   );

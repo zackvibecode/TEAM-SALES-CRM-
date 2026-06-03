@@ -28,11 +28,13 @@ export async function GET(request: NextRequest) {
     const filter = (searchParams.get("filter") || "today") as FollowUpFilterTab;
     const sort = (searchParams.get("sort") || "follow_up_date") as FollowUpSortKey;
     const salesUser = searchParams.get("salesUser") ?? undefined;
+    const customDate = searchParams.get("customDate") ?? undefined;
 
     const rows = await getFollowUps(ctx.db, {
       role: ctx.role,
       userId: ctx.user.id,
       filter,
+      customDate,
       salesUserFilter: salesUser,
       sort,
     });

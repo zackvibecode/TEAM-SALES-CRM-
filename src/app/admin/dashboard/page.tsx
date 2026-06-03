@@ -82,7 +82,7 @@ export default async function AdminDashboardPage() {
         <PageHeader
           badge="Admin"
           title="Admin Dashboard"
-          subtitle="Overview of all sales activity — live KPIs and team leaderboard"
+          subtitle="Overview of all sales activity — live KPIs and team performance"
         />
 
         <AdminDashboardClient

@@ -1,3 +1,23 @@
+export type FollowUpFilterTab =
+  | "today"
+  | "tomorrow"
+  | "yesterday"
+  | "week"
+  | "custom"
+  | "all";
+
+export function filterTabLabel(tab: FollowUpFilterTab): string {
+  const labels: Record<FollowUpFilterTab, string> = {
+    today: "Today",
+    tomorrow: "Tomorrow",
+    yesterday: "Yesterday",
+    week: "This Week",
+    custom: "Custom Date",
+    all: "All",
+  };
+  return labels[tab];
+}
+
 /** Date helpers for follow-up filters (Asia/Kuala_Lumpur style: local server date). */
 
 export function toDateString(d: Date = new Date()): string {
@@ -35,26 +55,4 @@ export function endOfWeek(d: Date = new Date()): string {
   const copy = new Date(d);
   copy.setDate(copy.getDate() - copy.getDay() + 6);
   return toDateString(copy);
-}
-
-export type FollowUpFilterTab =
-  | "today"
-  | "tomorrow"
-  | "overdue"
-  | "yesterday"
-  | "week"
-  | "completed"
-  | "all";
-
-export function filterTabLabel(tab: FollowUpFilterTab): string {
-  const labels: Record<FollowUpFilterTab, string> = {
-    today: "Today",
-    tomorrow: "Tomorrow",
-    overdue: "Overdue",
-    yesterday: "Yesterday",
-    week: "This Week",
-    completed: "Completed",
-    all: "All",
-  };
-  return labels[tab];
 }

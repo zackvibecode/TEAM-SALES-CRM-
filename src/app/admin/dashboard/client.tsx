@@ -73,7 +73,7 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
     : salesProfiles.find((s) => s.id === selectedUserId)?.full_name || "Unknown";
 
   const leaderboard = [...performanceData]
-    .sort((a, b) => b.converted - a.converted || b.clicked - a.clicked)
+    .sort((a, b) => b.clicked - a.clicked || b.followUp - a.followUp)
     .slice(0, 5);
 
   return (
@@ -113,7 +113,7 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
             <span className="icon-stat text-amber-600">
               <Trophy className="w-4 h-4" />
             </span>
-            Leaderboard (by conversions, then clicks)
+            Leaderboard (by WhatsApp clicks & follow-ups)
           </h2>
           <ol className="space-y-2">
             {leaderboard.map((p, i) => (
@@ -122,8 +122,8 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
                   {i + 1}
                 </span>
                 <span className="font-medium flex-1">{p.full_name}</span>
-                <span className="text-slate-500">{p.converted} converted</span>
-                <span className="text-slate-400">{p.clicked} clicked</span>
+                <span className="text-slate-500">{p.clicked} clicks</span>
+                <span className="text-slate-400">{p.followUp} follow ups</span>
               </li>
             ))}
           </ol>

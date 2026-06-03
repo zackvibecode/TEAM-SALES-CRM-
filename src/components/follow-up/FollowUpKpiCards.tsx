@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { StatCard } from "@/components/shared/StatCard";
-import { CalendarClock, AlertTriangle, CheckCircle2, ListChecks } from "lucide-react";
+import { CalendarClock, AlertTriangle, ListChecks } from "lucide-react";
 import type { FollowUpKpiStats } from "@/lib/follow-up/types";
 
 export function FollowUpKpiCards({ compact }: { compact?: boolean }) {
@@ -20,14 +20,13 @@ export function FollowUpKpiCards({ compact }: { compact?: boolean }) {
   if (!kpis) return null;
 
   const grid = compact
-    ? "grid grid-cols-2 lg:grid-cols-4 gap-3"
-    : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4";
+    ? "grid grid-cols-1 sm:grid-cols-3 gap-3"
+    : "grid grid-cols-1 sm:grid-cols-3 gap-4";
 
   return (
     <div className={grid}>
-      <StatCard label="Follow Ups Today" value={kpis.today} icon={CalendarClock} accent="sky" />
+      <StatCard label="Follow Up Today" value={kpis.today} icon={CalendarClock} accent="sky" />
       <StatCard label="Overdue Follow Ups" value={kpis.overdue} icon={AlertTriangle} accent="blue" />
-      <StatCard label="Completed Follow Ups" value={kpis.completed} icon={CheckCircle2} accent="blue" />
       <StatCard label="Total Follow Ups" value={kpis.total} icon={ListChecks} accent="sky" />
     </div>
   );

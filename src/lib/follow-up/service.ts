@@ -426,8 +426,9 @@ const FOLLOW_UP_SELECT = `
   *,
   lead:lead_id (
     id, name, whatsapp, campaign_name, owner_user_id,
-    assigned_sales_user_name, last_contacted_at, whatsapp_click_count,
-    follow_up_count, follow_up_status, next_follow_up_date, follow_up_notes, clicked_at
+    assigned_sales_user_name, last_contacted_at, last_followed_up_at,
+    whatsapp_click_count, follow_up_count, follow_up_status,
+    next_follow_up_date, follow_up_notes, clicked_at, updated_at
   )
 `;
 
@@ -437,6 +438,7 @@ export async function getFollowUps(
     role: "admin" | "sales";
     userId?: string;
     filter: FollowUpFilterTab;
+    customDate?: string;
     salesUserFilter?: string;
     sort: FollowUpSortKey;
   }
@@ -465,13 +467,10 @@ export async function getFollowUps(
 
   switch (opts.filter) {
     case "today":
-      query = query.eq("follow_up_date", today).eq("status", "pending");
+      query = query.eq("follow_up_date", today).in("status", ["pending", "overdue"]);
       break;
     case "tomorrow":
       query = query.eq("follow_up_date", tomorrowStr).eq("status", "pending");
-      break;
-    case "overdue":
-      query = query.lt("follow_up_date", today).in("status", ["pending", "overdue"]);
       break;
     case "yesterday":
       query = query.eq("follow_up_date", yesterday);
@@ -479,8 +478,10 @@ export async function getFollowUps(
     case "week":
       query = query.gte("follow_up_date", weekStart).lte("follow_up_date", weekEnd);
       break;
-    case "completed":
-      query = query.eq("status", "completed");
+    case "custom":
+      if (opts.customDate) {
+        query = query.eq("follow_up_date", opts.customDate);
+      }
       break;
     case "all":
     default:
@@ -492,15 +493,18 @@ export async function getFollowUps(
 
   const rows = [...((data ?? []) as FollowUpRow[])].sort((a, b) => {
     switch (opts.sort) {
-      case "last_contacted": {
-        const ta = a.lead?.last_contacted_at ?? "";
-        const tb = b.lead?.last_contacted_at ?? "";
+      case "last_followed_up": {
+        const ta = a.lead?.last_followed_up_at ?? "";
+        const tb = b.lead?.last_followed_up_at ?? "";
         return tb.localeCompare(ta);
       }
-      case "follow_up_number":
-        return b.follow_up_number - a.follow_up_number;
-      case "sales_user":
-        return (a.sales_user_name ?? "").localeCompare(b.sales_user_name ?? "");
+      case "latest_activity": {
+        const ta = a.lead?.last_contacted_at ?? a.updated_at ?? "";
+        const tb = b.lead?.last_contacted_at ?? b.updated_at ?? "";
+        return tb.localeCompare(ta);
+      }
+      case "oldest_follow_up":
+        return b.follow_up_date.localeCompare(a.follow_up_date);
       case "follow_up_date":
       default:
         return a.follow_up_date.localeCompare(b.follow_up_date);
