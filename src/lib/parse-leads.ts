@@ -265,7 +265,7 @@ export function parseLeadRows(json: RowRecord[]): ParsedLeadRow[] {
   const skipForScan = new Set(
     [nameCol, waCol, linkCol, pkgCol, notesCol].filter(Boolean) as string[]
   );
-  let dateCol =
+  const dateCol =
     detectDateCreatedColumn(headers) ??
     detectDateColumnByContent(headers, rows, skipForScan);
 
