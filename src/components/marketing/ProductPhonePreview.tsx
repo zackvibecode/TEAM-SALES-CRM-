@@ -1,197 +1,171 @@
 "use client";
 
-import { Calendar, MessageCircle, Sparkles } from "lucide-react";
+import {
+  ArrowUpDown,
+  CalendarRange,
+  Clock,
+  MessageCircle,
+  Search,
+  Target,
+} from "lucide-react";
 import { useMarketingLocale } from "./MarketingLocaleProvider";
 
-const SAMPLE_LEADS = [
-  { name: "Selver Kumar", date: "4 Jun 2024, 12:00 am", status: "Pending" },
-  { name: "Nora Hamid", date: "4 Jun 2024, 12:01 am", status: "Pending" },
-  { name: "Deedat", date: "4 Jun 2024, 12:02 am", status: "Clicked" },
+const LEADS = [
+  { name: "Selver Kumar", wa: "60123456789", date: "4 Jun 2024", status: "Pending" },
+  { name: "Nora Hamid", wa: "60198765432", date: "4 Jun 2024", status: "Pending" },
+  { name: "Deedat", wa: "60111222333", date: "4 Jun 2024", status: "Clicked" },
 ];
 
 export function ProductPhonePreview() {
   const { locale } = useMarketingLocale();
   const isBm = locale === "bm";
 
-  const labels = {
-    app: "Zaqone CRM",
-    screen: isBm ? "Tugasan Saya" : "My Tasks",
-    mission: isBm ? "0 / 100 follow-up hari ini" : "0 / 100 follow-ups today",
+  const t = {
+    queue: "Queue",
+    title: isBm ? "Tugasan Saya" : "My Tasks",
+    subtitle: isBm ? "Alip · nusatra00@gmail.com" : "Alip · nusatra00@gmail.com",
+    mission: isBm ? "Misi hari ini" : "Today's mission",
+    missionStat: isBm ? "0 / 100 follow-up" : "0 / 100 follow-ups",
+    missionHint: isBm
+      ? "2,964 pending dalam buku · 2,964 jumlah lead"
+      : "2,964 pending in your book · 2,964 total leads",
+    bookBar: isBm
+      ? "Buku anda: 2,964 lead · 2,964 pending"
+      : "Your book: 2,964 leads · 2,964 pending",
+    tabQueue: isBm ? "Queue (Pending)" : "My queue (Pending)",
     tabAll: isBm ? "Semua lead" : "All leads",
     tabPending: "Pending",
+    tabFollow: "Follow Up",
+    tabClicker: "Clicker",
+    search: isBm ? "Cari nama atau WhatsApp..." : "Search name or WhatsApp...",
     customize: isBm ? "Sesuaikan tarikh" : "Customize by date",
     sort: isBm ? "Lama → Baru" : "Old → New",
+    count: isBm ? "2,964 pelanggan" : "2,964 customers",
+    colName: "Name",
+    colWa: "WhatsApp",
     colDate: isBm ? "Tarikh dicipta" : "Date Created",
-    leads: isBm ? "2,964 pelanggan" : "2,964 customers",
+    colStatus: "Status",
     wa: "WhatsApp",
+    pillFollow: isBm ? "Follow-up teratur" : "Organized follow-ups",
+    pillWa: isBm ? "WhatsApp 1-klik" : "1-tap WhatsApp",
+    pillSort: isBm ? "Sort ikut tarikh" : "Sort by date",
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-[320px] sm:max-w-[340px]">
-      <div
-        className="absolute -inset-4 rounded-[2.5rem] opacity-60 blur-2xl motion-reduce:hidden"
-        aria-hidden
-        style={{
-          background:
-            "radial-gradient(circle at 30% 20%, rgba(59, 102, 255, 0.35), transparent 55%), radial-gradient(circle at 70% 80%, rgba(37, 211, 102, 0.2), transparent 50%)",
-        }}
-      />
+    <div className="phone-showcase relative mx-auto w-full max-w-[288px] lg:max-w-[288px] lg:mx-0">
+      <div className="phone-shadow-static" aria-hidden />
 
-      <div
-        className="absolute -top-3 -right-2 z-10 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold shadow-lg"
-        style={{
-          background: "var(--surface-card)",
-          color: "#3b66ff",
-          border: "1px solid var(--border-color)",
-        }}
-      >
-        <Sparkles className="w-3.5 h-3.5" />
-        {labels.leads}
-      </div>
+      {/* Benefit pills */}
+      <span className="phone-benefit phone-benefit-1 motion-reduce:hidden">{t.pillFollow}</span>
+      <span className="phone-benefit phone-benefit-2 motion-reduce:hidden">{t.pillWa}</span>
+      <span className="phone-benefit phone-benefit-3 motion-reduce:hidden">{t.pillSort}</span>
 
-      <div
-        className="relative rounded-[2.25rem] p-2.5 shadow-2xl"
-        style={{
-          background: "linear-gradient(145deg, #1e293b 0%, #0f172a 50%, #1e3a8a 100%)",
-        }}
-      >
-        <div
-          className="overflow-hidden rounded-[1.85rem]"
-          style={{
-            background: "var(--surface-bg)",
-            border: "1px solid var(--border-color)",
-          }}
-        >
-          {/* Status bar */}
-          <div
-            className="flex items-center justify-between px-5 pt-2.5 pb-1 text-[10px] font-medium"
-            style={{ color: "var(--text-muted)" }}
-          >
-            <span>9:41</span>
-            <div className="flex gap-1">
-              <span className="w-3 h-1.5 rounded-sm bg-slate-400/80" />
-              <span className="w-3 h-1.5 rounded-sm bg-slate-400/80" />
-              <span className="w-4 h-1.5 rounded-sm bg-[#3b66ff]" />
-            </div>
-          </div>
-
-          {/* App header */}
-          <div
-            className="px-3 pb-2 border-b"
-            style={{ borderColor: "var(--border-color)", background: "var(--surface-card)" }}
-          >
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#3b66ff]">
-              {labels.app}
-            </p>
-            <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-              {labels.screen}
-            </p>
-          </div>
-
-          {/* Mission card */}
-          <div className="px-3 pt-2">
-            <div
-              className="rounded-xl px-3 py-2 text-[10px] font-medium"
-              style={{
-                background: "linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%)",
-                color: "var(--text-secondary)",
-                border: "1px solid #c7d2fe",
-              }}
-            >
-              <span className="font-bold text-[#3b66ff]">{labels.mission}</span>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1 px-3 pt-2 overflow-x-auto scrollbar-none">
-            <span className="shrink-0 px-2 py-1 rounded-lg text-[9px] font-bold bg-[#3b66ff] text-white">
-              {labels.tabAll}
-            </span>
-            <span
-              className="shrink-0 px-2 py-1 rounded-lg text-[9px] font-semibold"
-              style={{ background: "var(--surface-muted)", color: "var(--text-muted)" }}
-            >
-              {labels.tabPending}
-            </span>
-            <span
-              className="shrink-0 px-2 py-1 rounded-lg text-[9px] font-semibold"
-              style={{ background: "var(--surface-muted)", color: "var(--text-muted)" }}
-            >
-              Clicker
-            </span>
-          </div>
-
-          {/* Date tools */}
-          <div className="flex flex-wrap gap-1 px-3 pt-2">
-            <span
-              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-semibold border"
-              style={{ borderColor: "var(--border-color)", color: "var(--text-secondary)" }}
-            >
-              <Calendar className="w-2.5 h-2.5" />
-              {labels.customize}
-            </span>
-            <span className="px-1.5 py-0.5 rounded-md text-[8px] font-bold bg-[#3b66ff] text-white">
-              {labels.sort}
-            </span>
-          </div>
-
-          {/* Mini table */}
-          <div className="px-3 pt-2 pb-3">
-            <div
-              className="rounded-xl overflow-hidden text-[9px]"
-              style={{
-                border: "1px solid var(--border-color)",
-                background: "var(--surface-card)",
-              }}
-            >
-              <div
-                className="px-2 py-1.5 font-bold uppercase tracking-wide text-[8px]"
-                style={{ background: "var(--surface-muted)", color: "var(--text-muted)" }}
-              >
-                Name · {labels.colDate}
+      {/* iPhone 17 Pro frame */}
+      <div className="phone-frame-17 relative z-10 mx-auto">
+        <div className="phone-dynamic-island" aria-hidden />
+        <div className="phone-screen-inner">
+          <div className="phone-app-view">
+            <div className="phone-app-content space-y-2 p-2">
+              {/* Page header — matches sales My Tasks */}
+              <div>
+                <span className="phone-page-badge">{t.queue}</span>
+                <p className="phone-page-title">{t.title}</p>
+                <p className="phone-page-sub">{t.subtitle}</p>
               </div>
-              {SAMPLE_LEADS.map((lead) => (
-                <div
-                  key={lead.name}
-                  className="flex items-center gap-2 px-2 py-1.5 border-t"
-                  style={{ borderColor: "var(--border-color)" }}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold truncate text-[9px]" style={{ color: "var(--text-primary)" }}>
-                      {lead.name}
-                    </p>
-                    <p className="text-[8px] mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
-                      {lead.date}
-                    </p>
-                  </div>
-                  <div className="shrink-0 flex flex-col items-end gap-1">
-                    <span
-                      className={`px-1 py-0.5 rounded text-[8px] font-semibold ${
-                        lead.status === "Clicked"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {lead.status}
-                    </span>
-                    <span
-                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-bold text-white"
-                      style={{ background: "#25d366" }}
-                    >
-                      <MessageCircle className="w-2.5 h-2.5" />
-                      {labels.wa}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Home indicator */}
-          <div className="flex justify-center pb-2">
-            <div className="w-24 h-1 rounded-full bg-slate-300/80 dark:bg-slate-600" />
+              {/* Daily goal panel */}
+              <div className="phone-mission-card">
+                <div className="flex items-center gap-1 text-[#3b66ff] mb-1">
+                  <Target className="w-3 h-3" />
+                  <span className="text-[8px] font-bold uppercase tracking-wide">{t.mission}</span>
+                </div>
+                <p className="text-[11px] font-bold" style={{ color: "var(--text-primary)" }}>
+                  {t.missionStat}
+                </p>
+                <p className="text-[8px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                  {t.missionHint}
+                </p>
+                <div className="mt-1.5 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                  <div className="h-full w-[8%] rounded-full bg-[#3b66ff]" />
+                </div>
+              </div>
+
+              {/* Book bar */}
+              <div className="phone-glass-bar text-[8px]">{t.bookBar}</div>
+
+              {/* Tabs */}
+              <div className="flex gap-1 overflow-x-auto scrollbar-none pb-0.5">
+                <span className="phone-tab phone-tab-active">
+                  <Clock className="w-2.5 h-2.5 inline mr-0.5" />
+                  {t.tabQueue}
+                </span>
+                <span className="phone-tab">{t.tabAll}</span>
+                <span className="phone-tab">{t.tabPending}</span>
+                <span className="phone-tab">{t.tabFollow}</span>
+                <span className="phone-tab">{t.tabClicker}</span>
+              </div>
+
+              {/* Search + tools */}
+              <div className="space-y-1.5">
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                  <div className="phone-input pl-7">{t.search}</div>
+                </div>
+                <div className="flex flex-wrap gap-1 items-center">
+                  <span className="phone-tool">
+                    <CalendarRange className="w-2.5 h-2.5" />
+                    {t.customize}
+                  </span>
+                  <span className="phone-tool phone-tool-active">
+                    <ArrowUpDown className="w-2.5 h-2.5" />
+                    {t.sort}
+                  </span>
+                  <span className="text-[8px] ml-auto" style={{ color: "var(--text-muted)" }}>
+                    {t.count}
+                  </span>
+                </div>
+              </div>
+
+              {/* Table — real My Tasks columns */}
+              <div className="phone-table-shell">
+                <div className="phone-table-head grid grid-cols-[1.2fr_1fr_0.9fr] gap-0.5 px-1.5 py-1">
+                  <span>{t.colName}</span>
+                  <span>{t.colDate}</span>
+                  <span className="text-center">{t.colStatus}</span>
+                </div>
+                {LEADS.map((lead) => (
+                  <div
+                    key={lead.name}
+                    className="phone-table-row grid grid-cols-[1.2fr_1fr_0.9fr] gap-0.5 px-1.5 py-1.5 items-center border-t"
+                    style={{ borderColor: "var(--border-color)" }}
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[9px] truncate text-slate-800">{lead.name}</p>
+                      <p className="text-[7px] font-mono text-slate-500 truncate">{lead.wa}</p>
+                    </div>
+                    <p className="text-[7px] text-slate-600 whitespace-nowrap">{lead.date}</p>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span
+                        className={`text-[7px] font-semibold px-1 py-0.5 rounded-full ${
+                          lead.status === "Clicked"
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {lead.status}
+                      </span>
+                      <span className="phone-wa-btn">
+                        <MessageCircle className="w-2.5 h-2.5" />
+                        {t.wa}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
+        <div className="phone-home-bar" aria-hidden />
       </div>
     </div>
   );

@@ -21,6 +21,22 @@ export interface MarketingCopy {
     subtitle: string;
     ctaPricing: string;
     ctaLogin: string;
+    demo: {
+      formTitle: string;
+      nameLabel: string;
+      nameValue: string;
+      packageLabel: string;
+      packageValue: string;
+      waLabel: string;
+      waValue: string;
+      submit: string;
+      chatContact: string;
+      chatHint: string;
+      chatBrand: string;
+      chatLines: string[];
+      reply: string;
+      time: string;
+    };
   };
   problem: {
     title: string;
@@ -105,6 +121,28 @@ const COPY_BM: MarketingCopy = {
       "Upload lead dari Excel, assign kepada sales, jejak follow-up dan prestasi klik WhatsApp — tanpa spreadsheet bertabur.",
     ctaPricing: "Lihat Harga",
     ctaLogin: "Log Masuk",
+    demo: {
+      formTitle: "Lead Campaign",
+      nameLabel: "Nama pelanggan",
+      nameValue: "Nora Hamid",
+      packageLabel: "Pakej berminat",
+      packageValue: "Bali 5H4M — Premium",
+      waLabel: "No. WhatsApp",
+      waValue: "+60 12-345 6789",
+      submit: "Hantar di WhatsApp",
+      chatContact: "Sales — Alip",
+      chatHint: "Ketik di sini untuk maklumat hubungan",
+      chatBrand: "Zaqone CRM",
+      chatLines: [
+        "Nama: Nora Hamid",
+        "Pakej: Bali 5H4M — Premium",
+        "WhatsApp: +60 12-345 6789",
+        "Status: Pending · Tarikh: 4 Jun 2024",
+      ],
+      reply:
+        "Hi Tuan/Puan, saya dari Zaqone CRM. Saya nak follow up pakej travel yang tuan/puan berminat. Boleh saya bantu?",
+      time: "07:18",
+    },
   },
   problem: {
     title: "Masalah biasa pasukan sales travel",
@@ -277,6 +315,28 @@ const COPY_EN: MarketingCopy = {
       "Upload leads from Excel, assign to reps, track follow-ups and WhatsApp click performance — without scattered spreadsheets.",
     ctaPricing: "View Pricing",
     ctaLogin: "Sign In",
+    demo: {
+      formTitle: "Lead Campaign",
+      nameLabel: "Client name",
+      nameValue: "Nora Hamid",
+      packageLabel: "Package interest",
+      packageValue: "Bali 5D4N — Premium",
+      waLabel: "WhatsApp number",
+      waValue: "+60 12-345 6789",
+      submit: "Submit on WhatsApp",
+      chatContact: "Sales — Alip",
+      chatHint: "Tap here for contact info",
+      chatBrand: "Zaqone CRM",
+      chatLines: [
+        "Name: Nora Hamid",
+        "Package: Bali 5D4N — Premium",
+        "WhatsApp: +60 12-345 6789",
+        "Status: Pending · Created: 4 Jun 2024",
+      ],
+      reply:
+        "Hi, I'm from Zaqone CRM. I'd like to follow up on the travel package you enquired about. Happy to help!",
+      time: "07:18",
+    },
   },
   problem: {
     title: "Common pain points for travel sales",
