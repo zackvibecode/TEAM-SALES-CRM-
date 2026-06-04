@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createDbClient } from "@/lib/supabase/server";
+import {
+  batchUpdateLeadDatesForOwner,
+  type LeadDatePatch,
+} from "@/lib/batch-update-lead-dates";
+import { debugSessionLog } from "@/lib/debug-log";
 import { dateCreatedToISO } from "@/lib/lead-date-created";
-import { parseLeadRows } from "@/lib/parse-leads";
+import { detectDateCreatedColumn, parseLeadRows } from "@/lib/parse-leads";
 import { formatWhatsAppNumber } from "@/lib/whatsapp";
 import { logAudit } from "@/lib/audit";
 
@@ -75,8 +80,12 @@ async function insertBatchForOwner(
   const toInsert: ParsedLead[] = [];
   let skippedSameOwner = 0;
   let reassigned = 0;
+  let datesUpdated = 0;
+  let listOrdersUpdated = 0;
   const fileDupes = new Set<string>();
   const now = new Date().toISOString();
+  const datePatches: LeadDatePatch[] = [];
+  const listOrderOnly: { id: string; list_order: number }[] = [];
 
   for (const l of params.leads) {
     const wa = formatWhatsAppNumber(l.whatsapp);
@@ -89,10 +98,25 @@ async function insertBatchForOwner(
     const existing = byWa.get(wa);
     if (existing) {
       if (existing.owner_user_id === params.ownerUserId) {
+        const excelCreatedAt = l.date_created
+          ? dateCreatedToISO(l.date_created)
+          : null;
+        if (excelCreatedAt) {
+          datePatches.push({
+            whatsapp: wa,
+            created_at: excelCreatedAt,
+            ...(l.list_order != null ? { list_order: l.list_order } : {}),
+          });
+        } else if (l.list_order != null) {
+          listOrderOnly.push({ id: existing.id, list_order: l.list_order });
+        }
         skippedSameOwner++;
         continue;
       }
       if (params.reassignExisting) {
+        const excelCreatedAt = l.date_created
+          ? dateCreatedToISO(l.date_created)
+          : null;
         await db
           .from("leads")
           .update({
@@ -103,6 +127,7 @@ async function insertBatchForOwner(
             package_interest: l.package_interest,
             notes: l.notes,
             updated_at: now,
+            ...(excelCreatedAt ? { created_at: excelCreatedAt } : {}),
           })
           .eq("id", existing.id);
         reassigned++;
@@ -114,6 +139,36 @@ async function insertBatchForOwner(
 
     toInsert.push(l);
     byWa.set(wa, { id: "pending", owner_user_id: params.ownerUserId });
+  }
+
+  if (datePatches.length > 0) {
+    const batch = await batchUpdateLeadDatesForOwner(
+      db,
+      params.ownerUserId,
+      datePatches
+    );
+    datesUpdated = batch.updated;
+    if (batch.failed > 0) {
+      debugSessionLog({
+        hypothesisId: "H-UPDATE",
+        location: "upload-leads:insertBatchForOwner",
+        message: "batched date update partial failure",
+        data: { updated: batch.updated, failed: batch.failed },
+      });
+    }
+  }
+
+  for (let i = 0; i < listOrderOnly.length; i += 50) {
+    const chunk = listOrderOnly.slice(i, i + 50);
+    await Promise.all(
+      chunk.map(async (p) => {
+        const { error } = await db
+          .from("leads")
+          .update({ list_order: p.list_order, updated_at: now })
+          .eq("id", p.id);
+        if (!error) listOrdersUpdated++;
+      })
+    );
   }
 
   const batchSize = 100;
@@ -132,6 +187,7 @@ async function insertBatchForOwner(
         notes: l.notes,
         status: "Pending",
         ...(excelCreatedAt ? { created_at: excelCreatedAt } : {}),
+        ...(l.list_order != null ? { list_order: l.list_order } : {}),
       };
     });
 
@@ -151,6 +207,8 @@ async function insertBatchForOwner(
     inserted,
     reassigned,
     skippedSameOwner,
+    datesUpdated,
+    listOrdersUpdated,
     rowCount: totalAssigned,
   };
 }
@@ -179,6 +237,21 @@ export async function POST(request: NextRequest) {
     const uploadedByAdminId = auth.user.id;
     const db = auth.db;
     const normalized = parseLeadRows(leads as Record<string, unknown>[]);
+    const rawHeaders =
+      leads.length > 0 ? Object.keys(leads[0] as Record<string, unknown>) : [];
+    const dateColDetected = detectDateCreatedColumn(rawHeaders);
+    const withDate = normalized.filter((l) => l.date_created).length;
+    const parseable = normalized.filter(
+      (l) => l.date_created && dateCreatedToISO(l.date_created)
+    ).length;
+    const sampleYears = [
+      ...new Set(
+        normalized
+          .filter((l) => l.date_created && dateCreatedToISO(l.date_created))
+          .slice(0, 20)
+          .map((l) => new Date(dateCreatedToISO(l.date_created!)!).getFullYear())
+      ),
+    ].sort();
 
     if (normalized.length === 0) {
       const sampleKeys =
@@ -223,6 +296,8 @@ export async function POST(request: NextRequest) {
       inserted: number;
       reassigned: number;
       skipped: number;
+      datesUpdated: number;
+      listOrdersUpdated: number;
     }[] = [];
 
     if (assignMode === "round_robin" && targetOwners.length > 1) {
@@ -255,6 +330,8 @@ export async function POST(request: NextRequest) {
           inserted: result.inserted,
           reassigned: result.reassigned,
           skipped: result.skippedSameOwner,
+          datesUpdated: result.datesUpdated,
+          listOrdersUpdated: result.listOrdersUpdated,
         });
       }
     } else {
@@ -273,10 +350,14 @@ export async function POST(request: NextRequest) {
         reassignExisting,
       });
 
-      if (result.rowCount === 0) {
+      if (
+        result.rowCount === 0 &&
+        result.datesUpdated === 0 &&
+        result.listOrdersUpdated === 0
+      ) {
         return NextResponse.json(
           {
-            error: `No new leads assigned to ${check.profile.full_name} (${check.profile.email}). All ${result.skippedSameOwner} numbers already belong to this user.`,
+            error: `No new leads assigned to ${check.profile.full_name} (${check.profile.email}). All ${result.skippedSameOwner} numbers already belong to this user. Re-upload with a date column (e.g. Privyr "Date Added" or "Date Created") to refresh dates on existing leads.`,
             duplicate_count: result.skippedSameOwner,
           },
           { status: 400 }
@@ -292,11 +373,18 @@ export async function POST(request: NextRequest) {
         inserted: result.inserted,
         reassigned: result.reassigned,
         skipped: result.skippedSameOwner,
+        datesUpdated: result.datesUpdated,
+        listOrdersUpdated: result.listOrdersUpdated,
       });
     }
 
     const totalRows = assignments.reduce((s, a) => s + a.rows, 0);
-    if (totalRows === 0) {
+    const totalDatesUpdated = assignments.reduce((s, a) => s + a.datesUpdated, 0);
+    const totalListOrdersUpdated = assignments.reduce(
+      (s, a) => s + a.listOrdersUpdated,
+      0
+    );
+    if (totalRows === 0 && totalDatesUpdated === 0 && totalListOrdersUpdated === 0) {
       return NextResponse.json({ error: "No leads were assigned. Check WhatsApp column data." }, { status: 400 });
     }
 
@@ -309,10 +397,32 @@ export async function POST(request: NextRequest) {
       details: { campaign, source, assignMode, totalRows, assignments },
     });
 
+    debugSessionLog({
+      hypothesisId: "H-DATE",
+      runId: "date-fix",
+      location: "upload-leads/route.ts:POST",
+      message: "upload date parse stats",
+      data: {
+        dateColDetected,
+        rawHeaders: rawHeaders.slice(0, 15),
+        withDate,
+        parseable,
+        sampleYears,
+        totalDatesUpdated,
+        totalListOrdersUpdated,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       total_rows: totalRows,
+      total_dates_updated: totalDatesUpdated > 0 ? totalDatesUpdated : undefined,
+      total_list_orders_updated:
+        totalListOrdersUpdated > 0 ? totalListOrdersUpdated : undefined,
       skipped_rows: skipped > 0 ? skipped : undefined,
+      date_column: dateColDetected ?? undefined,
+      dates_parseable: parseable,
+      sample_years: sampleYears.length ? sampleYears : undefined,
       assignments,
       campaign_name: campaign,
     });

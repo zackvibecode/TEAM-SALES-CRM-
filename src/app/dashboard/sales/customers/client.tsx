@@ -5,8 +5,14 @@ import { createClient } from "@/lib/supabase/client";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 import { resolveWhatsAppMessage } from "@/lib/whatsapp-templates";
-import { Search, X, Clock } from "lucide-react";
-import { sortLeadsByDateCreatedOldestFirst } from "@/lib/lead-date-created";
+import { Search, X, Clock, CalendarRange, ArrowUpDown } from "lucide-react";
+import {
+  formatLeadDateCreated,
+  leadCreatedAtInRange,
+  parseDateCreated,
+  sortLeadsByDateCreated,
+  type DateCreatedSortDirection,
+} from "@/lib/lead-date-created";
 import type { Lead, LeadActivity, LeadStatus } from "@/types";
 
 const TASK_STATUSES: { value: LeadStatus; label: string }[] = [
@@ -51,7 +57,13 @@ function CustomersClientInner({
   const [editError, setEditError] = useState("");
   const [saving, setSaving] = useState(false);
   const [loadingLeads, setLoadingLeads] = useState(true);
+  const [dateRangeOpen, setDateRangeOpen] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [sortDirection, setSortDirection] = useState<DateCreatedSortDirection>("asc");
   const pageSize = 20;
+
+  const dateRangeActive = Boolean(dateFrom && dateTo);
 
   const whatsappMessage = useCallback(
     (name: string) => resolveWhatsAppMessage(whatsappPretext, name),
@@ -68,6 +80,37 @@ function CustomersClientInner({
       const json = await res.json();
       if (res.ok && json.leads) {
         setLeads(json.leads);
+        // #region agent log
+        const arr = json.leads as Lead[];
+        const years = [
+          ...new Set(
+            arr
+              .slice(0, 200)
+              .map((l) => new Date(parseDateCreated(l.created_at)).getFullYear())
+              .filter((y) => y > 1970)
+          ),
+        ].sort();
+        fetch("http://127.0.0.1:7550/ingest/9ea49f98-0131-4e47-8093-2c8680050cb4", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ef1fce" },
+          body: JSON.stringify({
+            sessionId: "ef1fce",
+            hypothesisId: "H-DISPLAY",
+            location: "client.tsx:refreshData",
+            message: "leads years in UI",
+            data: {
+              count: arr.length,
+              distinctYears: years,
+              sampleDisplay: arr.slice(0, 3).map((l) => ({
+                name: l.name,
+                created_at: l.created_at,
+                display: formatLeadDateCreated(l.created_at),
+              })),
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
       } else if (!res.ok) {
         console.error("Load leads:", json.error);
       }
@@ -84,19 +127,31 @@ function CustomersClientInner({
   const filtered = useMemo(() => {
     const list = leads.filter((l) => {
       if (queueMode && statusFilter === "" && l.status !== "Pending") return false;
+      if (!queueMode && !statusFilter && l.status === "Clicked") return false;
       if (search) {
         const s = search.toLowerCase();
         if (!l.name.toLowerCase().includes(s) && !l.whatsapp.includes(s)) return false;
       }
       if (statusFilter && l.status !== statusFilter) return false;
+      if (dateRangeActive && !leadCreatedAtInRange(l.created_at, dateFrom, dateTo)) {
+        return false;
+      }
       return true;
     });
 
-    return sortLeadsByDateCreatedOldestFirst(list);
-  }, [leads, search, statusFilter, queueMode]);
+    return sortLeadsByDateCreated(list, sortDirection);
+  }, [leads, search, statusFilter, queueMode, dateRangeActive, dateFrom, dateTo, sortDirection]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  const usesRowOrderForSort = useMemo(() => {
+    if (leads.length < 2) return false;
+    const years = new Set(
+      leads.slice(0, 100).map((l) => new Date(l.created_at).getFullYear())
+    );
+    return years.size === 1 && leads.some((l) => l.list_order != null);
+  }, [leads]);
 
   const loadActivities = async (leadId: string) => {
     const supabase = createClient();
@@ -146,17 +201,24 @@ function CustomersClientInner({
   };
 
   const handleWhatsAppSuccess = useCallback(
-    (leadId: string) => {
+    async (leadId: string) => {
       const now = new Date().toISOString();
       patchLead(leadId, {
         status: "Clicked",
         clicked_at: now,
         updated_at: now,
       });
-      refreshData();
+      await refreshData();
     },
     [patchLead, refreshData]
   );
+
+  const clearDateRange = () => {
+    setDateFrom("");
+    setDateTo("");
+    setDateRangeOpen(false);
+    setPage(1);
+  };
 
   const openEditor = (lead: Lead) => {
     setEditingId(lead.id);
@@ -230,20 +292,79 @@ function CustomersClientInner({
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
-          <input
-            type="text"
-            placeholder="Search name or WhatsApp..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="input-field pl-10 py-2"
-          />
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 flex-wrap items-start sm:items-center">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
+            <input
+              type="text"
+              placeholder="Search name or WhatsApp..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              className="input-field pl-10 py-2"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+            <button
+              type="button"
+              onClick={() => setDateRangeOpen((o) => !o)}
+              className={`px-3 py-2 text-sm font-semibold border inline-flex items-center gap-1.5 ${
+                dateRangeOpen || dateRangeActive ? "filter-pill-active" : "filter-pill"
+              }`}
+            >
+              <CalendarRange className="w-3.5 h-3.5" />
+              Customize by date
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+                setPage(1);
+              }}
+              className="px-3 py-2 text-sm font-semibold border filter-pill inline-flex items-center gap-1.5"
+              title="Sort by Date Created"
+            >
+              <ArrowUpDown className="w-3.5 h-3.5" />
+              {sortDirection === "asc" ? "Old → New" : "New → Old"}
+            </button>
+            <span className="text-sm self-center" style={{ color: "var(--text-muted)" }}>
+              {filtered.length} customers
+            </span>
+          </div>
         </div>
-        <span className="text-sm self-center ml-auto" style={{ color: "var(--text-muted)" }}>
-          {filtered.length} customers
-        </span>
+        {usesRowOrderForSort && (
+          <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            Sort uses Excel row order (No. 1, 2, 3…). Date Created shows upload day until admin adds a{" "}
+            <strong>Date Created</strong> column in Excel and re-uploads.
+          </p>
+        )}
+        {dateRangeOpen && (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+              className="input-field py-1.5 text-xs max-w-[150px]"
+              aria-label="Date from"
+            />
+            <span className="text-slate-400">to</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+              className="input-field py-1.5 text-xs max-w-[150px]"
+              aria-label="Date to"
+            />
+            {dateRangeActive && (
+              <button type="button" onClick={clearDateRange} className="btn-secondary text-xs px-3 py-1.5">
+                Clear
+              </button>
+            )}
+            {!dateRangeActive && (dateFrom || dateTo) && (
+              <span className="text-xs text-amber-700">Select both From and To to filter.</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Desktop table */}
@@ -254,7 +375,7 @@ function CustomersClientInner({
               <tr className="table-head">
                 <th className="table-th">Name</th>
                 <th className="table-th">WhatsApp</th>
-                <th className="table-th hidden sm:table-cell">Package</th>
+                <th className="table-th hidden sm:table-cell">Date Created</th>
                 <th className="table-th text-center">Status</th>
                 <th className="table-th text-center">Action</th>
               </tr>
@@ -264,7 +385,9 @@ function CustomersClientInner({
                 <tr key={lead.id} className="table-row">
                   <td className="px-4 py-3 font-medium text-slate-800">{lead.name || "-"}</td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{lead.whatsapp || "-"}</td>
-                  <td className="px-4 py-3 text-slate-600 hidden sm:table-cell">{lead.package_interest || "-"}</td>
+                  <td className="px-4 py-3 text-slate-600 hidden sm:table-cell whitespace-nowrap">
+                    {formatLeadDateCreated(lead.created_at)}
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <StatusBadge status={lead.status as LeadStatus} />
                   </td>
@@ -310,6 +433,9 @@ function CustomersClientInner({
               <div>
                 <p className="font-semibold" style={{ color: "var(--text-primary)" }}>{lead.name || "-"}</p>
                 <p className="text-xs font-mono mt-1" style={{ color: "var(--text-muted)" }}>{lead.whatsapp || "-"}</p>
+                <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                  {formatLeadDateCreated(lead.created_at)}
+                </p>
               </div>
               <StatusBadge status={lead.status as LeadStatus} />
             </div>

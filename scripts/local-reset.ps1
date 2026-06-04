@@ -4,7 +4,7 @@ $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
 Write-Host "Stopping listeners on ports 3000-3002..."
-foreach ($port in 3000, 3001, 3002) {
+foreach ($port in 3000, 3001, 3002, 3005) {
   Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue |
     ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
 }

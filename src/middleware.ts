@@ -4,9 +4,21 @@ import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { createDbClient } from "@/lib/supabase/server";
 import { resolveUserRole } from "@/lib/auth-context";
 
+const PUBLIC_PATHS = ["/", "/pricing", "/login"];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.includes(pathname);
+}
+
 function loginRedirect(request: NextRequest) {
   const redirectUrl = request.nextUrl.clone();
-  redirectUrl.pathname = "/";
+  redirectUrl.pathname = "/login";
+  return NextResponse.redirect(redirectUrl);
+}
+
+function dashboardRedirect(request: NextRequest, role: string) {
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = role === "admin" ? "/admin/dashboard" : "/dashboard/sales";
   return NextResponse.redirect(redirectUrl);
 }
 
@@ -20,7 +32,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (!valid) {
-    if (pathname.startsWith("/api/health") || pathname === "/") {
+    if (pathname.startsWith("/api/health") || isPublicPath(pathname)) {
       return NextResponse.next();
     }
     return loginRedirect(request);
@@ -60,6 +72,9 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith("/api/")) {
       return supabaseResponse;
     }
+    if (isPublicPath(pathname)) {
+      return supabaseResponse;
+    }
     return loginRedirect(request);
   }
 
@@ -86,7 +101,7 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  if (!user && pathname !== "/") {
+  if (!user && !isPublicPath(pathname)) {
     return loginRedirect(request);
   }
 
@@ -124,10 +139,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    if (pathname === "/") {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = role === "admin" ? "/admin/dashboard" : "/dashboard/sales";
-      return NextResponse.redirect(redirectUrl);
+    if (pathname === "/" || pathname === "/login") {
+      return dashboardRedirect(request, role);
     }
   }
 

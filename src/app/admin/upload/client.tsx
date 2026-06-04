@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { parseLeadRows } from "@/lib/parse-leads";
+import { dateCreatedToISO, formatLeadDateCreated } from "@/lib/lead-date-created";
+import { detectDateCreatedColumn, parseLeadRows } from "@/lib/parse-leads";
+import { readSpreadsheetRows } from "@/lib/read-spreadsheet";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 import { resolveWhatsAppMessage } from "@/lib/whatsapp-templates";
 import { SOURCE_TAGS } from "@/lib/campaign-stats";
@@ -19,59 +21,25 @@ interface PreviewRow {
   whatsappNumber: string;
   packageInterest: string;
   notes: string;
+  dateCreated: string;
 }
 
 async function readSheetRows(f: File): Promise<Record<string, unknown>[]> {
-  const XLSX = await import("xlsx");
   const data = await f.arrayBuffer();
-  const workbook = XLSX.read(data, { type: "array" });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const matrix = XLSX.utils.sheet_to_json<(string | number)[]>(sheet, {
-    header: 1,
-    defval: "",
-    raw: false,
-  }) as (string | number)[][];
-
-  if (!matrix.length) return [];
-
-  let headerRowIndex = 0;
-  for (let i = 0; i < Math.min(matrix.length, 10); i++) {
-    const rowText = matrix[i].map((c) => String(c).toLowerCase()).join(" ");
-    if (
-      /whatsapp|phone|mobile|telefon/.test(rowText) &&
-      /name|nama|client|customer/.test(rowText)
-    ) {
-      headerRowIndex = i;
-      break;
-    }
-  }
-
-  const headers = matrix[headerRowIndex].map((c, i) => {
-    const label = String(c).trim();
-    return label || `Column_${i + 1}`;
-  });
-
-  const rows: Record<string, unknown>[] = [];
-  for (let r = headerRowIndex + 1; r < matrix.length; r++) {
-    const line = matrix[r];
-    if (!line || line.every((c) => !String(c).trim())) continue;
-    const record: Record<string, unknown> = {};
-    headers.forEach((h, i) => {
-      record[h] = line[i] ?? "";
-    });
-    rows.push(record);
-  }
-
-  return rows;
+  return readSpreadsheetRows(data);
 }
 
 function toPreviewRows(parsed: ReturnType<typeof parseLeadRows>): PreviewRow[] {
-  return parsed.map((r) => ({
-    clientName: r.name,
-    whatsappNumber: r.whatsapp,
-    packageInterest: r.package_interest,
-    notes: r.notes,
-  }));
+  return parsed.map((r) => {
+    const iso = r.date_created ? dateCreatedToISO(r.date_created) : null;
+    return {
+      clientName: r.name,
+      whatsappNumber: r.whatsapp,
+      packageInterest: r.package_interest,
+      notes: r.notes,
+      dateCreated: iso ? formatLeadDateCreated(iso) : "—",
+    };
+  });
 }
 
 export function UploadClient({ salesUsers, whatsappPretext }: UploadClientProps) {
@@ -86,6 +54,8 @@ export function UploadClient({ salesUsers, whatsappPretext }: UploadClientProps)
   const [success, setSuccess] = useState("");
   const [preview, setPreview] = useState<PreviewRow[]>([]);
   const [previewTotal, setPreviewTotal] = useState(0);
+  const [detectedDateCol, setDetectedDateCol] = useState<string | null>(null);
+  const [previewParseableDates, setPreviewParseableDates] = useState(0);
 
   const toggleRoundRobinUser = (id: string) => {
     setSelectedUsers((prev) =>
@@ -123,9 +93,53 @@ export function UploadClient({ salesUsers, whatsappPretext }: UploadClientProps)
         );
         return;
       }
+      const parseableDates = parsed.filter(
+        (r) => r.date_created && dateCreatedToISO(r.date_created)
+      ).length;
+      const sampleYears = [
+        ...new Set(
+          parsed
+            .filter((r) => r.date_created && dateCreatedToISO(r.date_created))
+            .slice(0, 30)
+            .map((r) => new Date(dateCreatedToISO(r.date_created!)!).getFullYear())
+        ),
+      ].sort();
+      // #region agent log
+      fetch("http://127.0.0.1:7550/ingest/9ea49f98-0131-4e47-8093-2c8680050cb4", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ef1fce" },
+        body: JSON.stringify({
+          sessionId: "ef1fce",
+          hypothesisId: "H-EXCEL",
+          location: "upload/client.tsx:parsePreview",
+          message: "excel parse preview",
+          data: {
+            fileName: f.name,
+            columns: json.length > 0 ? Object.keys(json[0]) : [],
+            totalRows: parsed.length,
+            parseableDates,
+            sampleYears,
+            sampleRawDates: parsed
+              .filter((r) => r.date_created)
+              .slice(0, 3)
+              .map((r) => r.date_created),
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+      const headers = json.length > 0 ? Object.keys(json[0]) : [];
+      const dateCol = detectDateCreatedColumn(headers);
+      setDetectedDateCol(dateCol);
+      setPreviewParseableDates(parseableDates);
       setPreviewTotal(parsed.length);
       setPreview(toPreviewRows(parsed).slice(0, 10));
-      setError("");
+      const colList = headers.join(", ") || "none";
+      setError(
+        parseableDates === 0
+          ? `No dates detected in this file. Columns found: ${colList}. For Privyr CSV, include "Date Added". Or add "Date Created" with real dates, then re-upload.`
+          : ""
+      );
     } catch {
       setError("Failed to parse file. Please check the file format.");
       setPreview([]);
@@ -137,6 +151,49 @@ export function UploadClient({ salesUsers, whatsappPretext }: UploadClientProps)
     file &&
     previewTotal > 0 &&
     (assignMode === "single" ? selectedUser : selectedUsers.length >= 2);
+
+  const canRefreshDatesOnly =
+    file &&
+    previewTotal > 0 &&
+    previewParseableDates > 0 &&
+    assignMode === "single" &&
+    !!selectedUser;
+
+  const handleRefreshDatesOnly = async () => {
+    if (!canRefreshDatesOnly || !file) {
+      setError(
+        "Select sales user and a file with parseable dates (preview must show 2024/2020 dates, not all —)."
+      );
+      return;
+    }
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const json = await readSheetRows(file);
+      const res = await fetch("/api/admin/backfill-lead-dates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leads: json, ownerUserId: selectedUser }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Date refresh failed");
+
+      setSuccess(
+        `Date refresh OK: ${result.leads_updated} leads updated for ${result.owner_name} from "${result.date_column || detectedDateCol || "file"}" (years: ${(result.sample_years || []).join(", ")}). Ask sales to hard-refresh My Tasks.`
+      );
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Date refresh failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUpload = async () => {
     if (!canUpload) {
@@ -179,14 +236,38 @@ export function UploadClient({ salesUsers, whatsappPretext }: UploadClientProps)
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Upload failed");
 
-      const assignDetail = (result.assignments as { ownerName: string; ownerEmail: string; rows: number; inserted: number; reassigned: number }[])
-        ?.map((a) => `${a.ownerName} (${a.ownerEmail}): ${a.rows} tasks (${a.inserted} new, ${a.reassigned || 0} transferred)`)
+      const assignDetail = (
+        result.assignments as {
+          ownerName: string;
+          ownerEmail: string;
+          rows: number;
+          inserted: number;
+          reassigned: number;
+          datesUpdated?: number;
+        }[]
+      )
+        ?.map((a) => {
+          const dates =
+            a.datesUpdated && a.datesUpdated > 0
+              ? `, ${a.datesUpdated} dates refreshed`
+              : "";
+          return `${a.ownerName} (${a.ownerEmail}): ${a.rows} tasks (${a.inserted} new, ${a.reassigned || 0} transferred${dates})`;
+        })
         .join(" · ");
 
       const skipped = result.skipped_rows ? ` ${result.skipped_rows} empty rows skipped.` : "";
+      const datesTotal = result.total_dates_updated
+        ? ` ${result.total_dates_updated} existing leads updated with Excel/Privyr dates.`
+        : "";
+      const parseHint =
+        result.dates_parseable > 0
+          ? ` Parsed ${result.dates_parseable} rows with dates${result.sample_years?.length ? ` (years: ${result.sample_years.join(", ")})` : ""}${result.date_column ? ` from "${result.date_column}"` : ""}.`
+          : result.date_column
+            ? ` Date column "${result.date_column}" detected but few rows parsed — check date format.`
+            : "";
 
       setSuccess(
-        `Campaign "${result.campaign_name || campaignName}" assigned. ${assignDetail || result.total_rows + " leads"}.${skipped} Sales user must log in with that email to see My Tasks.`
+        `Campaign "${result.campaign_name || campaignName}" assigned. ${assignDetail || result.total_rows + " leads"}.${datesTotal}${parseHint}${skipped} Sales user must log in with that email to see My Tasks.`
       );
       setFile(null);
       setPreview([]);
@@ -299,10 +380,30 @@ export function UploadClient({ salesUsers, whatsappPretext }: UploadClientProps)
             <label htmlFor="file-upload" className="cursor-pointer">
               <FileSpreadsheet className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--text-muted)" }} />
               <p className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>{file ? file.name : "Click to select file"}</p>
-              <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Existing numbers transfer to selected sales user</p>
+              <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                Privyr CSV: include <strong>Date Created</strong> or <strong>Date Added</strong>. Use &quot;Refresh dates only&quot; to fix My Tasks without re-assigning leads.
+              </p>
             </label>
           </div>
+          {file && previewTotal > 0 && (
+            <p className="text-xs mt-2" style={{ color: previewParseableDates > 0 ? "var(--success, #15803d)" : "var(--text-muted)" }}>
+              {previewParseableDates > 0
+                ? `${previewParseableDates} rows with dates detected${detectedDateCol ? ` (column: "${detectedDateCol}")` : ""}.`
+                : "No dates detected yet — export from Privyr with Date Created before refreshing."}
+            </p>
+          )}
         </div>
+
+        {assignMode === "single" && (
+          <button
+            type="button"
+            onClick={handleRefreshDatesOnly}
+            disabled={loading || !canRefreshDatesOnly}
+            className="btn-secondary w-full py-2.5"
+          >
+            {loading ? "Working..." : "Refresh dates only (fix My Tasks Date Created)"}
+          </button>
+        )}
 
         <button onClick={handleUpload} disabled={loading || !canUpload} className="btn-primary-solid w-full py-2.5">
           <Upload className="w-4 h-4" />
@@ -320,6 +421,7 @@ export function UploadClient({ salesUsers, whatsappPretext }: UploadClientProps)
                   <th className="text-left px-3 py-2 text-xs uppercase">Name</th>
                   <th className="text-left px-3 py-2 text-xs uppercase">WhatsApp</th>
                   <th className="text-left px-3 py-2 text-xs uppercase">Package</th>
+                  <th className="text-left px-3 py-2 text-xs uppercase">Date Created</th>
                   <th className="text-center px-3 py-2 text-xs uppercase">WA</th>
                 </tr>
               </thead>
@@ -329,6 +431,7 @@ export function UploadClient({ salesUsers, whatsappPretext }: UploadClientProps)
                     <td className="px-3 py-2 font-medium">{row.clientName || "-"}</td>
                     <td className="px-3 py-2 font-mono text-xs">{row.whatsappNumber || "-"}</td>
                     <td className="px-3 py-2" style={{ color: "var(--text-secondary)" }}>{row.packageInterest || "-"}</td>
+                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--text-secondary)" }}>{row.dateCreated}</td>
                     <td className="px-3 py-2 text-center">
                       {row.whatsappNumber ? (
                         <a

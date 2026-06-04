@@ -54,6 +54,7 @@ export interface Lead {
   next_follow_up_date?: string | null;
   follow_up_status?: "none" | "pending" | "completed" | "overdue";
   follow_up_notes?: string | null;
+  list_order?: number | null;
   created_at: string;
   updated_at: string;
 }

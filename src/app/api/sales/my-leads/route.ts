@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { debugSessionLog } from "@/lib/debug-log";
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -35,6 +36,26 @@ export async function GET() {
       .from("leads")
       .select("*", { count: "exact", head: true })
       .eq("owner_user_id", user.id);
+
+    const yearCounts: Record<number, number> = {};
+    for (const row of all) {
+      const y = new Date(String(row.created_at)).getFullYear();
+      if (y > 1970) yearCounts[y] = (yearCounts[y] || 0) + 1;
+    }
+
+    debugSessionLog({
+      hypothesisId: "H-DISPLAY",
+      location: "my-leads/route.ts:GET",
+      message: "leads loaded for sales",
+      data: {
+        count: all.length,
+        yearCounts,
+        sample: all.slice(0, 2).map((r) => ({
+          name: r.name,
+          created_at: r.created_at,
+        })),
+      },
+    });
 
     return NextResponse.json({
       leads: all,

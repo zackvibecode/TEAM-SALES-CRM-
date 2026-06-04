@@ -1,4 +1,8 @@
-import { normalizeDateCreatedCell } from "@/lib/lead-date-created";
+import {
+  dateCreatedToISO,
+  extractDateCreatedFromRow,
+  normalizeDateCreatedCell,
+} from "@/lib/lead-date-created";
 import { formatWhatsAppNumber } from "@/lib/whatsapp";
 
 export interface ParsedLeadRow {
@@ -8,9 +12,24 @@ export interface ParsedLeadRow {
   notes: string;
   /** Raw "Date Created" cell from Excel — used to set leads.created_at on import */
   date_created?: string;
+  /** Excel "No." column — stable row order for sorting */
+  list_order?: number;
 }
 
 type RowRecord = Record<string, unknown>;
+
+/** Strip UTF-8 BOM and whitespace from spreadsheet column headers (common in CSV exports). */
+export function normalizeSpreadsheetHeader(header: string): string {
+  return header.replace(/^\uFEFF/, "").trim();
+}
+
+function normalizeLeadRowKeys(row: RowRecord): RowRecord {
+  const out: RowRecord = {};
+  for (const [key, value] of Object.entries(row)) {
+    out[normalizeSpreadsheetHeader(key)] = value;
+  }
+  return out;
+}
 
 function cellToString(value: unknown): string {
   if (value === null || value === undefined) return "";
@@ -111,6 +130,26 @@ export function detectPackageColumn(headers: string[]): string | null {
   ]);
 }
 
+export function detectListOrderColumn(headers: string[]): string | null {
+  return detectColumnExact(headers, [
+    "no.",
+    "no",
+    "#",
+    "bil",
+    "row",
+    "row no",
+    "row no.",
+    "nombor",
+  ]);
+}
+
+function parseListOrder(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === "") return undefined;
+  const n = Number(String(value).trim());
+  if (!Number.isFinite(n) || n < 1 || n > 5_000_000) return undefined;
+  return Math.floor(n);
+}
+
 export function detectNotesColumn(headers: string[]): string | null {
   return detectColumnExact(headers, [
     "notes", "note", "remarks", "catatan", "komen", "remark",
@@ -118,22 +157,85 @@ export function detectNotesColumn(headers: string[]): string | null {
 }
 
 export function detectDateCreatedColumn(headers: string[]): string | null {
-  const exact = detectColumnExact(headers, [
+  const normalized = headers.map((h) => normalizeSpreadsheetHeader(h));
+  const exact = detectColumnExact(normalized, [
+    "date added",
+    "date_added",
+    "dateadded",
+    "added date",
+    "added on",
     "date created",
     "date_created",
+    "datecreated",
     "created date",
+    "creation date",
+    "record date",
+    "created on",
+    "created at",
+    "client created",
+    "date create",
     "tarikh dicipta",
+    "tarikh ditambah",
+    "tarikh create",
+    "tarikh created",
     "tarikh",
+    "date",
+    "date create",
+    "registration date",
+    "register date",
+    "time added",
   ]);
   if (exact) return exact;
 
-  const lower = headers.map((h) => h.toLowerCase().trim());
+  const lower = normalized.map((h) => h.toLowerCase().trim());
+  const addedIdx = lower.findIndex((h) => /date/.test(h) && /added/.test(h));
+  if (addedIdx >= 0) return normalized[addedIdx];
+
   const idx = lower.findIndex(
     (h) =>
-      (/date/.test(h) && /created|create|dicipta/.test(h)) ||
-      h === "date created"
+      (/date/.test(h) && /created|create|dicipta|creation|record/.test(h)) ||
+      h === "date created" ||
+      h === "date" ||
+      h === "tarikh"
   );
-  return idx >= 0 ? headers[idx] : null;
+  return idx >= 0 ? normalized[idx] : null;
+}
+
+/** When header has no "Date Created", pick column whose cells parse as dates (e.g. unlabeled Excel cols). */
+export function detectDateColumnByContent(
+  headers: string[],
+  rows: RowRecord[],
+  skipCols: Set<string>
+): string | null {
+  const sample = rows.slice(0, Math.min(rows.length, 200));
+  let bestCol: string | null = null;
+  let bestHits = 0;
+
+  for (const h of headers) {
+    if (skipCols.has(h)) continue;
+    const label = h.toLowerCase().trim();
+    if (/^(no\.?|#|bil|email|e-?mail|whatsapp|phone|mobile|link|url|chat)$/i.test(label)) {
+      continue;
+    }
+    if (/^column_\d+$/i.test(label)) {
+      /* allow generic columns — often hold dates without headers */
+    }
+
+    let hits = 0;
+    let checked = 0;
+    for (const row of sample) {
+      const raw = row[h];
+      if (raw === null || raw === undefined || raw === "") continue;
+      checked++;
+      const normalized = normalizeDateCreatedCell(raw);
+      if (normalized && dateCreatedToISO(normalized)) hits++;
+    }
+    if (checked >= 5 && hits >= 3 && hits > bestHits && hits / checked >= 0.35) {
+      bestHits = hits;
+      bestCol = h;
+    }
+  }
+  return bestCol;
 }
 
 function findPhoneInRow(row: RowRecord, headers: string[], skipKeys: Set<string>): string {
@@ -152,21 +254,24 @@ function isBlankRow(row: RowRecord): boolean {
 export function parseLeadRows(json: RowRecord[]): ParsedLeadRow[] {
   if (json.length === 0) return [];
 
-  const headers = Object.keys(json[0]);
+  const rows = json.map(normalizeLeadRowKeys);
+  const headers = Object.keys(rows[0]);
   const nameCol = detectNameColumn(headers);
   const waCol = detectWhatsAppColumn(headers);
   const pkgCol = detectPackageColumn(headers);
   const notesCol = detectNotesColumn(headers);
-  const dateCol = detectDateCreatedColumn(headers);
+  const noCol = detectListOrderColumn(headers);
   const linkCol = headers.find((h) => /whatsapp\s*link/i.test(h));
-
   const skipForScan = new Set(
-    [nameCol, pkgCol, notesCol, dateCol].filter(Boolean) as string[]
+    [nameCol, waCol, linkCol, pkgCol, notesCol].filter(Boolean) as string[]
   );
+  let dateCol =
+    detectDateCreatedColumn(headers) ??
+    detectDateColumnByContent(headers, rows, skipForScan);
 
   const parsed: ParsedLeadRow[] = [];
 
-  for (const row of json) {
+  for (const row of rows) {
     if (isBlankRow(row)) continue;
 
     let name = nameCol ? cellToString(row[nameCol]) : "";
@@ -185,11 +290,21 @@ export function parseLeadRows(json: RowRecord[]): ParsedLeadRow[] {
       whatsapp = findPhoneInRow(row, headers, skipForScan);
     }
 
-    const package_interest = pkgCol ? cellToString(row[pkgCol]) : "";
+    let package_interest = pkgCol ? cellToString(row[pkgCol]) : "";
     const notes = notesCol ? cellToString(row[notesCol]) : "";
-    const date_created = dateCol
-      ? normalizeDateCreatedCell(row[dateCol])
-      : "";
+    const skipDateScan = new Set([
+      ...skipForScan,
+      ...(noCol ? [noCol] : []),
+    ]);
+    let date_created = extractDateCreatedFromRow(row, headers, dateCol, skipDateScan);
+
+    if (!date_created && package_interest) {
+      const fromPkg = normalizeDateCreatedCell(package_interest);
+      if (fromPkg && dateCreatedToISO(fromPkg)) {
+        date_created = fromPkg;
+        package_interest = "";
+      }
+    }
 
     // Skip header-like rows accidentally parsed as data
     if (/^(client name|customer name|nama|name|whatsapp)/i.test(name) && !whatsapp) {
@@ -199,12 +314,15 @@ export function parseLeadRows(json: RowRecord[]): ParsedLeadRow[] {
     // Skip rows with no usable phone
     if (!whatsapp || whatsapp.length < 9) continue;
 
+    const list_order = noCol ? parseListOrder(row[noCol]) : undefined;
+
     parsed.push({
       name: name || "Unknown",
       whatsapp,
       package_interest,
       notes,
       ...(date_created ? { date_created } : {}),
+      ...(list_order != null ? { list_order } : {}),
     });
   }
 

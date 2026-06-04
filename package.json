@@ -9,7 +9,9 @@
     "lint": "next lint",
     "local:clean": "node -e \"const fs=require('fs');['.next'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true})}catch{}});console.log('Removed .next')\"",
     "local:reset": "powershell -ExecutionPolicy Bypass -File scripts/local-reset.ps1",
-    "local:fresh": "npm run local:reset && npm run dev"
+    "local:fresh": "npm run local:reset && npm run dev",
+    "backfill:dates": "npx tsx scripts/backfill-created-at-from-xlsx.ts",
+    "backfill:dates-from-order": "node scripts/backfill-created-at-from-list-order.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
