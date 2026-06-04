@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "local:clean": "node -e \"const fs=require('fs');['.next'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true})}catch{}});console.log('Removed .next')\"",
+    "local:reset": "powershell -ExecutionPolicy Bypass -File scripts/local-reset.ps1",
+    "local:fresh": "npm run local:reset && npm run dev"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

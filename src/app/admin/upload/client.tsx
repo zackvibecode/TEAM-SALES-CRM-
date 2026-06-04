@@ -4,12 +4,14 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { parseLeadRows } from "@/lib/parse-leads";
 import { getWhatsAppLink } from "@/lib/whatsapp";
+import { resolveWhatsAppMessage } from "@/lib/whatsapp-templates";
 import { SOURCE_TAGS } from "@/lib/campaign-stats";
 import { Upload, FileSpreadsheet, ExternalLink, Users } from "lucide-react";
 import type { UserProfile } from "@/types";
 
 interface UploadClientProps {
   salesUsers: Pick<UserProfile, "id" | "full_name" | "email">[];
+  whatsappPretext?: string | null;
 }
 
 interface PreviewRow {
@@ -72,7 +74,7 @@ function toPreviewRows(parsed: ReturnType<typeof parseLeadRows>): PreviewRow[] {
   }));
 }
 
-export function UploadClient({ salesUsers }: UploadClientProps) {
+export function UploadClient({ salesUsers, whatsappPretext }: UploadClientProps) {
   const [assignMode, setAssignMode] = useState<"single" | "round_robin">("single");
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -329,7 +331,15 @@ export function UploadClient({ salesUsers }: UploadClientProps) {
                     <td className="px-3 py-2" style={{ color: "var(--text-secondary)" }}>{row.packageInterest || "-"}</td>
                     <td className="px-3 py-2 text-center">
                       {row.whatsappNumber ? (
-                        <a href={getWhatsAppLink(row.whatsappNumber)} target="_blank" rel="noopener noreferrer" className="btn-whatsapp px-2 py-1">
+                        <a
+                          href={getWhatsAppLink(
+                            row.whatsappNumber,
+                            resolveWhatsAppMessage(whatsappPretext, row.clientName)
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-whatsapp px-2 py-1"
+                        >
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       ) : (

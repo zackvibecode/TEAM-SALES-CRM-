@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { DataTable } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { getWhatsAppLink } from "@/lib/whatsapp";
+import { resolveWhatsAppMessage } from "@/lib/whatsapp-templates";
 import type { LeadStatus, UserProfile } from "@/types";
 
 interface LeadItem {
@@ -24,10 +26,12 @@ export function AllLeadsClient({
   initialLeads,
   salesUsers,
   batches,
+  whatsappPretext,
 }: {
   initialLeads: LeadItem[];
   salesUsers: Pick<UserProfile, "id" | "full_name">[];
   batches: { id: string; label: string }[];
+  whatsappPretext?: string | null;
 }) {
   const searchParams = useSearchParams();
   const batchFromUrl = searchParams.get("batch") || "";
@@ -90,7 +94,9 @@ export function AllLeadsClient({
             render: (row) => {
               const wa = row.whatsapp as string;
               if (!wa) return <span className="text-slate-400 text-xs">-</span>;
-              const link = `https://wa.me/${wa}`;
+              const name = (row.name as string) || "";
+              const message = resolveWhatsAppMessage(whatsappPretext, name);
+              const link = getWhatsAppLink(wa, message);
               return (
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-xs">{wa}</span>

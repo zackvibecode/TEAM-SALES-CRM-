@@ -13,11 +13,10 @@ export default async function AdminFollowUpsPage() {
   if (!user) return null;
 
   const db = createDbClient();
-  const { data: salesUsers } = await db
-    .from("profiles")
-    .select("id, full_name")
-    .eq("role", "sales")
-    .order("full_name");
+  const [{ data: salesUsers }, { data: profile }] = await Promise.all([
+    db.from("profiles").select("id, full_name").eq("role", "sales").order("full_name"),
+    auth.from("profiles").select("whatsapp_pretext").eq("id", user.id).single(),
+  ]);
 
   return (
     <AppLayout role="admin">
@@ -27,7 +26,11 @@ export default async function AdminFollowUpsPage() {
           title="Follow Up Queue"
           subtitle="Leads that need follow up after WhatsApp contact — all sales users"
         />
-        <FollowUpQueue role="admin" salesUsers={salesUsers ?? []} />
+        <FollowUpQueue
+          role="admin"
+          salesUsers={salesUsers ?? []}
+          whatsappPretext={profile?.whatsapp_pretext ?? null}
+        />
       </div>
     </AppLayout>
   );

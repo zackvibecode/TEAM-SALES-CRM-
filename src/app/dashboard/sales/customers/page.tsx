@@ -32,7 +32,7 @@ export default async function SalesCustomersPage() {
       .select("id, campaign_name, file_name, is_archived")
       .eq("owner_user_id", user.id)
       .order("created_at", { ascending: false }),
-    auth.from("profiles").select("full_name, email, role").eq("id", user.id).single(),
+    auth.from("profiles").select("full_name, email, role, whatsapp_pretext").eq("id", user.id).single(),
     auth.rpc("get_user_role", { user_id: user.id }),
   ]);
 
@@ -78,6 +78,7 @@ export default async function SalesCustomersPage() {
           pendingCount={pendingCount}
           totalCount={totalCount ?? 0}
           userEmail={profile?.email || user.email || ""}
+          whatsappPretext={profile?.whatsapp_pretext ?? null}
         />
       </div>
     </AppLayout>

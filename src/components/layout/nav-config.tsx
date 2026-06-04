@@ -8,6 +8,7 @@ import {
   ClipboardList,
   CalendarClock,
   Settings,
+  MessageCircle,
   LogOut,
 } from "lucide-react";
 
@@ -33,6 +34,7 @@ export const salesNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard/sales", icon: <LayoutDashboard className="w-4 h-4" /> },
   { label: "My Tasks", href: "/dashboard/sales/customers", icon: <List className="w-4 h-4" /> },
   { label: "Follow Up Queue", href: "/dashboard/sales/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
+  { label: "WhatsApp Message", href: "/dashboard/sales/message", icon: <MessageCircle className="w-4 h-4" /> },
 ];
 
 export const logoutIcon = <LogOut className="w-4 h-4" />;
@@ -50,6 +52,7 @@ export const routeTitles: Record<string, string> = {
   "/dashboard/sales": "Dashboard",
   "/dashboard/sales/customers": "My Tasks",
   "/dashboard/sales/follow-ups": "Follow Up Queue",
+  "/dashboard/sales/message": "WhatsApp Message",
 };
 
 export function getPageTitle(pathname: string) {

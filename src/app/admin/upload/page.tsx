@@ -12,11 +12,10 @@ export default async function AdminUploadPage() {
 
   const db = createDbClient();
 
-  const { data: salesUsers } = await db
-    .from("profiles")
-    .select("id, full_name, email")
-    .eq("role", "sales")
-    .order("full_name");
+  const [{ data: salesUsers }, { data: profile }] = await Promise.all([
+    db.from("profiles").select("id, full_name, email").eq("role", "sales").order("full_name"),
+    auth.from("profiles").select("whatsapp_pretext").eq("id", user.id).single(),
+  ]);
 
   return (
     <AppLayout role="admin">
@@ -26,7 +25,10 @@ export default async function AdminUploadPage() {
           title="Upload File"
           subtitle="Assign campaigns to sales users — single or round-robin split"
         />
-        <UploadClient salesUsers={salesUsers || []} />
+        <UploadClient
+          salesUsers={salesUsers || []}
+          whatsappPretext={profile?.whatsapp_pretext ?? null}
+        />
       </div>
     </AppLayout>
   );

@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   email TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('admin', 'sales')),
+  whatsapp_pretext TEXT,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 

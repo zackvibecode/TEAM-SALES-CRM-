@@ -14,9 +14,11 @@ import { Loader2 } from "lucide-react";
 export function FollowUpQueue({
   role,
   salesUsers,
+  whatsappPretext,
 }: {
   role: "admin" | "sales";
   salesUsers?: { id: string; full_name: string }[];
+  whatsappPretext?: string | null;
 }) {
   const [filter, setFilter] = useState<FollowUpFilterTab>("today");
   const [customDate, setCustomDate] = useState(toDateString());
@@ -68,7 +70,7 @@ export function FollowUpQueue({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
 
-      openWhatsApp(data.whatsapp, row.lead.name);
+      openWhatsApp(data.whatsapp, row.lead.name, whatsappPretext);
       setPostWaTarget({ leadId: row.lead.id, leadName: row.lead.name });
       await load();
     } catch (e) {

@@ -16,10 +16,10 @@ export function formatWhatsAppNumber(number: string): string {
   return cleaned;
 }
 
-export function getWhatsAppLink(number: string): string {
+export function getWhatsAppLink(number: string, message?: string): string {
   const formatted = formatWhatsAppNumber(number);
-  const message = BRAND_WHATSAPP_INTRO;
-  return `https://wa.me/${formatted}?text=${encodeURIComponent(message)}`;
+  const text = message ?? BRAND_WHATSAPP_INTRO;
+  return `https://wa.me/${formatted}?text=${encodeURIComponent(text)}`;
 }
 
 export function normalizeStatus(status: string): LeadStatus {

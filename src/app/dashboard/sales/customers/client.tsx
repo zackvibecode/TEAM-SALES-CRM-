@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo, Suspense, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
-import { BRAND_WHATSAPP_INTRO } from "@/lib/brand";
+import { resolveWhatsAppMessage } from "@/lib/whatsapp-templates";
 import { Search, X, Clock } from "lucide-react";
 import type { Lead, LeadActivity, LeadStatus } from "@/types";
 
@@ -22,6 +22,7 @@ interface CustomersClientProps {
   pendingCount: number;
   totalCount: number;
   userEmail: string;
+  whatsappPretext?: string | null;
 }
 
 interface BatchOption {
@@ -29,7 +30,13 @@ interface BatchOption {
   label: string;
 }
 
-function CustomersClientInner({ initialLeads, pendingCount, totalCount, userEmail }: CustomersClientProps) {
+function CustomersClientInner({
+  initialLeads,
+  pendingCount,
+  totalCount,
+  userEmail,
+  whatsappPretext,
+}: CustomersClientProps) {
   const [leads, setLeads] = useState(initialLeads);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -46,8 +53,8 @@ function CustomersClientInner({ initialLeads, pendingCount, totalCount, userEmai
   const pageSize = 20;
 
   const whatsappMessage = useCallback(
-    (name: string) => BRAND_WHATSAPP_INTRO.replace(/\{name\}/gi, name.trim() || "Tuan/Puan"),
-    []
+    (name: string) => resolveWhatsAppMessage(whatsappPretext, name),
+    [whatsappPretext]
   );
 
   const patchLead = useCallback((leadId: string, patch: Partial<Lead>) => {

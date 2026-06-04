@@ -3,7 +3,7 @@
 import { Phone, Calendar, User, CalendarPlus, History, MessageCircle } from "lucide-react";
 import { FollowUpStatusBadge } from "./FollowUpStatusBadge";
 import type { FollowUpRow } from "@/lib/follow-up/types";
-import { BRAND_WHATSAPP_INTRO } from "@/lib/brand";
+import { resolveWhatsAppMessage } from "@/lib/whatsapp-templates";
 
 function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -87,8 +87,12 @@ export function FollowUpQueueCard({
   );
 }
 
-export function openWhatsApp(wa: string, name: string) {
-  const message = BRAND_WHATSAPP_INTRO.replace(/\{name\}/gi, name.trim() || "Tuan/Puan");
+export function openWhatsApp(
+  wa: string,
+  name: string,
+  whatsappPretext?: string | null
+) {
+  const message = resolveWhatsAppMessage(whatsappPretext, name);
   window.open(
     `https://wa.me/${wa}?text=${encodeURIComponent(message)}`,
     "_blank",

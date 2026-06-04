@@ -30,3 +30,11 @@ export function applyTemplate(template: string, customerName: string): string {
   const name = customerName?.trim() || "Tuan/Puan";
   return template.replace(/\{name\}/gi, name);
 }
+
+export function resolveWhatsAppMessage(
+  savedPretext: string | null | undefined,
+  customerName?: string
+): string {
+  const template = savedPretext?.trim() || BRAND_WHATSAPP_INTRO;
+  return applyTemplate(template, customerName ?? "");
+}

@@ -13,7 +13,7 @@ export default async function AdminAllLeadsPage() {
 
   const db = createDbClient();
 
-  const [{ data: leads }, { data: salesUsers }, { data: files }] = await Promise.all([
+  const [{ data: leads }, { data: salesUsers }, { data: files }, { data: profile }] = await Promise.all([
     db
       .from("leads")
       .select("*, owner:owner_user_id (full_name, email)")
@@ -21,6 +21,7 @@ export default async function AdminAllLeadsPage() {
       .limit(2000),
     db.from("profiles").select("id, full_name").eq("role", "sales").order("full_name"),
     db.from("uploaded_files").select("id, campaign_name, file_name").order("created_at", { ascending: false }),
+    auth.from("profiles").select("whatsapp_pretext").eq("id", user.id).single(),
   ]);
 
   const batches = (files || []).map((f) => ({
@@ -36,6 +37,7 @@ export default async function AdminAllLeadsPage() {
           <AllLeadsClient
             salesUsers={salesUsers || []}
             batches={batches}
+            whatsappPretext={profile?.whatsapp_pretext ?? null}
             initialLeads={(leads || []).map((l) => ({
               id: l.id,
               owner_id: l.owner_user_id,
