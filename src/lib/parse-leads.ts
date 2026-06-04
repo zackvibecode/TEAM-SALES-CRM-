@@ -1,3 +1,4 @@
+import { normalizeDateCreatedCell } from "@/lib/lead-date-created";
 import { formatWhatsAppNumber } from "@/lib/whatsapp";
 
 export interface ParsedLeadRow {
@@ -5,6 +6,8 @@ export interface ParsedLeadRow {
   whatsapp: string;
   package_interest: string;
   notes: string;
+  /** Raw "Date Created" cell from Excel — used to set leads.created_at on import */
+  date_created?: string;
 }
 
 type RowRecord = Record<string, unknown>;
@@ -114,6 +117,25 @@ export function detectNotesColumn(headers: string[]): string | null {
   ]);
 }
 
+export function detectDateCreatedColumn(headers: string[]): string | null {
+  const exact = detectColumnExact(headers, [
+    "date created",
+    "date_created",
+    "created date",
+    "tarikh dicipta",
+    "tarikh",
+  ]);
+  if (exact) return exact;
+
+  const lower = headers.map((h) => h.toLowerCase().trim());
+  const idx = lower.findIndex(
+    (h) =>
+      (/date/.test(h) && /created|create|dicipta/.test(h)) ||
+      h === "date created"
+  );
+  return idx >= 0 ? headers[idx] : null;
+}
+
 function findPhoneInRow(row: RowRecord, headers: string[], skipKeys: Set<string>): string {
   for (const key of headers) {
     if (skipKeys.has(key)) continue;
@@ -135,10 +157,11 @@ export function parseLeadRows(json: RowRecord[]): ParsedLeadRow[] {
   const waCol = detectWhatsAppColumn(headers);
   const pkgCol = detectPackageColumn(headers);
   const notesCol = detectNotesColumn(headers);
+  const dateCol = detectDateCreatedColumn(headers);
   const linkCol = headers.find((h) => /whatsapp\s*link/i.test(h));
 
   const skipForScan = new Set(
-    [nameCol, pkgCol, notesCol].filter(Boolean) as string[]
+    [nameCol, pkgCol, notesCol, dateCol].filter(Boolean) as string[]
   );
 
   const parsed: ParsedLeadRow[] = [];
@@ -164,6 +187,9 @@ export function parseLeadRows(json: RowRecord[]): ParsedLeadRow[] {
 
     const package_interest = pkgCol ? cellToString(row[pkgCol]) : "";
     const notes = notesCol ? cellToString(row[notesCol]) : "";
+    const date_created = dateCol
+      ? normalizeDateCreatedCell(row[dateCol])
+      : "";
 
     // Skip header-like rows accidentally parsed as data
     if (/^(client name|customer name|nama|name|whatsapp)/i.test(name) && !whatsapp) {
@@ -178,6 +204,7 @@ export function parseLeadRows(json: RowRecord[]): ParsedLeadRow[] {
       whatsapp,
       package_interest,
       notes,
+      ...(date_created ? { date_created } : {}),
     });
   }
 

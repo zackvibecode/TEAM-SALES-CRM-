@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createDbClient } from "@/lib/supabase/server";
+import { dateCreatedToISO } from "@/lib/lead-date-created";
 import { parseLeadRows } from "@/lib/parse-leads";
 import { formatWhatsAppNumber } from "@/lib/whatsapp";
 import { logAudit } from "@/lib/audit";
@@ -118,15 +119,21 @@ async function insertBatchForOwner(
   const batchSize = 100;
   let inserted = 0;
   for (let i = 0; i < toInsert.length; i += batchSize) {
-    const batch = toInsert.slice(i, i + batchSize).map((l) => ({
-      source_file_id: uploadedFile.id,
-      owner_user_id: params.ownerUserId,
-      name: l.name,
-      whatsapp: formatWhatsAppNumber(l.whatsapp),
-      package_interest: l.package_interest,
-      notes: l.notes,
-      status: "Pending",
-    }));
+    const batch = toInsert.slice(i, i + batchSize).map((l) => {
+      const excelCreatedAt = l.date_created
+        ? dateCreatedToISO(l.date_created)
+        : null;
+      return {
+        source_file_id: uploadedFile.id,
+        owner_user_id: params.ownerUserId,
+        name: l.name,
+        whatsapp: formatWhatsAppNumber(l.whatsapp),
+        package_interest: l.package_interest,
+        notes: l.notes,
+        status: "Pending",
+        ...(excelCreatedAt ? { created_at: excelCreatedAt } : {}),
+      };
+    });
 
     const { error: insertError } = await db.from("leads").insert(batch);
     if (insertError) throw new Error(insertError.message);

@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 import { resolveWhatsAppMessage } from "@/lib/whatsapp-templates";
 import { Search, X, Clock } from "lucide-react";
+import { sortLeadsByDateCreatedOldestFirst } from "@/lib/lead-date-created";
 import type { Lead, LeadActivity, LeadStatus } from "@/types";
 
 const TASK_STATUSES: { value: LeadStatus; label: string }[] = [
@@ -81,12 +82,7 @@ function CustomersClientInner({
   }, [refreshData]);
 
   const filtered = useMemo(() => {
-    const statusOrder: Record<string, number> = {
-      Pending: 0,
-      Clicked: 1,
-      "Follow Up": 2,
-    };
-    let list = leads.filter((l) => {
+    const list = leads.filter((l) => {
       if (queueMode && statusFilter === "" && l.status !== "Pending") return false;
       if (search) {
         const s = search.toLowerCase();
@@ -96,10 +92,7 @@ function CustomersClientInner({
       return true;
     });
 
-    if (queueMode && !statusFilter) {
-      list = [...list].sort((a, b) => (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9));
-    }
-    return list;
+    return sortLeadsByDateCreatedOldestFirst(list);
   }, [leads, search, statusFilter, queueMode]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));

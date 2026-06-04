@@ -19,7 +19,7 @@ export async function GET() {
         .from("leads")
         .select("*")
         .eq("owner_user_id", user.id)
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: true })
         .range(from, from + pageSize - 1);
 
       if (error) {
