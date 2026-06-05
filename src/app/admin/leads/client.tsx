@@ -93,7 +93,7 @@ export function AllLeadsClient({
             label: "WhatsApp",
             render: (row) => {
               const wa = row.whatsapp as string;
-              if (!wa) return <span className="text-slate-400 text-xs">-</span>;
+              if (!wa) return <span className="text-xs" style={{ color: "var(--text-muted)" }}>-</span>;
               const name = (row.name as string) || "";
               const message = resolveWhatsAppMessage(whatsappPretext, name);
               const link = getWhatsAppLink(wa, message);

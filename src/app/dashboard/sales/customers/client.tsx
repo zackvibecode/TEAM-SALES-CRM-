@@ -234,12 +234,12 @@ function CustomersClientInner({
   return (
     <div className="space-y-4">
       {loadingLeads && (
-        <div className="glass-card rounded-2xl p-4 text-sm text-slate-500 animate-pulse">
+        <div className="glass-card rounded-2xl p-4 text-sm animate-pulse" style={{ color: "var(--text-muted)" }}>
           Loading your full lead book…
         </div>
       )}
       {!loadingLeads && bookTotal > 0 && (
-        <div className="glass-strong rounded-3xl px-4 py-3 text-sm text-slate-700">
+        <div className="glass-strong rounded-3xl px-4 py-3 text-sm" style={{ color: "var(--text-secondary)" }}>
           Your book: <strong>{bookTotal.toLocaleString()}</strong> leads
           · <strong>{pendingCount.toLocaleString()}</strong> pending
           · {userEmail}
@@ -347,7 +347,7 @@ function CustomersClientInner({
               className="input-field py-1.5 text-xs max-w-[150px]"
               aria-label="Date from"
             />
-            <span className="text-slate-400">to</span>
+            <span style={{ color: "var(--text-muted)" }}>to</span>
             <input
               type="date"
               value={dateTo}
@@ -383,9 +383,9 @@ function CustomersClientInner({
             <tbody>
               {paginated.map((lead) => (
                 <tr key={lead.id} className="table-row">
-                  <td className="px-4 py-3 font-medium text-slate-800">{lead.name || "-"}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-600">{lead.whatsapp || "-"}</td>
-                  <td className="px-4 py-3 text-slate-600 hidden sm:table-cell whitespace-nowrap">
+                  <td className="px-4 py-3 font-medium" style={{ color: "var(--text-primary)" }}>{lead.name || "-"}</td>
+                  <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--text-secondary)" }}>{lead.whatsapp || "-"}</td>
+                  <td className="px-4 py-3 hidden sm:table-cell whitespace-nowrap" style={{ color: "var(--text-secondary)" }}>
                     {formatLeadDateCreated(lead.created_at)}
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -415,7 +415,7 @@ function CustomersClientInner({
               ))}
               {paginated.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-slate-400">
+                  <td colSpan={5} className="px-4 py-12 text-center" style={{ color: "var(--text-muted)" }}>
                     {queueMode ? "Queue clear — great job!" : "No customers found."}
                   </td>
                 </tr>
@@ -464,7 +464,7 @@ function CustomersClientInner({
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-slate-500">
+        <div className="flex items-center justify-between text-sm" style={{ color: "var(--text-muted)" }}>
           <span>
             {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}
           </span>
@@ -490,18 +490,18 @@ function CustomersClientInner({
       {editingId && (
         <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
           <div className="card rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="font-semibold text-slate-900">
+            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border-color)" }}>
+              <h2 className="font-semibold" style={{ color: "var(--text-primary)" }}>
                 {leads.find((l) => l.id === editingId)?.name}
               </h2>
-              <button onClick={() => setEditingId(null)} className="text-slate-400">
+              <button onClick={() => setEditingId(null)} style={{ color: "var(--text-muted)" }}>
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-4">
               {editError && <div className="alert-error">{editError}</div>}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Status</label>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>Status</label>
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value as LeadStatus)}
@@ -513,7 +513,7 @@ function CustomersClientInner({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>
                   Notes {NOTES_REQUIRED.includes(editStatus) && <span className="text-red-500">*</span>}
                 </label>
                 <textarea
@@ -525,7 +525,7 @@ function CustomersClientInner({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Follow-up date</label>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>Follow-up date</label>
                 <input
                   type="date"
                   value={editFollowUp}
@@ -535,10 +535,10 @@ function CustomersClientInner({
               </div>
               {activities.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Timeline</p>
+                  <p className="text-xs font-semibold uppercase mb-2" style={{ color: "var(--text-muted)" }}>Timeline</p>
                   <ul className="space-y-2 max-h-32 overflow-y-auto text-xs">
                     {activities.map((a) => (
-                      <li key={a.id} className="text-slate-600 border-l-2 border-primary/30 pl-2">
+                      <li key={a.id} className="border-l-2 border-primary/30 pl-2" style={{ color: "var(--text-secondary)" }}>
                         {new Date(a.created_at).toLocaleString("en-MY")} — {a.activity_type.replace("_", " ")}
                         {a.old_status && a.new_status && (
                           <span>: {a.old_status} → {a.new_status}</span>
@@ -570,7 +570,7 @@ function CustomersClientInner({
 
 export function CustomersClient(props: CustomersClientProps) {
   return (
-    <Suspense fallback={<p className="text-slate-500">Loading...</p>}>
+    <Suspense fallback={<p style={{ color: "var(--text-muted)" }}>Loading...</p>}>
       <CustomersClientInner {...props} />
     </Suspense>
   );
