@@ -100,6 +100,19 @@ export async function getPendingFollowUp(db: Db, leadId: string) {
   return data;
 }
 
+/** Pending or overdue follow-up still owed — used to avoid duplicate scheduling. */
+export async function getActiveFollowUp(db: Db, leadId: string) {
+  const { data } = await db
+    .from("follow_ups")
+    .select("*")
+    .eq("lead_id", leadId)
+    .in("status", ["pending", "overdue"])
+    .order("follow_up_date", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}
+
 export async function createFollowUp(
   db: Db,
   params: {
@@ -153,18 +166,24 @@ export async function logWhatsAppClick(
   const newClickCount = (lead.whatsapp_click_count ?? 0) + 1;
   const isFirstClick = (lead.whatsapp_click_count ?? 0) === 0;
 
+  const leadUpdate: Record<string, unknown> = {
+    status: lead.status === "Pending" ? "Clicked" : lead.status,
+    clicked_at: now,
+    clicked_by: params.userId,
+    whatsapp_click_count: newClickCount,
+    last_contacted_at: now,
+    updated_at: now,
+  };
+
+  // Only the first WhatsApp click schedules a follow-up mission.
+  if (isFirstClick) {
+    leadUpdate.follow_up_status = "pending";
+    leadUpdate.next_follow_up_date = lead.next_follow_up_date ?? nextDate;
+  }
+
   const { data: updated, error: updateError } = await db
     .from("leads")
-    .update({
-      status: lead.status === "Pending" ? "Clicked" : lead.status,
-      clicked_at: now,
-      clicked_by: params.userId,
-      whatsapp_click_count: newClickCount,
-      last_contacted_at: now,
-      follow_up_status: "pending",
-      next_follow_up_date: lead.next_follow_up_date ?? nextDate,
-      updated_at: now,
-    })
+    .update(leadUpdate)
     .eq("id", params.leadId)
     .select("id, status, whatsapp, whatsapp_click_count, last_contacted_at, next_follow_up_date")
     .single();
@@ -199,24 +218,26 @@ export async function logWhatsAppClick(
     });
   }
 
-  const pending = await getPendingFollowUp(db, params.leadId);
-  if (!pending) {
-    await createFollowUp(db, {
-      leadId: params.leadId,
-      salesUserId: params.userId,
-      salesUserName: params.userName,
-      followUpDate: nextDate,
-      followUpNumber: (lead.follow_up_count ?? 0) + 1,
-      note: "Auto scheduled after WhatsApp click",
-    });
-    await logActivity(db, {
-      leadId: params.leadId,
-      salesUserId: params.userId,
-      salesUserName: params.userName,
-      actionType: "follow_up_scheduled",
-      message: "Next follow up scheduled after WhatsApp click",
-      metadata: { follow_up_date: nextDate, auto: true },
-    });
+  if (isFirstClick) {
+    const activeFollowUp = await getActiveFollowUp(db, params.leadId);
+    if (!activeFollowUp) {
+      await createFollowUp(db, {
+        leadId: params.leadId,
+        salesUserId: params.userId,
+        salesUserName: params.userName,
+        followUpDate: nextDate,
+        followUpNumber: (lead.follow_up_count ?? 0) + 1,
+        note: "Auto scheduled after WhatsApp click",
+      });
+      await logActivity(db, {
+        leadId: params.leadId,
+        salesUserId: params.userId,
+        salesUserName: params.userName,
+        actionType: "follow_up_scheduled",
+        message: "Next follow up scheduled after WhatsApp click",
+        metadata: { follow_up_date: nextDate, auto: true },
+      });
+    }
   }
 
   return updated;
