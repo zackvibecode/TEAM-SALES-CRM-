@@ -19,6 +19,7 @@ interface StatCardProps {
   color?: string;
   subtext?: string;
   variant?: "default" | "primary";
+  valueSize?: "default" | "compact";
 }
 
 function accentFromLegacy(color?: string): StatAccent {
@@ -36,6 +37,7 @@ export function StatCard({
   color,
   subtext,
   variant = "default",
+  valueSize = "default",
 }: StatCardProps) {
   const tint = iconTint[accent ?? accentFromLegacy(color)];
   const isPrimary = variant === "primary";
@@ -54,9 +56,13 @@ export function StatCard({
           </p>
           <p
             className={cn(
-              "stat-value text-2xl md:text-3xl font-bold tabular-nums tracking-tight",
+              "stat-value font-bold tracking-tight truncate",
+              valueSize === "compact"
+                ? "text-sm md:text-base uppercase"
+                : "text-2xl md:text-3xl tabular-nums",
               isPrimary ? "" : "text-[var(--text-primary)]"
             )}
+            title={typeof value === "string" ? value : undefined}
           >
             {typeof value === "number" ? value.toLocaleString() : value}
           </p>

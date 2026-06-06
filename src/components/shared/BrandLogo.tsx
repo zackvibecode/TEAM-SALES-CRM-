@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/layout/ThemeProvider";
 
 type BrandLogoSize = "sm" | "md" | "lg";
 
@@ -18,14 +21,18 @@ export function BrandLogo({
   className?: string;
   priority?: boolean;
 }) {
+  const { theme } = useTheme();
+
+  const isDark = theme === "dark";
+
   return (
     <Image
-      src="/zaqone-crm-logo.png"
+      src={isDark ? "/zaqone-crm-logo-dark.png" : "/zaqone-crm-logo.png"}
       alt="Zaqone CRM"
-      width={320}
-      height={64}
+      width={3802}
+      height={832}
       priority={priority}
-      className={cn("object-contain object-left", sizeClasses[size], className)}
+      className={cn("object-contain object-left shrink-0", sizeClasses[size], className)}
     />
   );
 }

@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { AdminDashboardOverview } from "@/components/admin/AdminDashboardOverview";
 import { AdminPerformanceGraph } from "@/components/admin/AdminPerformanceGraph";
 import { DashboardTable } from "@/components/shared/DashboardTable";
-import { RecentActivityCard } from "@/components/shared/RecentActivityCard";
 
 interface SalesProfile {
   id: string;
@@ -72,18 +71,6 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
     ? "All Sales Users"
     : salesProfiles.find((s) => s.id === selectedUserId)?.full_name || "Unknown";
 
-  const leaderboard = [...performanceData]
-    .sort((a, b) => b.clicked - a.clicked || b.followUp - a.followUp)
-    .slice(0, 5);
-
-  const activityItems = leaderboard.map((p, i) => ({
-    id: p.id,
-    name: p.full_name,
-    detail: `${p.clicked} clicks · ${p.followUp} follow ups`,
-    meta: `#${i + 1}`,
-    rank: i + 1,
-  }));
-
   return (
     <div className="dashboard-shell">
       <div className="card-padded-sm flex flex-col sm:flex-row sm:items-center gap-3">
@@ -103,9 +90,13 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
           ))}
         </select>
         <span className="text-[11px] sm:ml-auto" style={{ color: "var(--text-muted)" }}>
-          {selectedUserId === "all" ? `${salesProfiles.length} sales users` : "Individual view"}
+          {selectedUserId === "all"
+            ? `${salesProfiles.length} sales users · leaderboard syncs with click filters below`
+            : "Individual view"}
         </span>
       </div>
+
+      {selectedUserId === "all" && <AdminPerformanceGraph showLeaderboard />}
 
       <AdminDashboardOverview
         stats={currentStats}
@@ -117,18 +108,7 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
         }
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        <div className="xl:col-span-2">
-          <AdminPerformanceGraph />
-        </div>
-        {selectedUserId === "all" && leaderboard.length > 0 && (
-          <RecentActivityCard
-            title="Leaderboard"
-            items={activityItems}
-            emptyMessage="No team activity yet."
-          />
-        )}
-      </div>
+      {selectedUserId !== "all" && <AdminPerformanceGraph showLeaderboard={false} />}
 
       <DashboardTable title={`Sales Performance — ${selectedUserName}`}>
         <table className="w-full text-sm">

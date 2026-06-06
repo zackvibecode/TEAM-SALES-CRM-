@@ -14,6 +14,7 @@ export interface SalesClickPerformanceRow {
   sales_user_id: string;
   sales_user_name: string;
   total_clicks: number;
+  follow_up_count: number;
 }
 
 export interface SalesClickPerformanceSummary {
@@ -149,42 +150,53 @@ export async function getAdminSalesClickPerformance(
   const { startIso, endIso, startDate, endDate } = resolveSalesClickDateRange("custom", opts.startDate, opts.endDate);
   const sortBy = opts.sortBy ?? "highest";
 
-  const counts = new Map<string, { name: string; clicks: number }>();
+  const counts = new Map<string, { name: string; clicks: number; followUps: number }>();
   const pageSize = 1000;
   let offset = 0;
 
-  while (true) {
-    const { data, error } = await db
-      .from("activity_logs")
-      .select("sales_user_id, sales_user_name")
-      .in("action_type", [...CLICK_ACTIONS])
-      .gte("created_at", startIso)
-      .lte("created_at", endIso)
-      .order("created_at", { ascending: true })
-      .range(offset, offset + pageSize - 1);
+  async function ingestActionTypes(actionTypes: readonly string[], field: "clicks" | "followUps") {
+    offset = 0;
+    while (true) {
+      const { data, error } = await db
+        .from("activity_logs")
+        .select("sales_user_id, sales_user_name")
+        .in("action_type", [...actionTypes])
+        .gte("created_at", startIso)
+        .lte("created_at", endIso)
+        .order("created_at", { ascending: true })
+        .range(offset, offset + pageSize - 1);
 
-    if (error) throw new Error(error.message);
-    const batch = data ?? [];
-    if (batch.length === 0) break;
+      if (error) throw new Error(error.message);
+      const batch = data ?? [];
+      if (batch.length === 0) break;
 
-    for (const row of batch) {
-      const id = row.sales_user_id;
-      if (!id) continue;
-      const name = (row.sales_user_name ?? "Unknown").trim() || "Unknown";
-      const existing = counts.get(id);
-      if (existing) existing.clicks += 1;
-      else counts.set(id, { name, clicks: 1 });
+      for (const row of batch) {
+        const id = row.sales_user_id;
+        if (!id) continue;
+        const name = (row.sales_user_name ?? "Unknown").trim() || "Unknown";
+        const existing = counts.get(id);
+        if (existing) {
+          if (field === "clicks") existing.clicks += 1;
+          else existing.followUps += 1;
+        } else {
+          counts.set(id, { name, clicks: field === "clicks" ? 1 : 0, followUps: field === "followUps" ? 1 : 0 });
+        }
+      }
+
+      if (batch.length < pageSize) break;
+      offset += pageSize;
     }
-
-    if (batch.length < pageSize) break;
-    offset += pageSize;
   }
 
+  await ingestActionTypes(CLICK_ACTIONS, "clicks");
+  await ingestActionTypes(["follow_up_completed"], "followUps");
+
   const rows = sortRows(
-    [...counts.entries()].map(([sales_user_id, { name, clicks }]) => ({
+    [...counts.entries()].map(([sales_user_id, { name, clicks, followUps }]) => ({
       sales_user_id,
       sales_user_name: name,
       total_clicks: clicks,
+      follow_up_count: followUps,
     })),
     sortBy
   );

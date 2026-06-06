@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { StatCard } from "@/components/shared/StatCard";
+import { RecentActivityCard } from "@/components/shared/RecentActivityCard";
 import {
   DATE_PRESET_LABELS,
   SORT_LABELS,
@@ -35,8 +36,8 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function AdminPerformanceGraph() {
-  const [preset, setPreset] = useState<SalesClickDatePreset>("today");
+export function AdminPerformanceGraph({ showLeaderboard = true }: { showLeaderboard?: boolean }) {
+  const [preset, setPreset] = useState<SalesClickDatePreset>("week");
   const [sortBy, setSortBy] = useState<SalesClickSortKey>("highest");
   const [customStart, setCustomStart] = useState(todayStr());
   const [customEnd, setCustomEnd] = useState(todayStr());
@@ -76,9 +77,27 @@ export function AdminPerformanceGraph() {
     return sorted[0]?.sales_user_id ?? null;
   }, [data]);
 
-  return (
-    <section className="card-padded-sm space-y-5 h-full">
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+  const leaderboardItems = useMemo(() => {
+    if (!data?.rows.length) return [];
+    return [...data.rows]
+      .sort((a, b) => b.total_clicks - a.total_clicks || a.sales_user_name.localeCompare(b.sales_user_name))
+      .slice(0, 5)
+      .map((row, index) => ({
+        id: row.sales_user_id,
+        name: row.sales_user_name,
+        detail: `${row.total_clicks} clicks · ${row.follow_up_count} follow ups`,
+        meta: `#${index + 1}`,
+        rank: index + 1,
+      }));
+  }, [data]);
+
+  const rangeLabel = data
+    ? `${data.startDate}${data.startDate !== data.endDate ? ` → ${data.endDate}` : ""}`
+    : "";
+
+  const graphPanel = (
+    <section className="card-padded-sm flex flex-col gap-5 h-full min-h-0">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 shrink-0">
         <div>
           <h2 className="font-bold flex items-center gap-2 text-base" style={{ color: "var(--text-primary)" }}>
             <span className="icon-stat">
@@ -103,7 +122,7 @@ export function AdminPerformanceGraph() {
         </select>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 shrink-0">
         {PRESETS.map((key) => (
           <button
             key={key}
@@ -120,7 +139,7 @@ export function AdminPerformanceGraph() {
       </div>
 
       {preset === "custom" && (
-        <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-end">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-end shrink-0">
           <label className="text-xs font-medium space-y-1 block" style={{ color: "var(--text-secondary)" }}>
             Start date
             <input
@@ -146,15 +165,24 @@ export function AdminPerformanceGraph() {
       )}
 
       {data && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
           <StatCard label="Total Clicks" value={data.summary.total_clicks} icon={MousePointerClick} variant="primary" />
-          <StatCard label="Top Sales User" value={data.summary.top_sales_user ?? "—"} icon={Crown} accent="amber" />
+          <StatCard
+            label="Top Sales User"
+            value={data.summary.top_sales_user ?? "—"}
+            icon={Crown}
+            accent="amber"
+            valueSize="compact"
+          />
           <StatCard label="Active Sales Users" value={data.summary.active_sales_users} icon={Users} accent="sky" />
           <StatCard label="Average Clicks" value={data.summary.average_clicks} icon={TrendingUp} accent="mint" />
         </div>
       )}
 
-      <div className="rounded-2xl p-4 min-h-[240px] border" style={{ background: "var(--surface-muted)", borderColor: "var(--border-color)" }}>
+      <div
+        className="rounded-2xl p-4 flex-1 min-h-[300px] border overflow-visible"
+        style={{ background: "var(--surface-muted)", borderColor: "var(--border-color)" }}
+      >
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-[#3b66ff]" />
@@ -169,9 +197,9 @@ export function AdminPerformanceGraph() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto pb-2">
+          <div className="overflow-x-auto overflow-y-visible pb-2">
             <div
-              className="flex items-end gap-4 min-w-full px-2"
+              className="flex items-end gap-4 min-w-full px-2 pt-2"
               style={{ minWidth: `${Math.max(data.rows.length * 80, 320)}px` }}
             >
               {data.rows.map((row) => {
@@ -186,11 +214,11 @@ export function AdminPerformanceGraph() {
                     onMouseEnter={() => setHoveredId(row.sales_user_id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
-                    <div className="relative w-full flex flex-col items-center justify-end h-[180px]">
+                    <div className="relative w-full flex flex-col items-center justify-end h-[210px]">
                       {(isHovered || isTop) && (
                         <div
                           className={cn(
-                            "absolute -top-2 z-20 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-lg border whitespace-nowrap surface-card",
+                            "absolute top-0 z-20 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-lg border whitespace-nowrap surface-card -translate-y-1",
                             isTop && "ring-2 ring-amber-400/60"
                           )}
                           style={{ color: "var(--text-primary)" }}
@@ -206,11 +234,12 @@ export function AdminPerformanceGraph() {
 
                       <div
                         className={cn(
-                          "w-full max-w-[44px] rounded-t-xl rounded-b-sm transition-all duration-300 relative",
+                          "w-full max-w-[44px] rounded-t-xl rounded-b-sm transition-all duration-300 relative mt-12",
                           isTop && "ring-2 ring-[#3b66ff]/40 ring-offset-2"
                         )}
                         style={{
                           height: `${heightPct}%`,
+                          minHeight: "24px",
                           background: isTop
                             ? "linear-gradient(180deg, #6b8cff 0%, #3b66ff 55%, #2952e6 100%)"
                             : "linear-gradient(180deg, #a5b8ff 0%, #3b66ff 70%, #2952e6 100%)",
@@ -249,13 +278,34 @@ export function AdminPerformanceGraph() {
       </div>
 
       {data && data.rows.length > 0 && (
-        <p className="text-xs text-center" style={{ color: "var(--text-muted)" }}>
-          {data.startDate}
-          {data.startDate !== data.endDate ? ` → ${data.endDate}` : ""}
+        <p className="text-xs text-center shrink-0" style={{ color: "var(--text-muted)" }}>
+          {rangeLabel}
           {" · "}
           {data.rows.length} sales user{data.rows.length !== 1 ? "s" : ""}
         </p>
       )}
     </section>
+  );
+
+  if (!showLeaderboard) {
+    return graphPanel;
+  }
+
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 items-stretch">
+      <div className="xl:col-span-2 min-h-0 flex">{graphPanel}</div>
+      <div className="min-h-0 flex">
+        <RecentActivityCard
+          title="Leaderboard"
+          subtitle={
+            loading
+              ? "Loading team performance…"
+              : `${DATE_PRESET_LABELS[preset]}${rangeLabel ? ` · ${rangeLabel}` : ""}`
+          }
+          items={leaderboardItems}
+          emptyMessage="No team activity for this date range."
+        />
+      </div>
+    </div>
   );
 }
