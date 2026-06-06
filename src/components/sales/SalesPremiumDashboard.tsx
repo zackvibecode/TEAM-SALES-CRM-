@@ -54,7 +54,7 @@ export function SalesPremiumDashboard(props: Props) {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-stretch">
         <DailyGoalPanel />
-        <TeamLeaderboard currentUserId={props.currentUserId} preset="week" />
+        <TeamLeaderboard currentUserId={props.currentUserId} />
       </div>
 
       <SalesDashboardExtras

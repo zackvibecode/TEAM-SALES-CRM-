@@ -3,57 +3,31 @@
 import { useCallback, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { RecentActivityCard } from "@/components/shared/RecentActivityCard";
-import { buildLeaderboardItems } from "@/lib/leaderboard";
-import {
-  DATE_PRESET_LABELS,
-  type SalesClickDatePreset,
-  type SalesClickPerformanceResult,
-} from "@/lib/admin/sales-click-performance";
+import { buildLeaderboardItems, type LeaderboardRow } from "@/lib/leaderboard";
 
 interface Props {
   currentUserId?: string;
-  preset?: SalesClickDatePreset;
-  apiPath?: string;
-  subtitle?: string;
   className?: string;
 }
 
-export function TeamLeaderboard({
-  currentUserId,
-  preset = "week",
-  apiPath = "/api/sales/leaderboard",
-  subtitle,
-  className,
-}: Props) {
+export function TeamLeaderboard({ currentUserId, className }: Props) {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<SalesClickPerformanceResult | null>(null);
+  const [rows, setRows] = useState<LeaderboardRow[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ preset });
-      const res = await fetch(`${apiPath}?${params}`, { cache: "no-store" });
+      const res = await fetch("/api/leaderboard", { cache: "no-store" });
       const json = await res.json();
-      if (res.ok) setData(json as SalesClickPerformanceResult);
-      else setData(null);
+      if (res.ok) setRows((json.rows as LeaderboardRow[]) ?? []);
     } finally {
       setLoading(false);
     }
-  }, [apiPath, preset]);
+  }, []);
 
   useEffect(() => {
     load();
   }, [load]);
-
-  const rangeLabel = data
-    ? `${data.startDate}${data.startDate !== data.endDate ? ` → ${data.endDate}` : ""}`
-    : "";
-
-  const resolvedSubtitle =
-    subtitle ??
-    (loading
-      ? "Loading team performance…"
-      : `${DATE_PRESET_LABELS[preset]}${rangeLabel ? ` · ${rangeLabel}` : ""}`);
 
   if (loading) {
     return (
@@ -66,9 +40,9 @@ export function TeamLeaderboard({
   return (
     <RecentActivityCard
       title="Leaderboard"
-      subtitle={resolvedSubtitle}
-      items={buildLeaderboardItems(data?.rows ?? [], { currentUserId })}
-      emptyMessage="No team activity for this date range."
+      subtitle="All-time team rankings by assigned leads"
+      items={buildLeaderboardItems(rows, { currentUserId })}
+      emptyMessage="No team data yet."
       className={className}
       fillHeight
     />

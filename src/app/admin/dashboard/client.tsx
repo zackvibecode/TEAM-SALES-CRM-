@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import { AdminDashboardOverview } from "@/components/admin/AdminDashboardOverview";
 import { AdminPerformanceGraph } from "@/components/admin/AdminPerformanceGraph";
 import { DashboardTable } from "@/components/shared/DashboardTable";
+import { RecentActivityCard } from "@/components/shared/RecentActivityCard";
+import { buildLeaderboardItems } from "@/lib/leaderboard";
 
 interface SalesProfile {
   id: string;
@@ -71,6 +73,19 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
     ? "All Sales Users"
     : salesProfiles.find((s) => s.id === selectedUserId)?.full_name || "Unknown";
 
+  const leaderboardRows = useMemo(
+    () =>
+      performanceData.map((p) => ({
+        id: p.id,
+        name: p.full_name,
+        total: p.total_data,
+        clicked: p.clicked,
+        pending: p.pending,
+        followUp: p.followUp,
+      })),
+    [performanceData]
+  );
+
   return (
     <div className="dashboard-shell space-y-5">
       <AdminDashboardOverview
@@ -99,9 +114,22 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
       />
 
       {selectedUserId === "all" ? (
-        <AdminPerformanceGraph showLeaderboard />
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 items-stretch">
+          <div className="xl:col-span-2 min-h-0 flex">
+            <AdminPerformanceGraph />
+          </div>
+          <div className="min-h-0 flex w-full">
+            <RecentActivityCard
+              title="Leaderboard"
+              subtitle="All-time team rankings by assigned leads"
+              items={buildLeaderboardItems(leaderboardRows)}
+              emptyMessage="No team data yet."
+              fillHeight
+            />
+          </div>
+        </div>
       ) : (
-        <AdminPerformanceGraph showLeaderboard={false} />
+        <AdminPerformanceGraph />
       )}
 
       <DashboardTable title={`Sales Performance — ${selectedUserName}`}>

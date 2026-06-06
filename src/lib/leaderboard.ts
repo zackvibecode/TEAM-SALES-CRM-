@@ -1,24 +1,32 @@
 import type { ActivityItem } from "@/components/shared/RecentActivityCard";
-import type { SalesClickPerformanceRow } from "@/lib/admin/sales-click-performance";
 
-export function sortLeaderboardRows(rows: SalesClickPerformanceRow[]): SalesClickPerformanceRow[] {
+export interface LeaderboardRow {
+  id: string;
+  name: string;
+  total: number;
+  clicked: number;
+  pending: number;
+  followUp: number;
+}
+
+export function sortLeaderboardRows(rows: LeaderboardRow[]): LeaderboardRow[] {
   return [...rows].sort(
     (a, b) =>
-      b.total_clicks - a.total_clicks ||
-      b.follow_up_count - a.follow_up_count ||
-      a.sales_user_name.localeCompare(b.sales_user_name)
+      b.clicked - a.clicked ||
+      b.followUp - a.followUp ||
+      a.name.localeCompare(b.name)
   );
 }
 
 export function buildLeaderboardItems(
-  rows: SalesClickPerformanceRow[],
+  rows: LeaderboardRow[],
   options?: { currentUserId?: string }
 ): ActivityItem[] {
   return sortLeaderboardRows(rows).map((row, index) => ({
-    id: row.sales_user_id,
-    name: row.sales_user_name,
-    detail: `${row.total_clicks} clicks · ${row.follow_up_count} follow ups`,
-    meta: options?.currentUserId === row.sales_user_id ? "You" : `#${index + 1}`,
+    id: row.id,
+    name: row.name,
+    detail: `${row.clicked} clicked · ${row.followUp} follow ups · ${row.total} total leads`,
+    meta: options?.currentUserId === row.id ? "You" : `#${index + 1}`,
     rank: index + 1,
   }));
 }

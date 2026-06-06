@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { StatCard } from "@/components/shared/StatCard";
-import { RecentActivityCard } from "@/components/shared/RecentActivityCard";
-import { buildLeaderboardItems } from "@/lib/leaderboard";
 import {
   DATE_PRESET_LABELS,
   SORT_LABELS,
@@ -37,7 +35,7 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function AdminPerformanceGraph({ showLeaderboard = true }: { showLeaderboard?: boolean }) {
+export function AdminPerformanceGraph() {
   const [preset, setPreset] = useState<SalesClickDatePreset>("week");
   const [sortBy, setSortBy] = useState<SalesClickSortKey>("highest");
   const [customStart, setCustomStart] = useState(todayStr());
@@ -77,11 +75,6 @@ export function AdminPerformanceGraph({ showLeaderboard = true }: { showLeaderbo
     const sorted = [...data.rows].sort((a, b) => b.total_clicks - a.total_clicks);
     return sorted[0]?.sales_user_id ?? null;
   }, [data]);
-
-  const leaderboardItems = useMemo(
-    () => buildLeaderboardItems(data?.rows ?? []),
-    [data]
-  );
 
   const rangeLabel = data
     ? `${data.startDate}${data.startDate !== data.endDate ? ` → ${data.endDate}` : ""}`
@@ -279,26 +272,5 @@ export function AdminPerformanceGraph({ showLeaderboard = true }: { showLeaderbo
     </section>
   );
 
-  if (!showLeaderboard) {
-    return graphPanel;
-  }
-
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 items-stretch">
-      <div className="xl:col-span-2 min-h-0 flex">{graphPanel}</div>
-      <div className="min-h-0 flex w-full">
-        <RecentActivityCard
-          title="Leaderboard"
-          subtitle={
-            loading
-              ? "Loading team performance…"
-              : `${DATE_PRESET_LABELS[preset]}${rangeLabel ? ` · ${rangeLabel}` : ""}`
-          }
-          items={leaderboardItems}
-          emptyMessage="No team activity for this date range."
-          fillHeight
-        />
-      </div>
-    </div>
-  );
+  return graphPanel;
 }
