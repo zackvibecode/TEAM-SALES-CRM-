@@ -25,7 +25,7 @@ export function buildLeaderboardItems(
   return sortLeaderboardRows(rows).map((row, index) => ({
     id: row.id,
     name: row.name,
-    detail: `${row.clicked} clicked · ${row.followUp} follow ups · ${row.total} total leads`,
+    detail: `${row.clicked.toLocaleString()} clicked · ${row.total.toLocaleString()} leads`,
     meta: options?.currentUserId === row.id ? "You" : `#${index + 1}`,
     rank: index + 1,
   }));

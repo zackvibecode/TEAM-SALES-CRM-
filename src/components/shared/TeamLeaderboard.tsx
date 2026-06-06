@@ -40,7 +40,7 @@ export function TeamLeaderboard({ currentUserId, className }: Props) {
   return (
     <RecentActivityCard
       title="Leaderboard"
-      subtitle="All-time team rankings by assigned leads"
+      subtitle="All-time rankings"
       items={buildLeaderboardItems(rows, { currentUserId })}
       emptyMessage="No team data yet."
       className={className}

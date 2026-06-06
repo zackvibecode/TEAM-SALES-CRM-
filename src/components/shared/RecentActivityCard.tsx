@@ -32,17 +32,19 @@ export function RecentActivityCard({
         className
       )}
     >
-      <div className="mb-4 shrink-0">
-        <h2 className="font-bold text-sm flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-          <span className="icon-stat text-amber-500">
-            <Trophy />
+      <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b shrink-0" style={{ borderColor: "var(--border-color)" }}>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/30 shrink-0">
+            <Trophy className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
           </span>
-          {title}
-        </h2>
+          <h2 className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>
+            {title}
+          </h2>
+        </div>
         {subtitle && (
-          <p className="text-[11px] mt-1" style={{ color: "var(--text-muted)" }}>
+          <span className="text-[10px] shrink-0" style={{ color: "var(--text-muted)" }}>
             {subtitle}
-          </p>
+          </span>
         )}
       </div>
       {items.length === 0 ? (
@@ -50,38 +52,54 @@ export function RecentActivityCard({
           {emptyMessage}
         </p>
       ) : (
-        <ol
-          className={cn(
-            "space-y-3 flex-1 min-h-0 overflow-y-auto",
-            fillHeight && items.length > 0 && "flex flex-col justify-between"
-          )}
-        >
+        <ol className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-y-auto">
           {items.map((item, i) => {
             const rank = item.rank ?? i + 1;
             const isFirst = rank === 1;
+            const isSecond = rank === 2;
+            const isThird = rank === 3;
 
             return (
-              <li key={item.id} className="flex items-center gap-3">
+              <li
+                key={item.id}
+                className={cn(
+                  "flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition hover:bg-[var(--surface-hover)]",
+                  isFirst && "bg-amber-50/60 dark:bg-amber-900/10"
+                )}
+              >
                 <span
                   className={cn(
-                    "w-8 h-8 rounded-full text-xs font-bold flex items-center justify-center shrink-0",
+                    "w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0",
                     isFirst
-                      ? "bg-amber-400 text-amber-950 ring-2 ring-amber-300/50"
-                      : "bg-[#3b66ff] text-white"
+                      ? "bg-amber-500 text-white shadow-sm shadow-amber-300"
+                      : isSecond
+                        ? "bg-slate-400 text-white"
+                        : isThird
+                          ? "bg-amber-700/60 text-white"
+                          : "text-[10px] font-bold"
                   )}
+                  style={rank > 3 ? { color: "var(--text-muted)" } : undefined}
                 >
-                  {isFirst ? <Crown className="w-4 h-4" /> : rank}
+                  {isFirst ? <Crown className="w-3 h-3" /> : rank}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>
+                  <p className="text-[13px] font-semibold truncate leading-tight" style={{ color: "var(--text-primary)" }}>
                     {item.name}
                   </p>
-                  <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+                  <p className="text-[11px] truncate leading-tight" style={{ color: "var(--text-muted)" }}>
                     {item.detail}
                   </p>
                 </div>
                 {item.meta && (
-                  <span className="text-xs font-medium shrink-0" style={{ color: "var(--text-secondary)" }}>
+                  <span
+                    className={cn(
+                      "text-[10px] font-bold shrink-0 px-1.5 py-0.5 rounded-md",
+                      item.meta === "You"
+                        ? "bg-[#3b66ff]/10 text-[#3b66ff]"
+                        : ""
+                    )}
+                    style={item.meta !== "You" ? { color: "var(--text-muted)" } : undefined}
+                  >
                     {item.meta}
                   </span>
                 )}

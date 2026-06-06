@@ -121,7 +121,7 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
           <div className="min-h-0 flex w-full">
             <RecentActivityCard
               title="Leaderboard"
-              subtitle="All-time team rankings by assigned leads"
+              subtitle="All-time rankings"
               items={buildLeaderboardItems(leaderboardRows)}
               emptyMessage="No team data yet."
               fillHeight

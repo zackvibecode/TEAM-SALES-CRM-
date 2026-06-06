@@ -23,9 +23,6 @@ export function HeroSection() {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-10 xl:gap-14 items-center">
           {/* Left: headline */}
           <div className="text-center lg:text-left">
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#eef2ff] text-[#3b66ff] dark:bg-[#1e3a8a]/40 dark:text-[#93c5fd] mb-5">
-              {copy.hero.badge}
-            </span>
             <h1
               className="text-3xl sm:text-4xl xl:text-[2.75rem] font-extrabold tracking-tight leading-[1.15]"
               style={{ color: "var(--text-primary)" }}
