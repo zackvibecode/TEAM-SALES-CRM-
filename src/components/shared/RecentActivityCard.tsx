@@ -14,14 +14,24 @@ export function RecentActivityCard({
   items,
   emptyMessage = "No activity yet.",
   subtitle,
+  className,
+  fillHeight = false,
 }: {
   title?: string;
   items: ActivityItem[];
   emptyMessage?: string;
   subtitle?: string;
+  className?: string;
+  fillHeight?: boolean;
 }) {
   return (
-    <div className="card-padded-sm h-full flex flex-col min-h-0">
+    <div
+      className={cn(
+        "card-padded-sm h-full flex flex-col min-h-0 w-full",
+        fillHeight && "min-h-[280px]",
+        className
+      )}
+    >
       <div className="mb-4 shrink-0">
         <h2 className="font-bold text-sm flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
           <span className="icon-stat text-amber-500">
@@ -40,7 +50,12 @@ export function RecentActivityCard({
           {emptyMessage}
         </p>
       ) : (
-        <ol className="space-y-3 flex-1 min-h-0 overflow-y-auto">
+        <ol
+          className={cn(
+            "space-y-3 flex-1 min-h-0 overflow-y-auto",
+            fillHeight && items.length > 0 && "flex flex-col justify-between"
+          )}
+        >
           {items.map((item, i) => {
             const rank = item.rank ?? i + 1;
             const isFirst = rank === 1;

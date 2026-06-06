@@ -5,14 +5,8 @@ import { DailyGoalPanel } from "./DailyGoalPanel";
 import { SalesDashboardExtras, type SalesBatchCard } from "./SalesDashboardExtras";
 import { SalesDashboardOverview } from "./SalesDashboardOverview";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { RecentActivityCard, type ActivityItem } from "@/components/shared/RecentActivityCard";
+import { TeamLeaderboard } from "@/components/shared/TeamLeaderboard";
 import { ArrowRight } from "lucide-react";
-
-interface LeaderboardEntry {
-  id: string;
-  full_name: string;
-  followUp: number;
-}
 
 interface Props {
   fullName: string;
@@ -26,7 +20,6 @@ interface Props {
   newBatchCount: number;
   kpiClicks: number | null;
   monthClicks: number;
-  leaderboard: LeaderboardEntry[];
 }
 
 export function SalesPremiumDashboard(props: Props) {
@@ -34,16 +27,8 @@ export function SalesPremiumDashboard(props: Props) {
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
-  const leaderboardItems: ActivityItem[] = props.leaderboard.map((entry, i) => ({
-    id: entry.id,
-    name: entry.full_name,
-    detail: `${entry.followUp} follow ups`,
-    meta: entry.id === props.currentUserId ? "You" : `#${i + 1}`,
-    rank: i + 1,
-  }));
-
   return (
-    <div className="dashboard-shell">
+    <div className="dashboard-shell space-y-5">
       <PageHeader
         greeting={greeting}
         title={props.fullName || "Sales"}
@@ -67,13 +52,9 @@ export function SalesPremiumDashboard(props: Props) {
         }}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-stretch">
         <DailyGoalPanel />
-        <RecentActivityCard
-          title="Leaderboard"
-          items={leaderboardItems}
-          emptyMessage="No team activity yet."
-        />
+        <TeamLeaderboard currentUserId={props.currentUserId} preset="week" />
       </div>
 
       <SalesDashboardExtras

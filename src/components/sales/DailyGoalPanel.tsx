@@ -63,7 +63,7 @@ export function DailyGoalPanel({ onGoalReached }: { onGoalReached?: () => void }
 
   return (
     <>
-      <div className="card-padded-sm">
+      <div className="card-padded-sm h-full min-h-[280px] flex flex-col justify-center">
         <div className="flex flex-col md:flex-row md:items-center gap-5">
           <div className="flex-1 space-y-3">
             <div className="flex items-center gap-2 text-[#3b66ff]">

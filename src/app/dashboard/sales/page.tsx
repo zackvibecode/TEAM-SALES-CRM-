@@ -1,4 +1,4 @@
-import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
 import { SalesPremiumDashboard } from "@/components/sales/SalesPremiumDashboard";
 import { computeBatchStats } from "@/lib/campaign-stats";
@@ -15,8 +15,6 @@ export default async function SalesDashboardPage() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const db = createDbClient();
-
   const [
     { count: total },
     { count: pending },
@@ -28,7 +26,6 @@ export default async function SalesDashboardPage() {
     { data: files },
     { data: fileLeads },
     { count: newBatches },
-    { data: allSalesProfiles },
   ] = await Promise.all([
     auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id),
     auth.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).eq("status", "Pending"),
@@ -40,7 +37,6 @@ export default async function SalesDashboardPage() {
     auth.from("uploaded_files").select("id, campaign_name, file_name, source_tag, is_archived, created_at").eq("owner_user_id", user.id).order("created_at", { ascending: false }),
     auth.from("leads").select("source_file_id, status").eq("owner_user_id", user.id),
     auth.from("uploaded_files").select("*", { count: "exact", head: true }).eq("owner_user_id", user.id).gte("created_at", sevenDaysAgo),
-    db.from("profiles").select("id, full_name").eq("role", "sales"),
   ]);
 
   const statsByFile = new Map<string, { status: string }[]>();
@@ -66,26 +62,6 @@ export default async function SalesDashboardPage() {
       };
     });
 
-  // Build leaderboard: follow-up counts for all sales users
-  const leaderboard = allSalesProfiles
-    ? await Promise.all(
-        allSalesProfiles.map(async (sp) => {
-          const { count: followUp } = await db
-            .from("leads")
-            .select("*", { count: "exact", head: true })
-            .eq("owner_user_id", sp.id)
-            .eq("status", "Follow Up");
-          return {
-            id: sp.id,
-            full_name: sp.full_name,
-            followUp: followUp ?? 0,
-          };
-        })
-      )
-    : [];
-
-  leaderboard.sort((a, b) => b.followUp - a.followUp);
-
   return (
     <AppLayout role="sales">
       <SalesPremiumDashboard
@@ -100,7 +76,6 @@ export default async function SalesDashboardPage() {
         newBatchCount={newBatches ?? 0}
         kpiClicks={profile?.kpi_monthly_clicks ?? null}
         monthClicks={monthClicks ?? 0}
-        leaderboard={leaderboard}
       />
     </AppLayout>
   );

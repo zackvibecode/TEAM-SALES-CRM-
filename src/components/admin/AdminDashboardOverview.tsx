@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Users,
   FileText,
@@ -28,10 +28,13 @@ interface Stats {
 export function AdminDashboardOverview({
   stats,
   showWorkspace,
+  viewingLabel,
+  filterSlot,
 }: {
   stats: Stats;
   showWorkspace?: boolean;
   viewingLabel?: string;
+  filterSlot?: ReactNode;
 }) {
   const [followUp, setFollowUp] = useState<FollowUpKpiStats | null>(null);
 
@@ -46,6 +49,17 @@ export function AdminDashboardOverview({
 
   return (
     <div className="space-y-5">
+      {(viewingLabel || filterSlot) && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {viewingLabel && (
+            <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+              {viewingLabel}
+            </p>
+          )}
+          {filterSlot && <div className="sm:ml-auto">{filterSlot}</div>}
+        </div>
+      )}
+
       <DashboardMetricSection title="Key metrics" columns={5}>
         <DashboardMetricTile label="Total Leads" value={stats.leads} icon={List} accent="blue" highlight />
         <DashboardMetricTile label="Pending Leads" value={stats.pending} icon={Clock} accent="amber" />

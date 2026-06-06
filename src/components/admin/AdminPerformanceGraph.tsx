@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { StatCard } from "@/components/shared/StatCard";
 import { RecentActivityCard } from "@/components/shared/RecentActivityCard";
+import { buildLeaderboardItems } from "@/lib/leaderboard";
 import {
   DATE_PRESET_LABELS,
   SORT_LABELS,
@@ -77,19 +78,10 @@ export function AdminPerformanceGraph({ showLeaderboard = true }: { showLeaderbo
     return sorted[0]?.sales_user_id ?? null;
   }, [data]);
 
-  const leaderboardItems = useMemo(() => {
-    if (!data?.rows.length) return [];
-    return [...data.rows]
-      .sort((a, b) => b.total_clicks - a.total_clicks || a.sales_user_name.localeCompare(b.sales_user_name))
-      .slice(0, 5)
-      .map((row, index) => ({
-        id: row.sales_user_id,
-        name: row.sales_user_name,
-        detail: `${row.total_clicks} clicks · ${row.follow_up_count} follow ups`,
-        meta: `#${index + 1}`,
-        rank: index + 1,
-      }));
-  }, [data]);
+  const leaderboardItems = useMemo(
+    () => buildLeaderboardItems(data?.rows ?? []),
+    [data]
+  );
 
   const rangeLabel = data
     ? `${data.startDate}${data.startDate !== data.endDate ? ` → ${data.endDate}` : ""}`
@@ -294,7 +286,7 @@ export function AdminPerformanceGraph({ showLeaderboard = true }: { showLeaderbo
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 items-stretch">
       <div className="xl:col-span-2 min-h-0 flex">{graphPanel}</div>
-      <div className="min-h-0 flex">
+      <div className="min-h-0 flex w-full">
         <RecentActivityCard
           title="Leaderboard"
           subtitle={
@@ -304,6 +296,7 @@ export function AdminPerformanceGraph({ showLeaderboard = true }: { showLeaderbo
           }
           items={leaderboardItems}
           emptyMessage="No team activity for this date range."
+          fillHeight
         />
       </div>
     </div>

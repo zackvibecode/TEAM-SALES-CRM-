@@ -72,32 +72,7 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
     : salesProfiles.find((s) => s.id === selectedUserId)?.full_name || "Unknown";
 
   return (
-    <div className="dashboard-shell">
-      <div className="card-padded-sm flex flex-col sm:flex-row sm:items-center gap-3">
-        <span className="text-xs font-medium shrink-0" style={{ color: "var(--text-muted)" }}>
-          Viewing:
-        </span>
-        <select
-          value={selectedUserId}
-          onChange={(e) => setSelectedUserId(e.target.value)}
-          className="input-field max-w-xs py-2 text-sm sm:flex-1 sm:max-w-sm"
-        >
-          <option value="all">All Sales Users</option>
-          {salesProfiles.map((sp) => (
-            <option key={sp.id} value={sp.id}>
-              {sp.full_name} ({sp.email})
-            </option>
-          ))}
-        </select>
-        <span className="text-[11px] sm:ml-auto" style={{ color: "var(--text-muted)" }}>
-          {selectedUserId === "all"
-            ? `${salesProfiles.length} sales users · leaderboard syncs with click filters below`
-            : "Individual view"}
-        </span>
-      </div>
-
-      {selectedUserId === "all" && <AdminPerformanceGraph showLeaderboard />}
-
+    <div className="dashboard-shell space-y-5">
       <AdminDashboardOverview
         stats={currentStats}
         showWorkspace={selectedUserId === "all"}
@@ -106,9 +81,28 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
             ? "Team-wide metrics"
             : `Metrics for ${selectedUserName}`
         }
+        filterSlot={
+          <select
+            value={selectedUserId}
+            onChange={(e) => setSelectedUserId(e.target.value)}
+            className="input-field max-w-xs py-2 text-sm"
+            aria-label="View sales user"
+          >
+            <option value="all">All Sales Users</option>
+            {salesProfiles.map((sp) => (
+              <option key={sp.id} value={sp.id}>
+                {sp.full_name}
+              </option>
+            ))}
+          </select>
+        }
       />
 
-      {selectedUserId !== "all" && <AdminPerformanceGraph showLeaderboard={false} />}
+      {selectedUserId === "all" ? (
+        <AdminPerformanceGraph showLeaderboard />
+      ) : (
+        <AdminPerformanceGraph showLeaderboard={false} />
+      )}
 
       <DashboardTable title={`Sales Performance — ${selectedUserName}`}>
         <table className="w-full text-sm">
