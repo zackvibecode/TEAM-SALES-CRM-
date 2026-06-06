@@ -50,13 +50,13 @@ export function AdminDashboardOverview({
   return (
     <div className="space-y-5">
       {(viewingLabel || filterSlot) && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex items-center gap-3 pb-1">
           {viewingLabel && (
-            <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            <p className="text-sm font-semibold flex-1" style={{ color: "var(--text-primary)" }}>
               {viewingLabel}
             </p>
           )}
-          {filterSlot && <div className="sm:ml-auto">{filterSlot}</div>}
+          {filterSlot && <div className="shrink-0">{filterSlot}</div>}
         </div>
       )}
 
