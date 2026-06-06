@@ -1,6 +1,7 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { WhatsAppPretextEditor } from "@/components/settings/WhatsAppPretextEditor";
+import { AdminResetData } from "@/components/admin/AdminResetData";
 
 export default function AdminSettingsPage() {
   return (
@@ -13,6 +14,7 @@ export default function AdminSettingsPage() {
           compact
         />
         <WhatsAppPretextEditor />
+        <AdminResetData variant="panel" />
       </div>
     </AppLayout>
   );

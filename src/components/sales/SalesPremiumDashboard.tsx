@@ -5,10 +5,18 @@ import { DailyGoalPanel } from "./DailyGoalPanel";
 import { SalesDashboardExtras, type SalesBatchCard } from "./SalesDashboardExtras";
 import { SalesDashboardOverview } from "./SalesDashboardOverview";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { RecentActivityCard, type ActivityItem } from "@/components/shared/RecentActivityCard";
 import { ArrowRight } from "lucide-react";
+
+interface LeaderboardEntry {
+  id: string;
+  full_name: string;
+  followUp: number;
+}
 
 interface Props {
   fullName: string;
+  currentUserId: string;
   total: number;
   pending: number;
   clicked: number;
@@ -18,12 +26,21 @@ interface Props {
   newBatchCount: number;
   kpiClicks: number | null;
   monthClicks: number;
+  leaderboard: LeaderboardEntry[];
 }
 
 export function SalesPremiumDashboard(props: Props) {
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  const leaderboardItems: ActivityItem[] = props.leaderboard.map((entry, i) => ({
+    id: entry.id,
+    name: entry.full_name,
+    detail: `${entry.followUp} follow ups`,
+    meta: entry.id === props.currentUserId ? "You" : `#${i + 1}`,
+    rank: i + 1,
+  }));
 
   return (
     <div className="dashboard-shell">
@@ -50,7 +67,14 @@ export function SalesPremiumDashboard(props: Props) {
         }}
       />
 
-      <DailyGoalPanel />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <DailyGoalPanel />
+        <RecentActivityCard
+          title="Leaderboard"
+          items={leaderboardItems}
+          emptyMessage="No team activity yet."
+        />
+      </div>
 
       <SalesDashboardExtras
         batches={props.batches}

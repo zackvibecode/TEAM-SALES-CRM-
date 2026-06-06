@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { AdminResetData } from "@/components/admin/AdminResetData";
 import type { NavItem } from "./nav-config";
 import { logoutIcon } from "./nav-config";
 import { PanelLeftClose } from "lucide-react";
@@ -11,7 +10,7 @@ import { BrandLogo } from "@/components/shared/BrandLogo";
 export function AppSidebar({
   navItems,
   pathname,
-  role,
+  role: _role,
   userEmail,
   sidebarOpen,
   onToggleSidebar,
@@ -92,12 +91,6 @@ export function AppSidebar({
           );
         })}
       </nav>
-
-      {role === "admin" && (
-        <div className="px-3 pb-3 shrink-0 w-[260px]">
-          <AdminResetData variant="sidebar" />
-        </div>
-      )}
 
       <div className="p-4 border-t shrink-0 w-[260px]" style={{ borderColor: "var(--border-color)" }}>
         {userEmail && (
