@@ -6,14 +6,7 @@ import { AdminResetData } from "@/components/admin/AdminResetData";
 import type { NavItem } from "./nav-config";
 import { logoutIcon } from "./nav-config";
 import { PanelLeftClose } from "lucide-react";
-
-function BrandMark() {
-  return (
-    <div className="w-10 h-10 rounded-xl bg-[#3b66ff] flex items-center justify-center shrink-0">
-      <span className="text-lg font-extrabold text-white">Z</span>
-    </div>
-  );
-}
+import { BrandLogo } from "@/components/shared/BrandLogo";
 
 export function AppSidebar({
   navItems,
@@ -49,13 +42,9 @@ export function AppSidebar({
       )}
     >
       <div className="px-5 pt-6 pb-4 shrink-0 w-[260px]">
-        <div className="flex items-center gap-3 min-w-0">
-          <BrandMark />
+        <div className="flex items-center gap-2 min-w-0">
           <div className="min-w-0 flex-1">
-            <span className="font-bold text-base block truncate" style={{ color: "var(--text-primary)" }}>
-              Zaqone CRM
-            </span>
-            <span className="text-[11px] font-medium text-[#3b66ff]">by Zack</span>
+            <BrandLogo size="sm" />
           </div>
           {showCloseMobile && onCloseMobile && (
             <button

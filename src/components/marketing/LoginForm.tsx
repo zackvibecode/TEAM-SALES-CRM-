@@ -7,6 +7,7 @@ import { Lock, Mail } from "lucide-react";
 import { getSalesContactUrl } from "@/lib/marketing/contact";
 import { useMarketingLocale } from "./MarketingLocaleProvider";
 import { LangToggle } from "./LangToggle";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 
 export function LoginForm() {
   const router = useRouter();
@@ -109,14 +110,9 @@ export function LoginForm() {
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="relative w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="inline-flex mb-5">
-              <div className="w-16 h-16 rounded-2xl bg-[#3b66ff] flex items-center justify-center shadow-lg">
-                <span className="text-2xl font-extrabold text-white">Z</span>
-              </div>
+            <div className="inline-flex justify-center mb-2">
+              <BrandLogo size="lg" priority />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
-              Zaqone CRM
-            </h1>
           </div>
 
           <form onSubmit={handleLogin} className="card-padded-sm space-y-5">

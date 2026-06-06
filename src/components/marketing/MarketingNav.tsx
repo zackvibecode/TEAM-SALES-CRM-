@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Moon, Sun } from "lucide-react";
-import { BRAND_NAME, BRAND_BYLINE } from "@/lib/brand";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import { LangToggle } from "./LangToggle";
 import { useMarketingLocale } from "./MarketingLocaleProvider";
@@ -29,18 +29,8 @@ export function MarketingNav() {
       }}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-[#3b66ff] flex items-center justify-center shrink-0 shadow-md">
-            <span className="text-lg font-extrabold text-white">Z</span>
-          </div>
-          <div className="min-w-0 hidden sm:block">
-            <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>
-              {BRAND_NAME}
-            </p>
-            <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
-              {BRAND_BYLINE}
-            </p>
-          </div>
+        <Link href="/" className="flex items-center min-w-0 shrink-0">
+          <BrandLogo size="md" priority />
         </Link>
 
         <nav className="flex items-center gap-4 sm:gap-6">
