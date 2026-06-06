@@ -4,11 +4,11 @@ import { LucideIcon } from "lucide-react";
 export type StatAccent = "blue" | "sky" | "slate" | "mint" | "amber";
 
 const iconTint: Record<StatAccent, string> = {
-  blue: "text-[#3b66ff]",
-  sky: "text-sky-500",
-  slate: "text-slate-500",
-  mint: "text-teal-500",
-  amber: "text-amber-500",
+  blue: "text-[#3b66ff] dark:text-[var(--text-secondary)]",
+  sky: "text-sky-500 dark:text-[var(--text-secondary)]",
+  slate: "text-slate-500 dark:text-[var(--text-secondary)]",
+  mint: "text-teal-500 dark:text-[var(--text-secondary)]",
+  amber: "text-amber-500 dark:text-[var(--text-secondary)]",
 };
 
 interface StatCardProps {
@@ -45,7 +45,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "rounded-2xl p-4 md:p-5 transition surface-card",
+        "rounded-lg p-4 md:p-5 transition surface-card",
         isPrimary && "stat-card-primary"
       )}
     >

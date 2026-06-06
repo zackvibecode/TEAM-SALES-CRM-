@@ -30,7 +30,7 @@ export function MobileSidebar({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+        className="fixed inset-0 bg-black/60 z-40 lg:hidden"
         onClick={onClose}
         aria-hidden
       />
@@ -77,7 +77,7 @@ export function DashboardLayout({
   onLogout: () => void;
 }) {
   return (
-    <div className="min-h-screen flex app-shell p-0 lg:p-4 lg:gap-4">
+    <div className="min-h-screen flex app-shell">
       <MobileSidebar
         open={mobileOpen}
         onClose={onCloseMobile}
@@ -102,7 +102,7 @@ export function DashboardLayout({
         />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0 lg:rounded-2xl overflow-hidden surface-card lg:border lg:border-[var(--border-color)]">
+      <div className="flex-1 flex flex-col min-w-0 border-l border-[var(--border-color)]">
         <TopHeader
           role={role}
           pathname={pathname}
@@ -111,7 +111,7 @@ export function DashboardLayout({
           onOpenMobile={onOpenMobile}
           onOpenSidebar={onToggleSidebar}
         />
-        <main className="flex-1 p-4 lg:p-6 max-w-[1680px] w-full mx-auto overflow-y-auto bg-[var(--surface-bg)]">
+        <main className="flex-1 p-5 lg:p-8 max-w-[1400px] w-full mx-auto overflow-y-auto bg-[var(--surface-bg)]">
           {children}
         </main>
       </div>

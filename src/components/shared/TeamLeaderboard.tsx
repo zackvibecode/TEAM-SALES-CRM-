@@ -32,7 +32,7 @@ export function TeamLeaderboard({ currentUserId, className }: Props) {
   if (loading) {
     return (
       <div className={`card-padded-sm h-full flex flex-col items-center justify-center min-h-[280px] ${className ?? ""}`}>
-        <Loader2 className="w-6 h-6 animate-spin text-[#3b66ff]" />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--text-muted)" }} />
       </div>
     );
   }

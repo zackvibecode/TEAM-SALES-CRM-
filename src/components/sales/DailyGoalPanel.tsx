@@ -56,7 +56,7 @@ export function DailyGoalPanel({ onGoalReached }: { onGoalReached?: () => void }
   };
 
   if (loading || !stats) {
-    return <div className="surface-card animate-pulse h-28 rounded-2xl" />;
+    return <div className="surface-card animate-pulse h-28 rounded-lg" />;
   }
 
   const pct = Math.min(100, Math.round((stats.todayCompleted / stats.goal) * 100));
@@ -66,7 +66,7 @@ export function DailyGoalPanel({ onGoalReached }: { onGoalReached?: () => void }
       <div className="card-padded-sm h-full min-h-[280px] flex flex-col justify-center">
         <div className="flex flex-col md:flex-row md:items-center gap-5">
           <div className="flex-1 space-y-3">
-            <div className="flex items-center gap-2 text-[#3b66ff]">
+            <div className="flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
               <Target className="w-4 h-4" />
               <span className="text-xs font-semibold uppercase tracking-wide">Today&apos;s mission</span>
             </div>
@@ -81,8 +81,8 @@ export function DailyGoalPanel({ onGoalReached }: { onGoalReached?: () => void }
             </p>
             <div className="h-2.5 rounded-full overflow-hidden" style={{ background: "var(--surface-muted)" }}>
               <div
-                className="h-full rounded-full bg-[#3b66ff] transition-all duration-500"
-                style={{ width: `${pct}%` }}
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${pct}%`, background: "var(--text-primary)" }}
               />
             </div>
           </div>

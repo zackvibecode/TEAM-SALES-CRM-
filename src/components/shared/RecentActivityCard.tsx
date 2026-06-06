@@ -34,8 +34,8 @@ export function RecentActivityCard({
     >
       <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b shrink-0" style={{ borderColor: "var(--border-color)" }}>
         <div className="flex items-center gap-2">
-          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/30 shrink-0">
-            <Trophy className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-amber-100 dark:bg-[var(--surface-muted)] dark:border dark:border-[var(--border-color)] shrink-0">
+            <Trophy className="w-3.5 h-3.5 text-amber-600 dark:text-[var(--text-secondary)]" />
           </span>
           <h2 className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>
             {title}
@@ -63,19 +63,19 @@ export function RecentActivityCard({
               <li
                 key={item.id}
                 className={cn(
-                  "flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition hover:bg-[var(--surface-hover)]",
-                  isFirst && "bg-amber-50/60 dark:bg-amber-900/10"
+                  "flex items-center gap-2.5 px-2.5 py-2 rounded-md transition hover:bg-[var(--surface-hover)]",
+                  isFirst && "bg-amber-50/60 dark:bg-[var(--surface-muted)]"
                 )}
               >
                 <span
                   className={cn(
                     "w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0",
                     isFirst
-                      ? "bg-amber-500 text-white shadow-sm shadow-amber-300"
+                      ? "bg-amber-500 text-white shadow-sm shadow-amber-300 dark:bg-white dark:text-black dark:shadow-none"
                       : isSecond
-                        ? "bg-slate-400 text-white"
+                        ? "bg-slate-400 text-white dark:bg-[#525252] dark:text-white"
                         : isThird
-                          ? "bg-amber-700/60 text-white"
+                          ? "bg-amber-700/60 text-white dark:bg-[#404040] dark:text-[var(--text-secondary)]"
                           : "text-[10px] font-bold"
                   )}
                   style={rank > 3 ? { color: "var(--text-muted)" } : undefined}
@@ -95,7 +95,7 @@ export function RecentActivityCard({
                     className={cn(
                       "text-[10px] font-bold shrink-0 px-1.5 py-0.5 rounded-md",
                       item.meta === "You"
-                        ? "bg-[#3b66ff]/10 text-[#3b66ff]"
+                        ? "bg-[#3b66ff]/10 text-[#3b66ff] dark:bg-[var(--surface-muted)] dark:text-white dark:border dark:border-[var(--border-color)]"
                         : ""
                     )}
                     style={item.meta !== "You" ? { color: "var(--text-muted)" } : undefined}

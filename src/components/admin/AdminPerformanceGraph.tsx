@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/layout/ThemeProvider";
 import { StatCard } from "@/components/shared/StatCard";
 import {
   DATE_PRESET_LABELS,
@@ -36,6 +37,8 @@ function todayStr() {
 }
 
 export function AdminPerformanceGraph() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [preset, setPreset] = useState<SalesClickDatePreset>("week");
   const [sortBy, setSortBy] = useState<SalesClickSortKey>("highest");
   const [customStart, setCustomStart] = useState(todayStr());
@@ -170,7 +173,7 @@ export function AdminPerformanceGraph() {
       >
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-[#3b66ff]" />
+            <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--text-muted)" }} />
           </div>
         ) : !data?.rows.length ? (
           <div className="text-center py-12 px-4">
@@ -220,17 +223,23 @@ export function AdminPerformanceGraph() {
                       <div
                         className={cn(
                           "w-full max-w-[44px] rounded-t-xl rounded-b-sm transition-all duration-300 relative mt-12",
-                          isTop && "ring-2 ring-[#3b66ff]/40 ring-offset-2"
+                          isTop && (isDark ? "ring-1 ring-[var(--border-color)]" : "ring-2 ring-[#3b66ff]/40 ring-offset-2")
                         )}
                         style={{
                           height: `${heightPct}%`,
                           minHeight: "24px",
-                          background: isTop
-                            ? "linear-gradient(180deg, #6b8cff 0%, #3b66ff 55%, #2952e6 100%)"
-                            : "linear-gradient(180deg, #a5b8ff 0%, #3b66ff 70%, #2952e6 100%)",
-                          boxShadow: isHovered
-                            ? "0 10px 24px -6px rgba(59, 102, 255, 0.5)"
-                            : "0 6px 16px -6px rgba(59, 102, 255, 0.35)",
+                          background: isDark
+                            ? isTop
+                              ? "linear-gradient(180deg, #ededed 0%, #a1a1a1 100%)"
+                              : "linear-gradient(180deg, #525252 0%, #333333 100%)"
+                            : isTop
+                              ? "linear-gradient(180deg, #6b8cff 0%, #3b66ff 55%, #2952e6 100%)"
+                              : "linear-gradient(180deg, #a5b8ff 0%, #3b66ff 70%, #2952e6 100%)",
+                          boxShadow: isDark
+                            ? "none"
+                            : isHovered
+                              ? "0 10px 24px -6px rgba(59, 102, 255, 0.5)"
+                              : "0 6px 16px -6px rgba(59, 102, 255, 0.35)",
                           transform: isHovered ? "translateY(-3px)" : undefined,
                         }}
                       >
@@ -244,9 +253,9 @@ export function AdminPerformanceGraph() {
                     <p
                       className={cn(
                         "mt-3 text-xs font-semibold text-center truncate w-full px-1",
-                        isTop ? "text-[#3b66ff]" : ""
+                        isTop && !isDark ? "text-[#3b66ff]" : ""
                       )}
-                      style={isTop ? undefined : { color: "var(--text-primary)" }}
+                      style={{ color: "var(--text-primary)" }}
                       title={row.sales_user_name}
                     >
                       {row.sales_user_name}

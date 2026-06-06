@@ -27,29 +27,32 @@ export function TopHeader({
 
   return (
     <header className="main-topbar sticky top-0 z-30 shrink-0">
-      <div className="h-14 lg:h-16 flex items-center px-4 lg:px-6 gap-3">
+      <div className="h-14 flex items-center px-4 lg:px-6 gap-3">
         <button
           type="button"
           onClick={onOpenMobile}
-          className="lg:hidden p-2 rounded-xl hover:bg-[var(--surface-hover)] shrink-0"
+          className="lg:hidden p-2 rounded-md hover:bg-[var(--surface-hover)] shrink-0"
           aria-label="Open menu"
         >
-          <Menu className="w-5 h-5" style={{ color: "var(--text-secondary)" }} />
+          <Menu className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
         </button>
 
         {!sidebarOpen && (
           <button
             type="button"
             onClick={onOpenSidebar}
-            className="hidden lg:inline-flex p-2 rounded-xl hover:bg-[var(--surface-hover)] shrink-0"
+            className="hidden lg:inline-flex p-2 rounded-md hover:bg-[var(--surface-hover)] shrink-0"
             aria-label="Open sidebar"
           >
-            <PanelLeftOpen className="w-5 h-5" style={{ color: "var(--text-secondary)" }} />
+            <PanelLeftOpen className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
           </button>
         )}
 
         <div className="min-w-0">
-          <h1 className="text-base lg:text-lg font-bold truncate" style={{ color: "var(--text-primary)" }}>
+          <h1
+            className="text-sm font-medium truncate tracking-tight"
+            style={{ color: "var(--text-primary)" }}
+          >
             {pageTitle}
           </h1>
         </div>
@@ -63,7 +66,7 @@ export function TopHeader({
             className={`theme-toggle-btn ${theme === "light" ? "theme-toggle-btn-active" : ""}`}
             aria-label="Light mode"
           >
-            <Sun className="w-4 h-4" />
+            <Sun className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
@@ -71,25 +74,38 @@ export function TopHeader({
             className={`theme-toggle-btn ${theme === "dark" ? "theme-toggle-btn-active" : ""}`}
             aria-label="Dark mode"
           >
-            <Moon className="w-4 h-4" />
+            <Moon className="w-3.5 h-3.5" />
           </button>
         </div>
 
         <button
           type="button"
-          className="relative p-2 rounded-xl hover:bg-[var(--surface-hover)] shrink-0 hidden sm:flex"
+          className="relative p-2 rounded-md hover:bg-[var(--surface-hover)] shrink-0 hidden sm:flex"
           aria-label="Notifications"
         >
-          <Bell className="w-5 h-5" style={{ color: "var(--text-secondary)" }} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#3b66ff]" />
+          <Bell className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
+          <span
+            className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+            style={{ background: "var(--text-primary)" }}
+          />
         </button>
 
         <div className="flex items-center gap-2 shrink-0 pl-1">
-          <div className="w-9 h-9 rounded-full bg-[#3b66ff] flex items-center justify-center text-white text-sm font-bold">
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium border"
+            style={{
+              background: "var(--surface-muted)",
+              borderColor: "var(--border-color)",
+              color: "var(--text-primary)",
+            }}
+          >
             {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="hidden md:block min-w-0">
-            <p className="text-sm font-semibold truncate max-w-[120px]" style={{ color: "var(--text-primary)" }}>
+            <p
+              className="text-[13px] font-medium truncate max-w-[120px]"
+              style={{ color: "var(--text-primary)" }}
+            >
               {displayName}
             </p>
             <p className="text-[11px] capitalize" style={{ color: "var(--text-muted)" }}>

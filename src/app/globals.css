@@ -50,19 +50,21 @@
 }
 
 .dark {
-  --surface-bg: #0f172a;
-  --surface-card: #1e293b;
-  --surface-sidebar: #1e293b;
-  --surface-muted: #334155;
-  --surface-hover: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #e2e8f0;
-  --text-muted: #94a3b8;
-  --border-color: #334155;
-  --input-border: #475569;
-  --input-bg: #1e293b;
-  --shadow-glass: 0 10px 30px rgba(0, 0, 0, 0.25);
-  --shadow-glass-lg: 0 16px 40px rgba(0, 0, 0, 0.35);
+  --surface-bg: #000000;
+  --surface-card: #0a0a0a;
+  --surface-sidebar: #000000;
+  --surface-muted: #111111;
+  --surface-hover: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #e5e5e5;
+  --text-muted: #a3a3a3;
+  --border-color: #262626;
+  --input-border: #333333;
+  --input-bg: #0a0a0a;
+  --radius-card: 0.5rem;
+  --shadow-card: none;
+  --shadow-glass: none;
+  --shadow-glass-lg: none;
 }
 
 @layer base {
@@ -129,7 +131,7 @@
   }
 
   .dashboard-shell {
-    @apply space-y-5;
+    @apply space-y-6;
   }
 
   .input-field {
@@ -430,6 +432,166 @@
     background: var(--surface-card);
     color: #3b66ff;
     box-shadow: var(--shadow-card);
+  }
+
+  /* Vercel-inspired dark dashboard overrides */
+  .dark .surface-card,
+  .dark .glass,
+  .dark .glass-strong,
+  .dark .card,
+  .dark .card-padded,
+  .dark .card-padded-sm,
+  .dark .glass-card,
+  .dark .table-shell {
+    box-shadow: none;
+    border-radius: 8px;
+  }
+
+  .dark .sidebar-panel {
+    background: var(--surface-sidebar);
+    border: none;
+    border-right: 1px solid var(--border-color);
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .dark .sidebar-nav-active {
+    background: #1a1a1a;
+    color: var(--text-primary);
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+  }
+
+  .dark .sidebar-nav-active .nav-icon-wrap {
+    background: transparent;
+    color: var(--text-primary);
+  }
+
+  .dark .nav-icon-wrap {
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .dark .main-topbar {
+    background: var(--surface-bg);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .dark .page-hero {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .dark .page-hero-badge {
+    color: var(--text-secondary);
+    background: var(--surface-muted);
+    border: 1px solid var(--border-color);
+  }
+
+  .dark .page-hero-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .dark .stat-card-primary {
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+  }
+
+  .dark .stat-card-primary .stat-label {
+    color: var(--text-muted);
+  }
+
+  .dark .stat-card-primary .stat-value {
+    color: var(--text-primary);
+  }
+
+  .dark .stat-card-primary .icon-stat {
+    background: var(--surface-muted);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+  }
+
+  .dark .icon-stat {
+    background: var(--surface-muted);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 6px;
+  }
+
+  .dark .filter-pill-active {
+    background: var(--text-primary);
+    color: #000000;
+    box-shadow: none;
+    border: 1px solid var(--text-primary);
+  }
+
+  .dark .filter-pill:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+  }
+
+  .dark .btn-primary-solid {
+    background: var(--text-primary);
+    color: #000000;
+    border-color: var(--text-primary);
+    box-shadow: none;
+  }
+
+  .dark .btn-primary-solid:hover:not(:disabled) {
+    background: #d4d4d4;
+    border-color: #d4d4d4;
+  }
+
+  .dark .btn-secondary {
+    background: transparent;
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+  }
+
+  .dark .btn-secondary:hover:not(:disabled) {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+    border-color: #404040;
+  }
+
+  .dark .input-field:focus {
+    border-color: var(--text-muted);
+    box-shadow: 0 0 0 1px var(--border-color);
+  }
+
+  .dark .table-head {
+    background: var(--surface-bg);
+  }
+
+  .dark .theme-toggle {
+    background: var(--surface-muted);
+    border-color: var(--border-color);
+  }
+
+  .dark .theme-toggle-btn-active {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+    box-shadow: none;
+  }
+
+  .dark .table-row td {
+    color: var(--text-secondary);
+  }
+
+  .dark .stat-label {
+    color: var(--text-muted) !important;
+  }
+
+  .dark .stat-value {
+    color: var(--text-primary) !important;
   }
 }
 

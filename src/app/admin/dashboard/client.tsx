@@ -4,8 +4,7 @@ import { useState, useMemo } from "react";
 import { AdminDashboardOverview } from "@/components/admin/AdminDashboardOverview";
 import { AdminPerformanceGraph } from "@/components/admin/AdminPerformanceGraph";
 import { DashboardTable } from "@/components/shared/DashboardTable";
-import { RecentActivityCard } from "@/components/shared/RecentActivityCard";
-import { buildLeaderboardItems } from "@/lib/leaderboard";
+import { TeamLeaderboard } from "@/components/shared/TeamLeaderboard";
 
 interface SalesProfile {
   id: string;
@@ -73,19 +72,6 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
     ? "All Sales Users"
     : salesProfiles.find((s) => s.id === selectedUserId)?.full_name || "Unknown";
 
-  const leaderboardRows = useMemo(
-    () =>
-      performanceData.map((p) => ({
-        id: p.id,
-        name: p.full_name,
-        total: p.total_data,
-        clicked: p.clicked,
-        pending: p.pending,
-        followUp: p.followUp,
-      })),
-    [performanceData]
-  );
-
   return (
     <div className="dashboard-shell space-y-5">
       <AdminDashboardOverview
@@ -119,13 +105,7 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
             <AdminPerformanceGraph />
           </div>
           <div className="min-h-0 flex w-full">
-            <RecentActivityCard
-              title="Leaderboard"
-              subtitle="All-time rankings"
-              items={buildLeaderboardItems(leaderboardRows)}
-              emptyMessage="No team data yet."
-              fillHeight
-            />
+            <TeamLeaderboard />
           </div>
         </div>
       ) : (
@@ -164,8 +144,8 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--surface-muted)" }}>
                       <div
-                        className="h-full rounded-full bg-[#3b66ff] transition-all"
-                        style={{ width: `${p.progress}%` }}
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${p.progress}%`, background: "var(--text-primary)" }}
                       />
                     </div>
                     <span className="text-xs w-10 text-right" style={{ color: "var(--text-muted)" }}>
