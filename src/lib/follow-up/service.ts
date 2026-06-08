@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { addDays, toDateString, tomorrow } from "./dates";
+import { addDays, isSameCalendarDay, toDateString, tomorrow } from "./dates";
 import type { FollowUpFilterTab } from "./dates";
 import type {
   ActivityLogActionType,
@@ -154,29 +154,47 @@ export async function logWhatsAppClick(
   const { data: lead, error: fetchError } = await db
     .from("leads")
     .select(
-      "id, owner_user_id, status, whatsapp, whatsapp_click_count, follow_up_count, next_follow_up_date"
+      "id, owner_user_id, status, whatsapp, whatsapp_click_count, follow_up_count, next_follow_up_date, last_contacted_at, clicked_at"
     )
     .eq("id", params.leadId)
     .single();
 
   if (fetchError || !lead) throw new Error("Lead not found");
 
+  const isFirstEverContact =
+    (lead.whatsapp_click_count ?? 0) === 0 && lead.status === "Pending";
+  const alreadyClickedToday =
+    typeof lead.clicked_at === "string" && isSameCalendarDay(lead.clicked_at);
+
+  // Same lead, same day — reopen WhatsApp tab only (not a new click, not follow-up).
+  if (alreadyClickedToday) {
+    return {
+      lead: {
+        id: lead.id,
+        status: lead.status,
+        whatsapp: lead.whatsapp,
+        whatsapp_click_count: lead.whatsapp_click_count ?? 0,
+        last_contacted_at: lead.last_contacted_at ?? null,
+        next_follow_up_date: lead.next_follow_up_date ?? null,
+      },
+      counted: false as const,
+    };
+  }
+
   const now = new Date().toISOString();
   const nextDate = lead.next_follow_up_date ?? tomorrow();
-  const newClickCount = (lead.whatsapp_click_count ?? 0) + 1;
-  const isFirstClick = (lead.whatsapp_click_count ?? 0) === 0;
+  const newClickCount = isFirstEverContact ? 1 : (lead.whatsapp_click_count ?? 0);
 
   const leadUpdate: Record<string, unknown> = {
-    status: lead.status === "Pending" ? "Clicked" : lead.status,
     clicked_at: now,
     clicked_by: params.userId,
-    whatsapp_click_count: newClickCount,
     last_contacted_at: now,
     updated_at: now,
   };
 
-  // Only the first WhatsApp click schedules a follow-up mission.
-  if (isFirstClick) {
+  if (isFirstEverContact) {
+    leadUpdate.status = "Clicked";
+    leadUpdate.whatsapp_click_count = 1;
     leadUpdate.follow_up_status = "pending";
     leadUpdate.next_follow_up_date = lead.next_follow_up_date ?? nextDate;
   }
@@ -204,10 +222,10 @@ export async function logWhatsAppClick(
       clicked_from: params.clickedFrom,
     },
     oldStatus: lead.status,
-    newStatus: updated?.status ?? "Clicked",
+    newStatus: updated?.status ?? lead.status,
   });
 
-  if (isFirstClick) {
+  if (isFirstEverContact) {
     await logActivity(db, {
       leadId: params.leadId,
       salesUserId: params.userId,
@@ -216,9 +234,7 @@ export async function logWhatsAppClick(
       message: "Initial WhatsApp contact made",
       metadata: { phone: params.phone },
     });
-  }
 
-  if (isFirstClick) {
     const activeFollowUp = await getActiveFollowUp(db, params.leadId);
     if (!activeFollowUp) {
       await createFollowUp(db, {
@@ -240,7 +256,7 @@ export async function logWhatsAppClick(
     }
   }
 
-  return updated;
+  return { lead: updated, counted: true as const };
 }
 
 export async function markFollowUpCompleted(
@@ -365,7 +381,6 @@ export async function followUpViaWhatsApp(
 
   const now = new Date().toISOString();
   const newFollowCount = (lead.follow_up_count ?? 0) + 1;
-  const newClickCount = (lead.whatsapp_click_count ?? 0) + 1;
 
   await db
     .from("follow_ups")
@@ -376,7 +391,6 @@ export async function followUpViaWhatsApp(
     .from("leads")
     .update({
       follow_up_count: newFollowCount,
-      whatsapp_click_count: newClickCount,
       last_followed_up_at: now,
       last_contacted_at: now,
       status: lead.status === "Pending" ? "Clicked" : lead.status,

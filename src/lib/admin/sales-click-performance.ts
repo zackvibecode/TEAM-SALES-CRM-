@@ -32,7 +32,6 @@ export interface SalesClickPerformanceResult {
   endDate: string;
 }
 
-const CLICK_ACTIONS = ["whatsapp_clicked", "follow_up_clicked"] as const;
 
 function toDateString(d: Date): string {
   const y = d.getFullYear();
@@ -154,12 +153,17 @@ export async function getAdminSalesClickPerformance(
   const pageSize = 1000;
   let offset = 0;
 
-  async function ingestActionTypes(actionTypes: readonly string[], field: "clicks" | "followUps") {
+  async function ingestActionTypes(
+    actionTypes: readonly string[],
+    field: "clicks" | "followUps",
+    dedupeByLead = false
+  ) {
     offset = 0;
+    const seenLeadIds = new Map<string, Set<string>>();
     while (true) {
       const { data, error } = await db
         .from("activity_logs")
-        .select("sales_user_id, sales_user_name")
+        .select("sales_user_id, sales_user_name, lead_id, created_at")
         .in("action_type", [...actionTypes])
         .gte("created_at", startIso)
         .lte("created_at", endIso)
@@ -173,6 +177,19 @@ export async function getAdminSalesClickPerformance(
       for (const row of batch) {
         const id = row.sales_user_id;
         if (!id) continue;
+        if (dedupeByLead && field === "clicks") {
+          const leadId = row.lead_id;
+          if (!leadId) continue;
+          const dayKey = String(row.created_at ?? "").slice(0, 10);
+          const dedupeKey = `${leadId}:${dayKey}`;
+          let leadSet = seenLeadIds.get(id);
+          if (!leadSet) {
+            leadSet = new Set();
+            seenLeadIds.set(id, leadSet);
+          }
+          if (leadSet.has(dedupeKey)) continue;
+          leadSet.add(dedupeKey);
+        }
         const name = (row.sales_user_name ?? "Unknown").trim() || "Unknown";
         const existing = counts.get(id);
         if (existing) {
@@ -188,7 +205,8 @@ export async function getAdminSalesClickPerformance(
     }
   }
 
-  await ingestActionTypes(CLICK_ACTIONS, "clicks");
+  await ingestActionTypes(["whatsapp_clicked"], "clicks", true);
+  await ingestActionTypes(["follow_up_clicked"], "clicks");
   await ingestActionTypes(["follow_up_completed"], "followUps");
 
   const rows = sortRows(

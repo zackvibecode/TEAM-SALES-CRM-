@@ -37,6 +37,11 @@ export function tomorrow(): string {
   return addDays(new Date(), 1);
 }
 
+/** True when an ISO timestamp falls on the same local calendar day as `base`. */
+export function isSameCalendarDay(iso: string, base: Date = new Date()): boolean {
+  return toDateString(new Date(iso)) === toDateString(base);
+}
+
 export function in3Days(): string {
   return addDays(new Date(), 3);
 }

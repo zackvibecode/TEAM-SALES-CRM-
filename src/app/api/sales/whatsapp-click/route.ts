@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userName = await getProfileName(db, user.id);
-    const updated = await logWhatsAppClick(db, {
+    const { lead: updated, counted } = await logWhatsAppClick(db, {
       leadId,
       userId: user.id,
       userName,
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      counted,
       lead: updated,
       whatsapp: wa,
     });

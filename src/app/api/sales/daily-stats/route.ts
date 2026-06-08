@@ -21,7 +21,7 @@ export async function GET() {
       { data: profile },
       { count: total },
       { count: pending },
-      { count: todayDone },
+      { data: todayActivities },
     ] = await Promise.all([
       db
         .from("profiles")
@@ -36,20 +36,24 @@ export async function GET() {
         .eq("status", "Pending"),
       db
         .from("lead_activities")
-        .select("*", { count: "exact", head: true })
+        .select("lead_id")
         .eq("sales_user_id", user.id)
         .gte("created_at", todayStart)
         .in("activity_type", ["whatsapp_clicked", "status_updated"]),
     ]);
 
+    const todayDone = new Set(
+      (todayActivities ?? []).map((row) => row.lead_id).filter(Boolean)
+    ).size;
+
     const goal = profile?.daily_follow_up_goal ?? 50;
 
     return NextResponse.json({
       goal,
-      todayCompleted: todayDone ?? 0,
+      todayCompleted: todayDone,
       totalLeads: total ?? 0,
       pendingLeads: pending ?? 0,
-      goalReached: (todayDone ?? 0) >= goal,
+      goalReached: todayDone >= goal,
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed";

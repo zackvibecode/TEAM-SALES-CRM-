@@ -201,14 +201,16 @@ function CustomersClientInner({
   };
 
   const handleWhatsAppSuccess = useCallback(
-    async (leadId: string) => {
-      const now = new Date().toISOString();
-      patchLead(leadId, {
-        status: "Clicked",
-        clicked_at: now,
-        updated_at: now,
-      });
-      await refreshData();
+    async (leadId: string, counted = true) => {
+      if (counted) {
+        const now = new Date().toISOString();
+        patchLead(leadId, {
+          status: "Clicked",
+          clicked_at: now,
+          updated_at: now,
+        });
+        await refreshData();
+      }
     },
     [patchLead, refreshData]
   );

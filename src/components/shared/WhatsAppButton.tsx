@@ -9,7 +9,7 @@ interface WhatsAppButtonProps {
   customerName?: string;
   messageTemplate?: string;
   clickedFrom?: "lead_card" | "follow_up_queue";
-  onSuccess?: (leadId: string) => void;
+  onSuccess?: (leadId: string, counted: boolean) => void;
   onError?: (message: string) => void;
   className?: string;
   children?: React.ReactNode;
@@ -48,7 +48,7 @@ export function WhatsAppButton({
         return;
       }
 
-      onSuccess?.(leadId);
+      onSuccess?.(leadId, result.counted !== false);
 
       let message = messageTemplate?.trim() ?? "";
       if (message && customerName) {
