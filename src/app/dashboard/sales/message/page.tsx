@@ -18,7 +18,7 @@ export default async function SalesWhatsAppMessagePage() {
         <PageHeader
           badge="WhatsApp"
           title="WhatsApp Message"
-          subtitle="Set your default opening text for every WhatsApp contact from the CRM"
+          subtitle="Optionally set opening text for WhatsApp contacts from the CRM"
         />
         <WhatsAppPretextEditor />
       </div>

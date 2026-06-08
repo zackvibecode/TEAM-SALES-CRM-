@@ -35,6 +35,7 @@ export function resolveWhatsAppMessage(
   savedPretext: string | null | undefined,
   customerName?: string
 ): string {
-  const template = savedPretext?.trim() || BRAND_WHATSAPP_INTRO;
+  const template = savedPretext?.trim();
+  if (!template) return "";
   return applyTemplate(template, customerName ?? "");
 }

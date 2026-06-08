@@ -4,6 +4,7 @@ import { Phone, Calendar, User, CalendarPlus, History, MessageCircle } from "luc
 import { FollowUpStatusBadge } from "./FollowUpStatusBadge";
 import type { FollowUpRow } from "@/lib/follow-up/types";
 import { resolveWhatsAppMessage } from "@/lib/whatsapp-templates";
+import { getWhatsAppLink } from "@/lib/whatsapp";
 
 function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -93,9 +94,5 @@ export function openWhatsApp(
   whatsappPretext?: string | null
 ) {
   const message = resolveWhatsAppMessage(whatsappPretext, name);
-  window.open(
-    `https://wa.me/${wa}?text=${encodeURIComponent(message)}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
+  window.open(getWhatsAppLink(wa, message || undefined), "_blank", "noopener,noreferrer");
 }

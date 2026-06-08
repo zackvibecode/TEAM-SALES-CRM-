@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { BRAND_WHATSAPP_INTRO } from "@/lib/brand";
-import { formatWhatsAppNumber } from "@/lib/whatsapp";
+import { getWhatsAppLink } from "@/lib/whatsapp";
 
 interface WhatsAppButtonProps {
   leadId: string;
@@ -51,14 +50,13 @@ export function WhatsAppButton({
 
       onSuccess?.(leadId);
 
-      let message = messageTemplate || BRAND_WHATSAPP_INTRO;
-      if (customerName) {
+      let message = messageTemplate?.trim() ?? "";
+      if (message && customerName) {
         message = message.replace(/\{name\}/gi, customerName.trim() || "Tuan/Puan");
       }
 
-      const wa = formatWhatsAppNumber(result.whatsapp || whatsapp);
       window.open(
-        `https://wa.me/${wa}?text=${encodeURIComponent(message)}`,
+        getWhatsAppLink(result.whatsapp || whatsapp, message || undefined),
         "_blank",
         "noopener,noreferrer"
       );

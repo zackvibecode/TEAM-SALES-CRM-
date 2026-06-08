@@ -1,5 +1,4 @@
 import { LeadStatus } from "@/types";
-import { BRAND_WHATSAPP_INTRO } from "@/lib/brand";
 
 export function formatWhatsAppNumber(number: string): string {
   let cleaned = number.replace(/[\s\-\(\)\+]/g, "");
@@ -18,7 +17,8 @@ export function formatWhatsAppNumber(number: string): string {
 
 export function getWhatsAppLink(number: string, message?: string): string {
   const formatted = formatWhatsAppNumber(number);
-  const text = message ?? BRAND_WHATSAPP_INTRO;
+  const text = message?.trim();
+  if (!text) return `https://wa.me/${formatted}`;
   return `https://wa.me/${formatted}?text=${encodeURIComponent(text)}`;
 }
 

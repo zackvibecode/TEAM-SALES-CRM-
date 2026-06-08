@@ -2,16 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { MessageCircle, RotateCcw, Save } from "lucide-react";
-import { BRAND_WHATSAPP_INTRO } from "@/lib/brand";
 import { WHATSAPP_PRETEXT_MAX_LENGTH } from "@/lib/whatsapp-pretext";
-import { applyTemplate } from "@/lib/whatsapp-templates";
-
-const SAMPLE_NAME = "Ahmad";
 
 export function WhatsAppPretextEditor() {
   const [draft, setDraft] = useState("");
   const [saved, setSaved] = useState<string | null>(null);
-  const [defaultMessage, setDefaultMessage] = useState(BRAND_WHATSAPP_INTRO);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -27,7 +22,6 @@ export function WhatsAppPretextEditor() {
       const pretext = data.pretext as string | null;
       setSaved(pretext);
       setDraft(pretext ?? "");
-      if (data.effectiveDefault) setDefaultMessage(data.effectiveDefault);
       if (typeof data.maxLength === "number" && data.maxLength !== WHATSAPP_PRETEXT_MAX_LENGTH) {
         console.warn(
           `API maxLength=${data.maxLength} but app expects ${WHATSAPP_PRETEXT_MAX_LENGTH}. Redeploy or restart dev server.`
@@ -69,7 +63,7 @@ export function WhatsAppPretextEditor() {
     }
   };
 
-  const handleReset = async () => {
+  const handleClear = async () => {
     setDraft("");
     setSaving(true);
     setStatus("idle");
@@ -81,21 +75,20 @@ export function WhatsAppPretextEditor() {
         body: JSON.stringify({ pretext: null }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to reset");
+      if (!res.ok) throw new Error(data.error || "Failed to clear");
       setSaved(null);
       setDraft("");
       setStatus("success");
     } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : "Failed to reset");
+      setErrorMsg(e instanceof Error ? e.message : "Failed to clear");
       setStatus("error");
     } finally {
       setSaving(false);
     }
   };
 
-  const previewTemplate = draft.trim() || defaultMessage;
-  const previewMessage = applyTemplate(previewTemplate, SAMPLE_NAME);
   const isDirty = (draft.trim() || null) !== (saved?.trim() || null);
+  const savedEmpty = !saved?.trim();
 
   if (loading) {
     return <div className="card-padded animate-pulse h-64 rounded-2xl" />;
@@ -114,13 +107,13 @@ export function WhatsAppPretextEditor() {
               className="ml-2 text-xs font-normal px-2 py-0.5 rounded-full"
               style={{ background: "var(--surface-elevated)", color: "var(--text-muted)" }}
             >
-              Max {maxLength} characters
+              Optional · Max {maxLength} characters
             </span>
           </h2>
           <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-            This text is pre-filled when you open WhatsApp from leads and follow-ups. Set it once —
-            you can paste emojis, links, and any wording you prefer. Photos cannot be embedded here;
-            share a link or attach images inside WhatsApp after the chat opens.
+            Optionally pre-fill a message when you open WhatsApp from leads and follow-ups. Leave
+            this blank to open chats with no pre-written text. You can paste emojis, links, and any
+            wording you prefer.
           </p>
         </div>
       </div>
@@ -135,7 +128,7 @@ export function WhatsAppPretextEditor() {
           onChange={(e) => setDraft(e.target.value)}
           rows={12}
           maxLength={maxLength}
-          placeholder={defaultMessage}
+          placeholder="Leave empty to open WhatsApp without a pre-filled message"
           className="input-field w-full resize-y min-h-[140px]"
         />
         <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
@@ -148,17 +141,12 @@ export function WhatsAppPretextEditor() {
         </p>
       </div>
 
-      <div className="rounded-xl border p-4" style={{ borderColor: "var(--border-subtle)", background: "var(--surface-elevated)" }}>
-        <p className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: "var(--text-muted)" }}>
-          Preview (sample name: {SAMPLE_NAME})
-        </p>
-        <p className="text-sm whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>
-          {previewMessage}
-        </p>
-      </div>
-
       {status === "success" && (
-        <p className="text-sm text-emerald-600">Saved. Your next WhatsApp opens will use this message.</p>
+        <p className="text-sm text-emerald-600">
+          {savedEmpty
+            ? "Saved. WhatsApp will open without a pre-filled message."
+            : "Saved. Your next WhatsApp opens will use this message."}
+        </p>
       )}
       {status === "error" && errorMsg && (
         <p className="text-sm text-red-500">{errorMsg}</p>
@@ -176,18 +164,18 @@ export function WhatsAppPretextEditor() {
         </button>
         <button
           type="button"
-          onClick={handleReset}
+          onClick={handleClear}
           disabled={saving || (!saved && !draft.trim())}
           className="btn-secondary inline-flex items-center gap-2 min-h-[44px] disabled:opacity-50"
         >
           <RotateCcw className="w-4 h-4" />
-          Reset to company default
+          Clear message
         </button>
       </div>
 
-      {!saved && !draft.trim() && (
+      {savedEmpty && !draft.trim() && (
         <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-          No custom message saved — the company default is used until you save your own.
+          No message saved — WhatsApp opens with an empty chat box.
         </p>
       )}
     </div>
