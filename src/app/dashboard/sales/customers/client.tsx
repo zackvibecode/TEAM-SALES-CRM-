@@ -9,7 +9,7 @@ import {
   formatLeadDateCreated,
   leadCreatedAtInRange,
   parseDateCreated,
-  sortLeadsByDateCreated,
+  sortLeadsForMyTasks,
   type DateCreatedSortDirection,
 } from "@/lib/lead-date-created";
 import type { Lead, LeadStatus } from "@/types";
@@ -129,7 +129,7 @@ function CustomersClientInner({
       return true;
     });
 
-    return sortLeadsByDateCreated(list, sortDirection);
+    return sortLeadsForMyTasks(list, { statusFilter, queueMode, sortDirection });
   }, [leads, search, statusFilter, queueMode, dateRangeActive, dateFrom, dateTo, sortDirection]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -152,6 +152,7 @@ function CustomersClientInner({
           clicked_at: now,
           updated_at: now,
         });
+        setPage(1);
         await refreshData();
       }
     },
@@ -251,18 +252,30 @@ function CustomersClientInner({
               <CalendarRange className="w-3.5 h-3.5" />
               Customize by date
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
-                setPage(1);
-              }}
-              className="px-3 py-2 text-sm font-semibold border filter-pill inline-flex items-center gap-1.5"
-              title="Sort by Date Created"
-            >
-              <ArrowUpDown className="w-3.5 h-3.5" />
-              {sortDirection === "asc" ? "Old → New" : "New → Old"}
-            </button>
+            {statusFilter === "Clicked" ? (
+              <span className="px-3 py-2 text-sm font-semibold border filter-pill-active inline-flex items-center gap-1.5">
+                <ArrowUpDown className="w-3.5 h-3.5" />
+                Latest click first
+              </span>
+            ) : queueMode || statusFilter === "Pending" ? (
+              <span className="px-3 py-2 text-sm font-semibold border filter-pill-active inline-flex items-center gap-1.5">
+                <ArrowUpDown className="w-3.5 h-3.5" />
+                Oldest first
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+                  setPage(1);
+                }}
+                className="px-3 py-2 text-sm font-semibold border filter-pill inline-flex items-center gap-1.5"
+                title="Sort by Date Created"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5" />
+                {sortDirection === "asc" ? "Old → New" : "New → Old"}
+              </button>
+            )}
             <span className="text-sm self-center" style={{ color: "var(--text-muted)" }}>
               {filtered.length} customers
             </span>

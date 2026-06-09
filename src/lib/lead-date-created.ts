@@ -170,6 +170,58 @@ export function sortLeadsByDateCreatedOldestFirst<T extends { created_at: string
   return sortLeadsByDateCreated(leads, "asc");
 }
 
+function parseClickedAt(value: string | null | undefined): number {
+  if (!value) return 0;
+  const t = Date.parse(value);
+  return Number.isNaN(t) ? 0 : t;
+}
+
+type MyTasksLead = {
+  created_at: string;
+  list_order?: number | null;
+  clicked_at?: string | null;
+  follow_up_at?: string | null;
+  next_follow_up_date?: string | null;
+};
+
+/** My Tasks: Pending by date created (oldest first), Clicker by latest click first. */
+export function sortLeadsForMyTasks<T extends MyTasksLead>(
+  leads: T[],
+  opts: {
+    statusFilter: string;
+    queueMode: boolean;
+    sortDirection: DateCreatedSortDirection;
+  }
+): T[] {
+  if (opts.statusFilter === "Clicked") {
+    return [...leads].sort((a, b) => {
+      const clickedDiff = parseClickedAt(b.clicked_at) - parseClickedAt(a.clicked_at);
+      if (clickedDiff !== 0) return clickedDiff;
+      const createdDiff = parseDateCreated(b.created_at) - parseDateCreated(a.created_at);
+      if (createdDiff !== 0) return createdDiff;
+      const la = a.list_order ?? Number.MAX_SAFE_INTEGER;
+      const lb = b.list_order ?? Number.MAX_SAFE_INTEGER;
+      return la - lb;
+    });
+  }
+
+  if (opts.queueMode || opts.statusFilter === "Pending") {
+    return sortLeadsByDateCreated(leads, "asc");
+  }
+
+  if (opts.statusFilter === "Follow Up") {
+    return [...leads].sort((a, b) => {
+      const fa = a.next_follow_up_date || a.follow_up_at || "";
+      const fb = b.next_follow_up_date || b.follow_up_at || "";
+      const dateDiff = fa.localeCompare(fb);
+      if (dateDiff !== 0) return dateDiff;
+      return parseDateCreated(a.created_at) - parseDateCreated(b.created_at);
+    });
+  }
+
+  return sortLeadsByDateCreated(leads, opts.sortDirection);
+}
+
 /** Inclusive range for YYYY-MM-DD date inputs (local calendar days). */
 export function leadCreatedAtInRange(
   createdAt: string,
