@@ -89,9 +89,17 @@ export async function getCrmApiKeyMeta(): Promise<{
   return { configured: false, source: "none", masked: null, updated_at: null };
 }
 
+/** Production custom domain — avoid *.vercel.app which may have Deployment Protection. */
+export const CRM_PUBLIC_BASE_URL =
+  process.env.NEXT_PUBLIC_CRM_BASE_URL?.trim().replace(/\/$/, "") ||
+  "https://salescrm.zaqone.com";
+
 export function getCrmPublicBaseUrl(requestHost?: string | null): string {
   if (process.env.NEXT_PUBLIC_CRM_BASE_URL?.trim()) {
     return process.env.NEXT_PUBLIC_CRM_BASE_URL.trim().replace(/\/$/, "");
+  }
+  if (requestHost?.includes("salescrm.zaqone.com")) {
+    return "https://salescrm.zaqone.com";
   }
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;

@@ -9,6 +9,9 @@ function extractProvidedKey(request: NextRequest): string | null {
   const bearer = auth.match(/^Bearer\s+(.+)$/i);
   if (bearer?.[1]?.trim()) return bearer[1].trim();
 
+  const queryKey = request.nextUrl.searchParams.get("api_key")?.trim();
+  if (queryKey) return queryKey;
+
   return null;
 }
 
@@ -30,7 +33,10 @@ export async function requireAgentAuth(request: NextRequest) {
   if (!provided || provided !== configured) {
     return {
       error: NextResponse.json(
-        { error: "Invalid or missing API key. Use header X-API-Key or Authorization: Bearer" },
+        {
+          error:
+            "Invalid or missing API key. Use X-API-Key header, Authorization: Bearer, or ?api_key= query param",
+        },
         { status: 401 }
       ),
     };

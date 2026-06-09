@@ -6,7 +6,7 @@ import { fetchWhatsAppActivityLogs } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminActivityPage() {
+export default async function SalesActivityPage() {
   const auth = await createServerSupabaseClient();
   const {
     data: { user },
@@ -14,32 +14,25 @@ export default async function AdminActivityPage() {
   if (!user) return null;
 
   const db = createDbClient();
+  const { data: profile } = await db
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
 
-  const [{ data: salesProfiles }, activities] = await Promise.all([
-    db.from("profiles").select("full_name").eq("role", "sales").order("full_name"),
-    fetchWhatsAppActivityLogs(db),
-  ]);
-
-  const salesUsers = Array.from(
-    new Set([
-      ...(salesProfiles ?? []).map((p) => p.full_name).filter(Boolean),
-      ...activities.map((a) => a.sales_name).filter((n) => n !== "Unknown"),
-    ])
-  ).sort();
+  const activities = await fetchWhatsAppActivityLogs(db, { salesUserId: user.id });
 
   return (
-    <AppLayout role="admin">
+    <AppLayout role="sales">
       <div className="space-y-6">
         <PageHeader
           badge="Live"
-          title="Activity Log"
-          subtitle="WhatsApp clicks across the team"
+          title="My Activity Log"
+          subtitle={`WhatsApp clicks · ${profile?.full_name ?? user.email}`}
         />
         <ActivityLogTable
           initialActivities={activities}
-          salesUsers={salesUsers}
-          showSalesUserFilter
-          showSalesUserColumn
+          showSalesUserColumn={false}
         />
       </div>
     </AppLayout>

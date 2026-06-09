@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { getWhatsAppLink } from "@/lib/whatsapp";
+import { WhatsAppRateLimitModal } from "@/components/shared/WhatsAppRateLimitModal";
 
 interface WhatsAppButtonProps {
   leadId: string;
@@ -27,11 +28,11 @@ export function WhatsAppButton({
   children,
 }: WhatsAppButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const [recentClickCount, setRecentClickCount] = useState(0);
 
-  const handleClick = async () => {
-    if (loading) return;
+  const executeClick = async () => {
     setLoading(true);
-
     try {
       const res = await fetch("/api/sales/whatsapp-click", {
         method: "POST",
@@ -69,15 +70,46 @@ export function WhatsAppButton({
     }
   };
 
+  const handleClick = async () => {
+    if (loading) return;
+
+    try {
+      const rateRes = await fetch("/api/sales/whatsapp-click-rate", { cache: "no-store" });
+      const rateData = await rateRes.json();
+
+      if (rateRes.ok && rateData.warning) {
+        setRecentClickCount(rateData.clickCount ?? 0);
+        setShowWarning(true);
+        return;
+      }
+    } catch {
+      // Proceed if rate check fails — do not block the sales flow.
+    }
+
+    await executeClick();
+  };
+
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={loading}
-      className={className}
-      aria-busy={loading}
-    >
-      {loading ? "..." : children || "Contact WhatsApp"}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={loading}
+        className={className}
+        aria-busy={loading}
+      >
+        {loading ? "..." : children || "Contact WhatsApp"}
+      </button>
+
+      <WhatsAppRateLimitModal
+        open={showWarning}
+        clickCount={recentClickCount}
+        onClose={() => setShowWarning(false)}
+        onContinue={() => {
+          setShowWarning(false);
+          void executeClick();
+        }}
+      />
+    </>
   );
 }

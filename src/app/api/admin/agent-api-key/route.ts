@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
       ...meta,
       baseUrl,
       endpoints: [
+        { method: "GET", path: "/api/agent/test", description: "Test connection (mula di sini)" },
+        { method: "GET", path: "/api/agent/help", description: "Arahan API (tanpa key)" },
         { method: "GET", path: "/api/agent/sales-users", description: "Senarai sales" },
         {
           method: "GET",
@@ -38,7 +40,17 @@ export async function GET(request: NextRequest) {
           description: "Pecahan mengikut hari",
         },
       ],
-      headerHint: "X-API-Key: <key>  atau  Authorization: Bearer <key>",
+      headerHint: "X-API-Key: <key>  atau  ?api_key=<key> pada URL",
+      importantNotes: [
+        "Token zaqone_* = CRM API key (bukan login admin, bukan Vercel bypass).",
+        "Guna domain https://salescrm.zaqone.com — jangan guna *.vercel.app preview.",
+        "Jangan fetch halaman web (/admin) — guna /api/agent/... sahaja.",
+        "Vercel bypass hanya perlu jika guna URL preview *.vercel.app (header x-vercel-protection-bypass).",
+      ],
+      exampleCurl:
+        'curl -H "X-API-Key: YOUR_KEY" https://salescrm.zaqone.com/api/agent/sales-users',
+      exampleUrlWithQuery:
+        "https://salescrm.zaqone.com/api/agent/sales-users?api_key=YOUR_KEY",
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to load API key info";

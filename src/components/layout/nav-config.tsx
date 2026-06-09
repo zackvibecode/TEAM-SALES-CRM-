@@ -7,6 +7,7 @@ import {
   Activity,
   ClipboardList,
   CalendarClock,
+  KeyRound,
   Settings,
   MessageCircle,
   LogOut,
@@ -27,12 +28,14 @@ export const adminNavItems: NavItem[] = [
   { label: "Activity Log", href: "/admin/activity", icon: <Activity className="w-4 h-4" /> },
   { label: "Follow Up Queue", href: "/admin/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
   { label: "Audit Log", href: "/admin/audit", icon: <ClipboardList className="w-4 h-4" /> },
+  { label: "AI API Key", href: "/admin/api-key", icon: <KeyRound className="w-4 h-4" /> },
   { label: "Settings", href: "/admin/settings", icon: <Settings className="w-4 h-4" /> },
 ];
 
 export const salesNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard/sales", icon: <LayoutDashboard className="w-4 h-4" /> },
   { label: "My Tasks", href: "/dashboard/sales/customers", icon: <List className="w-4 h-4" /> },
+  { label: "Activity Log", href: "/dashboard/sales/activity", icon: <Activity className="w-4 h-4" /> },
   { label: "Follow Up Queue", href: "/dashboard/sales/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
   { label: "WhatsApp Message", href: "/dashboard/sales/message", icon: <MessageCircle className="w-4 h-4" /> },
 ];
@@ -48,9 +51,11 @@ export const routeTitles: Record<string, string> = {
   "/admin/activity": "Activity Log",
   "/admin/follow-ups": "Follow Up Queue",
   "/admin/audit": "Audit Log",
+  "/admin/api-key": "AI API Key",
   "/admin/settings": "Settings",
   "/dashboard/sales": "Dashboard",
   "/dashboard/sales/customers": "My Tasks",
+  "/dashboard/sales/activity": "Activity Log",
   "/dashboard/sales/follow-ups": "Follow Up Queue",
   "/dashboard/sales/message": "WhatsApp Message",
 };

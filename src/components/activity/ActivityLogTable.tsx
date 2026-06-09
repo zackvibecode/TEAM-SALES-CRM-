@@ -1,21 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { ArrowRight, Search, X } from "lucide-react";
-
-interface ActivityItem {
-  id: string;
-  sales_name: string;
-  lead_name: string;
-  lead_whatsapp: string;
-  activity_type: string;
-  message?: string;
-  old_status: string | null;
-  new_status: string | null;
-  notes: string | null;
-  created_at: string;
-}
+import { Search, X } from "lucide-react";
+import {
+  formatActivityDate,
+  formatActivityTime,
+  type ActivityLogItem,
+} from "@/lib/activity-log";
 
 type DateFilter = "all" | "today" | "week" | "month" | "year" | "custom";
 
@@ -23,22 +15,38 @@ function getDateRange(filter: DateFilter): { start: Date | null; end: Date | nul
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   switch (filter) {
-    case "all": return { start: null, end: null };
-    case "today": return { start: todayStart, end: null };
+    case "all":
+      return { start: null, end: null };
+    case "today":
+      return { start: todayStart, end: null };
     case "week": {
       const weekStart = new Date(todayStart);
       weekStart.setDate(weekStart.getDate() - weekStart.getDay());
       return { start: weekStart, end: null };
     }
-    case "month": return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: null };
-    case "year": return { start: new Date(now.getFullYear(), 0, 1), end: null };
-    default: return { start: null, end: null };
+    case "month":
+      return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: null };
+    case "year":
+      return { start: new Date(now.getFullYear(), 0, 1), end: null };
+    default:
+      return { start: null, end: null };
   }
 }
 
-export function ActivityClient({ initialActivities }: { initialActivities: ActivityItem[] }) {
+export function ActivityLogTable({
+  initialActivities,
+  salesUsers = [],
+  showSalesUserFilter = false,
+  showSalesUserColumn = true,
+}: {
+  initialActivities: ActivityLogItem[];
+  salesUsers?: string[];
+  showSalesUserFilter?: boolean;
+  showSalesUserColumn?: boolean;
+}) {
   const [activities] = useState(initialActivities);
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [salesUserFilter, setSalesUserFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [customStart, setCustomStart] = useState("");
@@ -48,7 +56,6 @@ export function ActivityClient({ initialActivities }: { initialActivities: Activ
   const filtered = useMemo(() => {
     let result = activities;
 
-    // Date filter
     const range = getDateRange(dateFilter);
     if (range.start) {
       const startTime = range.start.getTime();
@@ -65,19 +72,22 @@ export function ActivityClient({ initialActivities }: { initialActivities: Activ
       }
     }
 
-    // Search filter
+    if (showSalesUserFilter && salesUserFilter !== "all") {
+      result = result.filter((a) => a.sales_name === salesUserFilter);
+    }
+
     if (search) {
       const s = search.toLowerCase();
-      result = result.filter((a) =>
-        a.sales_name.toLowerCase().includes(s) ||
-        a.lead_name.toLowerCase().includes(s) ||
-        a.activity_type.toLowerCase().includes(s) ||
-        (a.message?.toLowerCase().includes(s) ?? false)
+      result = result.filter(
+        (a) =>
+          a.sales_name.toLowerCase().includes(s) ||
+          a.lead_name.toLowerCase().includes(s) ||
+          a.lead_whatsapp.toLowerCase().includes(s)
       );
     }
 
     return result;
-  }, [activities, dateFilter, search, customStart, customEnd]);
+  }, [activities, dateFilter, search, customStart, customEnd, salesUserFilter, showSalesUserFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -91,11 +101,12 @@ export function ActivityClient({ initialActivities }: { initialActivities: Activ
     { label: "Custom", value: "custom" },
   ];
 
+  const colSpan =
+    4 + (showSalesUserColumn ? 1 : 0);
+
   return (
     <div className="space-y-4">
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Date filter buttons */}
         <div className="flex flex-wrap gap-1">
           {filterButtons.map((btn) => (
             <button
@@ -113,114 +124,149 @@ export function ActivityClient({ initialActivities }: { initialActivities: Activ
           ))}
         </div>
 
-        {/* Custom date inputs */}
         {dateFilter === "custom" && (
           <div className="flex items-center gap-2">
             <input
               type="date"
               value={customStart}
-              onChange={(e) => { setCustomStart(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setCustomStart(e.target.value);
+                setPage(1);
+              }}
               className="input-field py-1.5 text-xs max-w-[140px]"
             />
             <span className="text-xs text-slate-400">to</span>
             <input
               type="date"
               value={customEnd}
-              onChange={(e) => { setCustomEnd(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setCustomEnd(e.target.value);
+                setPage(1);
+              }}
               className="input-field py-1.5 text-xs max-w-[140px]"
             />
           </div>
         )}
 
-        {/* Search */}
+        {showSalesUserFilter && salesUsers.length > 0 && (
+          <select
+            value={salesUserFilter}
+            onChange={(e) => {
+              setSalesUserFilter(e.target.value);
+              setPage(1);
+            }}
+            className="input-field py-1.5 text-xs max-w-[180px]"
+          >
+            <option value="all">All sales users</option>
+            {salesUsers.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        )}
+
         <div className="relative max-w-xs flex-1 ml-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search..."
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="input-field pl-10 py-1.5"
           />
           {search && (
-            <button onClick={() => { setSearch(""); setPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <button
+              onClick={() => {
+                setSearch("");
+                setPage(1);
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+            >
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        <span className="text-xs" style={{ color: "var(--text-muted)" }}>{filtered.length} activities</span>
+        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+          {filtered.length} clicks
+        </span>
       </div>
 
-      {/* Table */}
       <div className="table-shell">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="table-head">
-                <th className="table-th">Sales User</th>
+                {showSalesUserColumn && <th className="table-th">Sales User</th>}
                 <th className="table-th">Customer</th>
-                <th className="table-th">Type</th>
-                <th className="table-th">Change</th>
+                <th className="table-th">Status</th>
+                <th className="table-th">Date</th>
                 <th className="table-th">Time</th>
               </tr>
             </thead>
             <tbody>
               {paginated.map((a) => (
                 <tr key={a.id} className="table-row">
-                  <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>{a.sales_name}</td>
+                  {showSalesUserColumn && (
+                    <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>
+                      {a.sales_name}
+                    </td>
+                  )}
                   <td className="px-4 py-3">
-                    <div className="font-medium" style={{ color: "var(--text-primary)" }}>{a.lead_name}</div>
-                    <div className="text-xs" style={{ color: "var(--text-muted)" }}>{a.lead_whatsapp}</div>
+                    <div className="font-medium" style={{ color: "var(--text-primary)" }}>
+                      {a.lead_name}
+                    </div>
+                    <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {a.lead_whatsapp}
+                    </div>
                   </td>
                   <td className="px-3 py-3">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      a.activity_type === "whatsapp_clicked" ? "bg-primary-light text-primary" :
-                      a.activity_type === "status_updated" ? "bg-blue-100 text-blue-700" :
-                      "bg-yellow-100 text-yellow-700"
-                    }`}>
-                      {a.activity_type.replace("_", " ")}
-                    </span>
+                    <StatusBadge status="Clicked" />
                   </td>
-                  <td className="px-4 py-3">
-                    {(a.old_status || a.new_status) ? (
-                      <div className="flex items-center gap-1.5 text-xs">
-                        {a.old_status ? (
-                          <StatusBadge status={a.old_status as "Pending" | "Clicked" | "Follow Up" | "Interested" | "Not Interested" | "No Response" | "Converted"} />
-                        ) : (
-                          <span style={{ color: "var(--text-muted)" }}>-</span>
-                        )}
-                        <ArrowRight className="w-3 h-3" style={{ color: "var(--text-muted)" }} />
-                        {a.new_status ? (
-                          <StatusBadge status={a.new_status as "Pending" | "Clicked" | "Follow Up" | "Interested" | "Not Interested" | "No Response" | "Converted"} />
-                        ) : (
-                          <span style={{ color: "var(--text-muted)" }}>-</span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-xs" style={{ color: "var(--text-secondary)" }}>{a.message || a.notes || "—"}</span>
-                    )}
+                  <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
+                    {formatActivityDate(a.created_at)}
                   </td>
-                  <td className="px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
-                    {new Date(a.created_at).toLocaleString("en-MY")}
+                  <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
+                    {formatActivityTime(a.created_at)}
                   </td>
                 </tr>
               ))}
               {paginated.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-12 text-center" style={{ color: "var(--text-muted)" }}>No activities found for this period.</td></tr>
+                <tr>
+                  <td colSpan={colSpan} className="px-4 py-12 text-center" style={{ color: "var(--text-muted)" }}>
+                    No WhatsApp clicks found for this period.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-sm" style={{ color: "var(--text-muted)" }}>
-          <span>Showing {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}</span>
+          <span>
+            Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}
+          </span>
           <div className="flex gap-2">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="btn-secondary px-3 py-1.5 disabled:opacity-40">Prev</button>
-            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="btn-secondary px-3 py-1.5 disabled:opacity-40">Next</button>
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="btn-secondary px-3 py-1.5 disabled:opacity-40"
+            >
+              Prev
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="btn-secondary px-3 py-1.5 disabled:opacity-40"
+            >
+              Next
+            </button>
           </div>
         </div>
       )}

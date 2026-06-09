@@ -226,15 +226,6 @@ export async function logWhatsAppClick(
   });
 
   if (isFirstEverContact) {
-    await logActivity(db, {
-      leadId: params.leadId,
-      salesUserId: params.userId,
-      salesUserName: params.userName,
-      actionType: "initial_contact",
-      message: "Initial WhatsApp contact made",
-      metadata: { phone: params.phone },
-    });
-
     const activeFollowUp = await getActiveFollowUp(db, params.leadId);
     if (!activeFollowUp) {
       await createFollowUp(db, {
@@ -244,14 +235,6 @@ export async function logWhatsAppClick(
         followUpDate: nextDate,
         followUpNumber: (lead.follow_up_count ?? 0) + 1,
         note: "Auto scheduled after WhatsApp click",
-      });
-      await logActivity(db, {
-        leadId: params.leadId,
-        salesUserId: params.userId,
-        salesUserName: params.userName,
-        actionType: "follow_up_scheduled",
-        message: "Next follow up scheduled after WhatsApp click",
-        metadata: { follow_up_date: nextDate, auto: true },
       });
     }
   }

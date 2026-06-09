@@ -1,53 +1,67 @@
 ---
 name: zaqone-crm-monitor
-description: Monitor aktiviti sales dalam Zaqone CRM — hari aktif, klik WhatsApp, follow-up, daily goal. Guna API read-only CRM.
+description: Zaqone CRM sales monitor. WAJIB guna HTTP GET ke /api/agent/ — JANGAN login web.
 ---
 
-# Zaqone CRM Sales Monitor
+# Zaqone CRM — WAJIB IKUT (Hermes Telegram)
 
-Jawab soalan tentang prestasi sales dalam **Zaqone CRM** dengan memanggil API agent (baca sahaja).
+## JANGAN BUAT INI ❌
 
-## Konfigurasi
+- JANGAN buka browser ke salescrm.zaqone.com
+- JANGAN guna /api/auth/login
+- JANGAN minta email atau password Boss Zack
+- JANGAN guna Vercel bypass (tak perlu)
+- JANGAN treat token zaqone_* sebagai password login
 
-Baca dari environment (`~/.hermes/.env`):
-- `ZAQONE_CRM_URL` — URL asas CRM (contoh `https://salescrm.zaqone.com`)
-- `ZAQONE_API_KEY` atau `CRM_API_KEY` — API key yang sama seperti dalam Vercel
+## YANG BETUL ✅
 
-Hantar key dengan **salah satu** cara (paling senang: `X-API-Key`):
+Token `zaqone_*` = **API key** untuk HTTP GET sahaja.
+
+### Langkah 1 — Test connection (WAJIB pertama kali)
+
+Guna tool `curl` atau `web_fetch` ke URL ini (ganti KEY):
+
 ```
-X-API-Key: <key-anda>
-```
-atau
-```
-Authorization: Bearer <key-anda>
+https://salescrm.zaqone.com/api/agent/test?api_key=ZAQONE_API_KEY
 ```
 
-API ini **bukan khas Hermes** — mana-mana agent yang boleh HTTP fetch boleh guna.
+Kalau `ok: true` → connected. Teruskan langkah 2.
 
-## Slug nama sales
+### Langkah 2 — Jawab soalan user
 
-Tukar nama kepada slug: huruf kecil, ruang → sempang.
-- "Timsah Mirata" → `timsah-mirata`
+Contoh soalan: "Berapa hari SHIEMA aktif?"
 
-Jika tidak pasti slug, panggil `GET {ZAQONE_CRM_URL}/api/agent/sales-users` dahulu.
+```
+https://salescrm.zaqone.com/api/agent/sales-user/shiema/summary?days=30&api_key=ZAQONE_API_KEY
+```
 
-## Endpoint
+Baca JSON: `active_days_count`, `total_whatsapp_clicks`, `today_completed`, `daily_follow_up_goal`.
 
-| Soalan biasa | Endpoint |
-|--------------|----------|
-| Senarai sales | `GET /api/agent/sales-users` |
-| Ringkasan (hari aktif, klik, goal) | `GET /api/agent/sales-user/{slug}/summary?days=30` |
-| Aktiviti terkini | `GET /api/agent/sales-user/{slug}/activity?limit=50` |
-| Pecahan mengikut hari | `GET /api/agent/sales-user/{slug}/daily-breakdown?days=30` |
+### Langkah 3 — Jawab Bahasa Melayu
 
-## Cara jawab
+Ringkas, guna angka dari JSON. Jangan tunjuk API key.
 
-- **Sentiasa jawab dalam Bahasa Melayu** melainkan user minta bahasa lain.
-- Jangan dedahkan token API dalam jawapan.
-- Terangkan: berapa hari aktif, apa yang dilakukan, sama ada capai daily goal.
+## Env vars (~/.hermes/.env)
 
-## Contoh
+```
+ZAQONE_CRM_URL=https://salescrm.zaqone.com
+ZAQONE_API_KEY=zaqone_xxxxxxxx
+```
 
-User: "Berapa hari Timsah Mirata aktif bulan ini?"
-→ `GET .../api/agent/sales-user/timsah-mirata/summary?days=30`
-→ Jawab ringkas dalam BM dengan angka dari `active_days_count`, `total_whatsapp_clicks`, `today_completed`, `daily_follow_up_goal`.
+## Bantuan awam (tanpa key)
+
+```
+GET https://salescrm.zaqone.com/api/agent/help
+```
+
+## Slug sales
+
+| Nama | Slug |
+|------|------|
+| SHIEMA | shiema |
+| ALIP | alip |
+| AIN | ain |
+| FATIN | fatin |
+| RIFQI | rifqi |
+
+Senarai penuh: `/api/agent/sales-users?api_key=KEY`
