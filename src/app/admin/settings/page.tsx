@@ -2,6 +2,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { WhatsAppPretextEditor } from "@/components/settings/WhatsAppPretextEditor";
 import { AdminResetData } from "@/components/admin/AdminResetData";
+import { AdminAgentApiKeyPanel } from "@/components/admin/AdminAgentApiKeyPanel";
 
 export default function AdminSettingsPage() {
   return (
@@ -13,6 +14,7 @@ export default function AdminSettingsPage() {
           subtitle="Workspace preferences and your WhatsApp opening message"
           compact
         />
+        <AdminAgentApiKeyPanel />
         <WhatsAppPretextEditor />
         <AdminResetData variant="panel" />
       </div>

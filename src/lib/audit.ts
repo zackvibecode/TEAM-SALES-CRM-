@@ -8,7 +8,8 @@ export type AuditAction =
   | "archive_batch"
   | "create_sales_user"
   | "update_kpi"
-  | "reset_all_crm_data";
+  | "reset_all_crm_data"
+  | "rotate_agent_api_key";
 
 export async function logAudit(params: {
   actorId: string;
