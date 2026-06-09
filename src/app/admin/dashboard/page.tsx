@@ -28,14 +28,14 @@ export default async function AdminDashboardPage() {
     { count: clicksWeek },
     { data: salesProfiles },
   ] = await Promise.all([
-    db.from("profiles").select("*", { count: "exact", head: true }).eq("role", "sales"),
+    db.from("profiles").select("*", { count: "exact", head: true }).in("role", ["sales", "admin"]),
     db.from("uploaded_files").select("*", { count: "exact", head: true }),
     db.from("leads").select("*", { count: "exact", head: true }),
     db.from("leads").select("*", { count: "exact", head: true }).eq("status", "Clicked"),
     db.from("leads").select("*", { count: "exact", head: true }).eq("status", "Pending"),
     db.from("leads").select("*", { count: "exact", head: true }).eq("status", "Clicked").gte("clicked_at", todayStart),
     db.from("leads").select("*", { count: "exact", head: true }).eq("status", "Clicked").gte("clicked_at", weekStart),
-    db.from("profiles").select("id, full_name, email").eq("role", "sales"),
+    db.from("profiles").select("id, full_name, email, role").in("role", ["sales", "admin"]).order("full_name"),
   ]);
 
   // Pre-compute per-user stats

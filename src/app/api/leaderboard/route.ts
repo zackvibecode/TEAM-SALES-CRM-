@@ -32,7 +32,7 @@ export async function GET() {
     const { data: salesProfiles } = await db
       .from("profiles")
       .select("id, full_name")
-      .eq("role", "sales");
+      .in("role", ["sales", "admin"]);
 
     if (!salesProfiles?.length) {
       return NextResponse.json({ rows: [] });

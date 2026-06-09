@@ -10,6 +10,7 @@ interface SalesProfile {
   id: string;
   full_name: string;
   email: string;
+  role?: string;
 }
 
 interface PerformanceRow {
@@ -69,7 +70,7 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
   }, [selectedUserId, performanceData]);
 
   const selectedUserName = selectedUserId === "all"
-    ? "All Sales Users"
+    ? "All Users"
     : salesProfiles.find((s) => s.id === selectedUserId)?.full_name || "Unknown";
 
   return (
@@ -87,12 +88,12 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
             className="input-field max-w-xs py-2 text-sm"
-            aria-label="View sales user"
+            aria-label="View team user"
           >
-            <option value="all">All Sales Users</option>
+            <option value="all">All Users</option>
             {salesProfiles.map((sp) => (
               <option key={sp.id} value={sp.id}>
-                {sp.full_name}
+                {sp.full_name}{sp.role === "admin" ? " (Admin)" : ""}
               </option>
             ))}
           </select>
@@ -112,11 +113,11 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
         <AdminPerformanceGraph />
       )}
 
-      <DashboardTable title={`Sales Performance — ${selectedUserName}`}>
+      <DashboardTable title={`Team Performance — ${selectedUserName}`}>
         <table className="w-full text-sm">
           <thead>
             <tr className="table-head">
-              <th className="table-th">Sales Name</th>
+              <th className="table-th">Name</th>
               <th className="table-th">Email</th>
               <th className="table-th text-right">Total</th>
               <th className="table-th text-right">Clicked</th>

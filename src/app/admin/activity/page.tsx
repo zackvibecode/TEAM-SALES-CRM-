@@ -16,7 +16,7 @@ export default async function AdminActivityPage() {
   const db = createDbClient();
 
   const [{ data: salesProfiles }, activities] = await Promise.all([
-    db.from("profiles").select("full_name").eq("role", "sales").order("full_name"),
+    db.from("profiles").select("full_name, role").in("role", ["sales", "admin"]).order("full_name"),
     fetchWhatsAppActivityLogs(db),
   ]);
 

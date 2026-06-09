@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useCallback, useMemo, Suspense, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 import { resolveWhatsAppMessage } from "@/lib/whatsapp-templates";
-import { Search, X, Clock, CalendarRange, ArrowUpDown } from "lucide-react";
+import { Search, Clock, CalendarRange, ArrowUpDown } from "lucide-react";
 import {
   formatLeadDateCreated,
   leadCreatedAtInRange,
@@ -13,15 +12,13 @@ import {
   sortLeadsByDateCreated,
   type DateCreatedSortDirection,
 } from "@/lib/lead-date-created";
-import type { Lead, LeadActivity, LeadStatus } from "@/types";
+import type { Lead, LeadStatus } from "@/types";
 
 const TASK_STATUSES: { value: LeadStatus; label: string }[] = [
   { value: "Pending", label: "Pending" },
   { value: "Clicked", label: "Clicker" },
   { value: "Follow Up", label: "Follow Up" },
 ];
-
-const NOTES_REQUIRED: LeadStatus[] = ["Follow Up"];
 
 interface CustomersClientProps {
   initialLeads: Lead[];
@@ -49,13 +46,6 @@ function CustomersClientInner({
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [queueMode, setQueueMode] = useState(false);
   const [page, setPage] = useState(1);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editStatus, setEditStatus] = useState<LeadStatus>("Pending");
-  const [editNotes, setEditNotes] = useState("");
-  const [editFollowUp, setEditFollowUp] = useState("");
-  const [activities, setActivities] = useState<LeadActivity[]>([]);
-  const [editError, setEditError] = useState("");
-  const [saving, setSaving] = useState(false);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
@@ -153,53 +143,6 @@ function CustomersClientInner({
     return years.size === 1 && leads.some((l) => l.list_order != null);
   }, [leads]);
 
-  const loadActivities = async (leadId: string) => {
-    const supabase = createClient();
-    const { data } = await supabase
-      .from("lead_activities")
-      .select("*")
-      .eq("lead_id", leadId)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    setActivities(data || []);
-  };
-
-  const handleUpdateStatus = async (leadId: string) => {
-    if (NOTES_REQUIRED.includes(editStatus) && !editNotes.trim()) {
-      setEditError("Notes required for this status.");
-      return;
-    }
-    setEditError("");
-    setSaving(true);
-
-    try {
-      const res = await fetch("/api/sales/update-lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          leadId,
-          status: editStatus,
-          notes: editNotes,
-          followUpAt: editFollowUp || null,
-        }),
-      });
-      const result = await res.json();
-      if (!res.ok) {
-        setEditError(result.error || "Failed to save");
-        return;
-      }
-      if (result.lead) {
-        patchLead(leadId, result.lead as Lead);
-      }
-      setEditingId(null);
-      await refreshData();
-    } catch {
-      setEditError("Network error. Try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleWhatsAppSuccess = useCallback(
     async (leadId: string, counted = true) => {
       if (counted) {
@@ -220,15 +163,6 @@ function CustomersClientInner({
     setDateTo("");
     setDateRangeOpen(false);
     setPage(1);
-  };
-
-  const openEditor = (lead: Lead) => {
-    setEditingId(lead.id);
-    setEditStatus(lead.status as LeadStatus);
-    setEditNotes(lead.notes);
-    setEditFollowUp(lead.follow_up_at ? lead.follow_up_at.slice(0, 10) : "");
-    setEditError("");
-    loadActivities(lead.id);
   };
 
   const bookTotal = totalCount > 0 ? totalCount : leads.length;
@@ -393,25 +327,17 @@ function CustomersClientInner({
                   <td className="px-4 py-3 text-center">
                     <StatusBadge status={lead.status as LeadStatus} />
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-center gap-2 flex-wrap">
-                      <WhatsAppButton
-                        leadId={lead.id}
-                        whatsapp={lead.whatsapp}
-                        customerName={lead.name}
-                        messageTemplate={whatsappMessage(lead.name)}
-                        onSuccess={handleWhatsAppSuccess}
-                        className="btn-whatsapp px-3 py-2 shadow-sm min-h-[40px] disabled:opacity-60"
-                      >
-                        WhatsApp
-                      </WhatsAppButton>
-                      <button
-                        onClick={() => openEditor(lead)}
-                        className="btn-secondary text-xs px-3 py-2"
-                      >
-                        Edit
-                      </button>
-                    </div>
+                  <td className="px-4 py-3 text-center">
+                    <WhatsAppButton
+                      leadId={lead.id}
+                      whatsapp={lead.whatsapp}
+                      customerName={lead.name}
+                      messageTemplate={whatsappMessage(lead.name)}
+                      onSuccess={handleWhatsAppSuccess}
+                      className="btn-whatsapp px-3 py-2 shadow-sm min-h-[40px] disabled:opacity-60"
+                    >
+                      WhatsApp
+                    </WhatsAppButton>
                   </td>
                 </tr>
               ))}
@@ -441,21 +367,16 @@ function CustomersClientInner({
               </div>
               <StatusBadge status={lead.status as LeadStatus} />
             </div>
-            <div className="flex gap-2">
-              <WhatsAppButton
-                leadId={lead.id}
-                whatsapp={lead.whatsapp}
-                customerName={lead.name}
-                messageTemplate={whatsappMessage(lead.name)}
-                onSuccess={handleWhatsAppSuccess}
-                className="btn-whatsapp px-3 py-2 flex-1 min-h-[44px] disabled:opacity-60"
-              >
-                WhatsApp
-              </WhatsAppButton>
-              <button onClick={() => openEditor(lead)} className="btn-secondary text-xs px-3 py-2">
-                Edit
-              </button>
-            </div>
+            <WhatsAppButton
+              leadId={lead.id}
+              whatsapp={lead.whatsapp}
+              customerName={lead.name}
+              messageTemplate={whatsappMessage(lead.name)}
+              onSuccess={handleWhatsAppSuccess}
+              className="btn-whatsapp px-3 py-2 w-full min-h-[44px] disabled:opacity-60"
+            >
+              WhatsApp
+            </WhatsAppButton>
           </div>
         ))}
         {paginated.length === 0 && (
@@ -489,83 +410,6 @@ function CustomersClientInner({
         </div>
       )}
 
-      {editingId && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-          <div className="card rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border-color)" }}>
-              <h2 className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                {leads.find((l) => l.id === editingId)?.name}
-              </h2>
-              <button onClick={() => setEditingId(null)} style={{ color: "var(--text-muted)" }}>
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              {editError && <div className="alert-error">{editError}</div>}
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>Status</label>
-                <select
-                  value={editStatus}
-                  onChange={(e) => setEditStatus(e.target.value as LeadStatus)}
-                  className="input-field"
-                >
-                  {TASK_STATUSES.map((s) => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>
-                  Notes {NOTES_REQUIRED.includes(editStatus) && <span className="text-red-500">*</span>}
-                </label>
-                <textarea
-                  value={editNotes}
-                  onChange={(e) => setEditNotes(e.target.value)}
-                  rows={3}
-                  className="input-field"
-                  placeholder="Call outcome, next step..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>Follow-up date</label>
-                <input
-                  type="date"
-                  value={editFollowUp}
-                  onChange={(e) => setEditFollowUp(e.target.value)}
-                  className="input-field"
-                />
-              </div>
-              {activities.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold uppercase mb-2" style={{ color: "var(--text-muted)" }}>Timeline</p>
-                  <ul className="space-y-2 max-h-32 overflow-y-auto text-xs">
-                    {activities.map((a) => (
-                      <li key={a.id} className="border-l-2 border-primary/30 pl-2" style={{ color: "var(--text-secondary)" }}>
-                        {new Date(a.created_at).toLocaleString("en-MY")} — {a.activity_type.replace("_", " ")}
-                        {a.old_status && a.new_status && (
-                          <span>: {a.old_status} → {a.new_status}</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <div className="flex gap-3">
-                <button onClick={() => setEditingId(null)} className="btn-secondary flex-1 py-2.5 text-sm">
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleUpdateStatus(editingId)}
-                  disabled={saving}
-                  className="btn-primary-solid flex-1 disabled:opacity-50"
-                >
-                  {saving ? "Saving..." : "Save"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

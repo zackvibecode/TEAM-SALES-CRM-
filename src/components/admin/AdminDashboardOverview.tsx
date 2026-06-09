@@ -76,7 +76,7 @@ export function AdminDashboardOverview({
 
       {showWorkspace && (
         <DashboardMetricSection title="Workspace" columns={3}>
-          <DashboardMetricTile label="Sales Users" value={stats.salesUsers} icon={Users} accent="sky" />
+          <DashboardMetricTile label="Team Members" value={stats.salesUsers} icon={Users} accent="sky" />
           <DashboardMetricTile label="Uploaded Files" value={stats.files} icon={FileText} accent="blue" />
         </DashboardMetricSection>
       )}
