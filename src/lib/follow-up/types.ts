@@ -7,7 +7,10 @@ export type ActivityLogActionType =
   | "follow_up_clicked"
   | "follow_up_scheduled"
   | "follow_up_completed"
-  | "follow_up_overdue";
+  | "follow_up_overdue"
+  | "whatsapp_rate_limit_warning";
+
+export type WhatsAppRateLimitWarningOutcome = "shown" | "wait" | "continue";
 
 export interface FollowUpRow {
   id: string;

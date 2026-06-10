@@ -1,8 +1,7 @@
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { ActivityLogTable } from "@/components/activity/ActivityLogTable";
-import { fetchWhatsAppActivityLogs } from "@/lib/activity-log";
+import { AdminActivityView } from "@/components/activity/AdminActivityView";
+import { fetchWhatsAppActivityLogs, fetchWhatsAppRateLimitWarnings } from "@/lib/activity-log";
 
 export const dynamic = "force-dynamic";
 
@@ -15,33 +14,23 @@ export default async function AdminActivityPage() {
 
   const db = createDbClient();
 
-  const [{ data: salesProfiles }, activities] = await Promise.all([
+  const [{ data: salesProfiles }, activities, warnings] = await Promise.all([
     db.from("profiles").select("full_name, role").in("role", ["sales", "admin"]).order("full_name"),
     fetchWhatsAppActivityLogs(db),
+    fetchWhatsAppRateLimitWarnings(db),
   ]);
 
   const salesUsers = Array.from(
     new Set([
       ...(salesProfiles ?? []).map((p) => p.full_name).filter(Boolean),
       ...activities.map((a) => a.sales_name).filter((n) => n !== "Unknown"),
+      ...warnings.map((w) => w.sales_name).filter((n) => n !== "Unknown"),
     ])
   ).sort();
 
   return (
     <AppLayout role="admin">
-      <div className="space-y-6">
-        <PageHeader
-          badge="Live"
-          title="Activity Log"
-          subtitle="WhatsApp clicks across the team"
-        />
-        <ActivityLogTable
-          initialActivities={activities}
-          salesUsers={salesUsers}
-          showSalesUserFilter
-          showSalesUserColumn
-        />
-      </div>
+      <AdminActivityView activities={activities} warnings={warnings} salesUsers={salesUsers} />
     </AppLayout>
   );
 }

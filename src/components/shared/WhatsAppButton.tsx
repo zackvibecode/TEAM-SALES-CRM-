@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 import { WhatsAppRateLimitModal } from "@/components/shared/WhatsAppRateLimitModal";
 
@@ -30,6 +30,30 @@ export function WhatsAppButton({
   const [loading, setLoading] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [recentClickCount, setRecentClickCount] = useState(0);
+  const warningLogIdRef = useRef<string | null>(null);
+
+  const logWarningEvent = async (outcome: "shown" | "wait" | "continue", clickCount: number) => {
+    try {
+      const res = await fetch("/api/sales/whatsapp-rate-limit-warning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId,
+          clickCount,
+          clickedFrom,
+          outcome,
+          warningLogId:
+            outcome === "shown" ? undefined : warningLogIdRef.current ?? undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.id && outcome === "shown") {
+        warningLogIdRef.current = data.id;
+      }
+    } catch {
+      // Non-blocking — sales flow must not break if logging fails.
+    }
+  };
 
   const executeClick = async () => {
     setLoading(true);
@@ -78,7 +102,9 @@ export function WhatsAppButton({
       const rateData = await rateRes.json();
 
       if (rateRes.ok && rateData.warning) {
-        setRecentClickCount(rateData.clickCount ?? 0);
+        const count = rateData.clickCount ?? 0;
+        setRecentClickCount(count);
+        await logWarningEvent("shown", count);
         setShowWarning(true);
         return;
       }
@@ -104,9 +130,15 @@ export function WhatsAppButton({
       <WhatsAppRateLimitModal
         open={showWarning}
         clickCount={recentClickCount}
-        onClose={() => setShowWarning(false)}
-        onContinue={() => {
+        onClose={() => {
+          void logWarningEvent("wait", recentClickCount);
           setShowWarning(false);
+          warningLogIdRef.current = null;
+        }}
+        onContinue={() => {
+          void logWarningEvent("continue", recentClickCount);
+          setShowWarning(false);
+          warningLogIdRef.current = null;
           void executeClick();
         }}
       />
