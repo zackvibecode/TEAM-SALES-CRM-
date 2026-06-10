@@ -3,7 +3,13 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import { MessageCircle } from "lucide-react";
-import { getRotatorImageClass, normalizeImageSize, type RotatorImageSize } from "@/lib/rotator/display";
+import {
+  getRotatorFrameClass,
+  getRotatorImageClass,
+  getRotatorImageSizesAttr,
+  normalizeImageSize,
+  type RotatorImageSize,
+} from "@/lib/rotator/display";
 import { fetchRotatorAssign } from "@/lib/rotator/assign-client";
 import { RotatorSceneBackground } from "./RotatorSceneBackground";
 import { RotatorContentFrame } from "./RotatorContentFrame";
@@ -44,7 +50,7 @@ export function CountdownRedirect({
   slug,
   imageUrl,
   loadingText,
-  imageSize = "medium",
+  imageSize = "large",
   source,
   campaign,
   previewMode = false,
@@ -143,7 +149,7 @@ export function CountdownRedirect({
         </p>
       )}
 
-      <RotatorContentFrame className="mb-5 sm:mb-7 w-full max-w-[min(100%,24rem)]">
+      <RotatorContentFrame className={`mb-5 sm:mb-7 ${getRotatorFrameClass(size)}`}>
         <div className={`mx-auto ${imageClass}`}>
           <Image
             src={imageUrl}
@@ -151,7 +157,7 @@ export function CountdownRedirect({
             fill
             className="object-contain rounded-2xl"
             priority
-            sizes="(max-width: 640px) 92vw, 420px"
+            sizes={getRotatorImageSizesAttr(size)}
           />
         </div>
       </RotatorContentFrame>
@@ -163,7 +169,9 @@ export function CountdownRedirect({
       {assigning ? (
         <div className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-[#3b66ff] border-t-transparent rounded-full animate-spin" />
       ) : countdown > 0 && whatsappUrl ? (
-        <RotatorCountdownRing value={countdown} total={COUNTDOWN_SECONDS} size="md" />
+        <div className="w-full flex justify-center">
+          <RotatorCountdownRing value={countdown} total={COUNTDOWN_SECONDS} size="md" />
+        </div>
       ) : !previewMode && countdown <= 0 && whatsappUrl ? (
         <div className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-[#3b66ff] border-t-transparent rounded-full animate-spin" />
       ) : null}

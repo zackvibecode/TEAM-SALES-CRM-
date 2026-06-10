@@ -13,6 +13,10 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Zaqone CRM by Zack",
   description: "Premium sales team CRM by Zack",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/apple-icon.svg",
+  },
 };
 
 export default function RootLayout({

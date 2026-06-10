@@ -652,6 +652,60 @@
     animation: hero-dot 1s ease-in-out infinite;
   }
 
+  @keyframes rotator-count-pop {
+    0% {
+      transform: scale(0.55);
+      opacity: 0;
+    }
+    55% {
+      transform: scale(1.12);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes rotator-count-tick {
+    0% {
+      transform: scale(1);
+      opacity: 0.85;
+    }
+    35% {
+      transform: scale(1.06);
+      opacity: 0.35;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes rotator-count-glow {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.55;
+    }
+    50% {
+      transform: scale(1.04);
+      opacity: 0.9;
+    }
+  }
+
+  .animate-rotator-count-pop {
+    animation: rotator-count-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-rotator-count-tick {
+    animation: rotator-count-tick 0.9s ease-out both;
+  }
+
+  .animate-rotator-count-glow {
+    animation: rotator-count-glow 2s ease-in-out infinite;
+  }
+
 }
 
 /* iPhone hero showcase — medium size, no motion */

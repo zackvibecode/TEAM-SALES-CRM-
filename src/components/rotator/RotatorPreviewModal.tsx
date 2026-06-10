@@ -24,7 +24,7 @@ export function RotatorPreviewModal({
   slug,
   imageUrl,
   loadingText = DEFAULT_LOADING_TEXT,
-  imageSize = "medium",
+  imageSize = "large",
 }: RotatorPreviewModalProps) {
   useEffect(() => {
     if (!open) return;

@@ -2,9 +2,6 @@
 
 import { cn } from "@/lib/utils";
 
-const RING_R = 44;
-const RING_C = 2 * Math.PI * RING_R;
-
 interface RotatorCountdownRingProps {
   value: number;
   total?: number;
@@ -12,74 +9,62 @@ interface RotatorCountdownRingProps {
   className?: string;
 }
 
-/** Mobile-first countdown ring — scales with viewport inside phone & full page */
+/** Centered countdown with pop tick animation each second */
 export function RotatorCountdownRing({
   value,
   total = 2,
   size = "md",
   className,
 }: RotatorCountdownRingProps) {
-  const progress = Math.max(0, Math.min(1, value / total));
-  const offset = RING_C * (1 - progress);
+  const boxSize =
+    size === "sm"
+      ? "h-[4.5rem] w-[4.5rem] sm:h-[5rem] sm:w-[5rem]"
+      : "h-[5.25rem] w-[5.25rem] sm:h-[6rem] sm:w-[6rem]";
+
+  const fontSize =
+    size === "sm"
+      ? "text-[2.5rem] sm:text-[2.75rem]"
+      : "text-[2.75rem] sm:text-[3.25rem]";
 
   return (
-    <div
-      className={cn(
-        "relative flex shrink-0 items-center justify-center",
-        size === "sm"
-          ? "h-[clamp(4.25rem,20vw,5.25rem)] w-[clamp(4.25rem,20vw,5.25rem)]"
-          : "h-[clamp(5rem,26vw,6.5rem)] w-[clamp(5rem,26vw,6.5rem)]",
-        className
-      )}
-      aria-label={`Countdown ${value}`}
-    >
-      <div className="absolute inset-[-6%] rounded-full bg-[#3b66ff]/[0.12] blur-md" />
+    <div className={cn("mx-auto w-full flex flex-col items-center justify-center", className)}>
+      <div
+        className={cn("relative grid place-items-center rounded-full", boxSize)}
+        aria-label={`Countdown ${value}`}
+      >
+        {/* Soft glow */}
+        <div className="absolute inset-0 rounded-full bg-[#3b66ff]/10 animate-rotator-count-glow" />
 
-      <svg
-        className="absolute inset-0 -rotate-90"
-        viewBox="0 0 100 100"
+        {/* Outer ring */}
+        <div className="absolute inset-0 rounded-full border-[3px] border-[#3b66ff]/15" />
+
+        {/* Tick pulse each second */}
+        <div
+          key={`pulse-${value}`}
+          className="absolute inset-0 rounded-full border-[3px] border-[#3b66ff]/50 animate-rotator-count-tick"
+        />
+
+        {/* Inner disc — number perfectly centered via grid */}
+        <div className="absolute inset-[10%] grid place-items-center rounded-full bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_16px_rgba(59,102,255,0.12)] ring-1 ring-[#3b66ff]/10">
+          <span
+            key={value}
+            className={cn(
+              "font-bold tabular-nums leading-none text-[#3b66ff] animate-rotator-count-pop",
+              fontSize
+            )}
+            style={{ fontFeatureSettings: '"tnum"' }}
+          >
+            {value}
+          </span>
+        </div>
+      </div>
+
+      <p
+        className="mt-2.5 text-center text-[10px] sm:text-xs font-medium text-slate-500"
         aria-hidden
       >
-        <circle
-          cx="50"
-          cy="50"
-          r={RING_R}
-          fill="none"
-          stroke="rgba(59,102,255,0.12)"
-          strokeWidth="5"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r={RING_R}
-          fill="none"
-          stroke="#3b66ff"
-          strokeWidth="5"
-          strokeLinecap="round"
-          strokeDasharray={RING_C}
-          strokeDashoffset={offset}
-          className="transition-[stroke-dashoffset] duration-1000 ease-linear"
-        />
-      </svg>
-
-      <div
-        className={cn(
-          "relative flex items-center justify-center rounded-full bg-white/90 shadow-[inset_0_2px_8px_rgba(59,102,255,0.08)] ring-1 ring-[#3b66ff]/15",
-          size === "sm" ? "h-[72%] w-[72%]" : "h-[74%] w-[74%]"
-        )}
-      >
-        <span
-          className={cn(
-            "font-bold tabular-nums leading-none tracking-tight text-[#3b66ff]",
-            size === "sm"
-              ? "text-[clamp(1.75rem,9vw,2.5rem)]"
-              : "text-[clamp(2.25rem,11vw,3.25rem)]"
-          )}
-          key={value}
-        >
-          {value}
-        </span>
-      </div>
+        {value > 0 ? `Redirect dalam ${value} detik` : "Sedang redirect..."}
+      </p>
     </div>
   );
 }

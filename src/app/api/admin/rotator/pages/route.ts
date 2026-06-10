@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const imageUrl = body.image_url || null;
     const defaultMessage = (body.default_message as string)?.trim() || DEFAULT_ROTATOR_MESSAGE;
     const loadingText = (body.loading_text as string)?.trim() || DEFAULT_LOADING_TEXT;
-    const imageSize = normalizeImageSize(body.image_size as string);
+    const imageSize = normalizeImageSize((body.image_size as string) || "large");
     const isActive = body.is_active !== false;
     const salesMemberIds: string[] = body.sales_member_ids || [];
 

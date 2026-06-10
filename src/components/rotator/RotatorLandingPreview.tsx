@@ -2,7 +2,11 @@
 
 import Image from "next/image";
 import { Smartphone } from "lucide-react";
-import { getRotatorImageClass, type RotatorImageSize } from "@/lib/rotator/display";
+import {
+  getRotatorFrameClass,
+  getRotatorImageClass,
+  type RotatorImageSize,
+} from "@/lib/rotator/display";
 import { RotatorPhoneFrame } from "./RotatorPhoneFrame";
 import { RotatorContentFrame } from "./RotatorContentFrame";
 import { RotatorSceneBackground } from "./RotatorSceneBackground";
@@ -42,7 +46,7 @@ export function RotatorLandingPreview({
         Preview — test rotation & WhatsApp
       </p>
 
-      <RotatorContentFrame className="mb-5 w-full">
+      <RotatorContentFrame className={`mb-5 ${getRotatorFrameClass(imageSize)}`}>
         <div className={`mx-auto ${imageClass}`}>
           <Image
             src={displayUrl}
@@ -58,7 +62,9 @@ export function RotatorLandingPreview({
         {loadingText || "Sedang sambungkan anda ke team kami..."}
       </p>
 
-      <RotatorCountdownRing value={countdown} total={2} size="sm" />
+      <div className="w-full flex justify-center">
+        <RotatorCountdownRing value={countdown} total={2} size="sm" />
+      </div>
     </>
   );
 
