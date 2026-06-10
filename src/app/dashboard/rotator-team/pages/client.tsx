@@ -8,6 +8,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { RotatorPreviewModal } from "@/components/rotator/RotatorPreviewModal";
 import { DEFAULT_LOADING_TEXT, normalizeImageSize } from "@/lib/rotator/display";
 import { getRotatorPreviewPath, getRotatorPublicPath } from "@/lib/rotator/urls";
+import { RotatorResetClicks } from "@/components/rotator/RotatorResetClicks";
 import type { RotatorPage } from "@/types/rotator";
 
 type PageRow = RotatorPage & {
@@ -106,6 +107,12 @@ export function RotatorPagesClient({ initialPages }: { initialPages: PageRow[] }
                 >
                   Copy Link
                 </button>
+                <RotatorResetClicks
+                  compact
+                  pageId={row.id as string}
+                  pageName={row.name as string}
+                  onReset={() => router.refresh()}
+                />
                 <Link
                   href={`/dashboard/rotator-team/pages/${row.id}/edit`}
                   className="btn-ghost text-xs py-1 px-2"

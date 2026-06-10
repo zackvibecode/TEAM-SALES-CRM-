@@ -6,6 +6,7 @@ import { getRotatorPreviewPath, getRotatorPublicPath } from "@/lib/rotator/urls"
 import { StatCard } from "@/components/shared/StatCard";
 import { DataTable } from "@/components/shared/DataTable";
 import { AnalyticsFilters } from "@/components/rotator/AnalyticsFilters";
+import { RotatorResetClicks } from "@/components/rotator/RotatorResetClicks";
 
 interface AnalyticsData {
   stats: {
@@ -100,6 +101,8 @@ export function RotatorOverviewClient() {
         onApply={loadData}
       />
 
+      <RotatorResetClicks onReset={loadData} />
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard label="Total Clicks" value={stats?.totalClicks ?? 0} icon={MousePointerClick} accent="blue" />
         <StatCard label="Unique Clicks" value={stats?.uniqueClicks ?? 0} icon={TrendingUp} accent="mint" />
@@ -170,6 +173,12 @@ export function RotatorOverviewClient() {
                   >
                     Copy Link
                   </button>
+                  <RotatorResetClicks
+                    compact
+                    pageId={row.id as string}
+                    pageName={row.name as string}
+                    onReset={loadData}
+                  />
                 </div>
               ),
             },
