@@ -11,6 +11,7 @@ import {
   Settings,
   MessageCircle,
   LogOut,
+  RotateCw,
 } from "lucide-react";
 
 export interface NavItem {
@@ -27,6 +28,7 @@ export const adminNavItems: NavItem[] = [
   { label: "All Leads", href: "/admin/leads", icon: <List className="w-4 h-4" /> },
   { label: "Activity Log", href: "/admin/activity", icon: <Activity className="w-4 h-4" /> },
   { label: "Follow Up Queue", href: "/admin/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
+  { label: "Rotator Team", href: "/dashboard/rotator-team", icon: <RotateCw className="w-4 h-4" /> },
   { label: "Audit Log", href: "/admin/audit", icon: <ClipboardList className="w-4 h-4" /> },
   { label: "AI API Key", href: "/admin/api-key", icon: <KeyRound className="w-4 h-4" /> },
   { label: "Settings", href: "/admin/settings", icon: <Settings className="w-4 h-4" /> },
@@ -50,6 +52,7 @@ export const routeTitles: Record<string, string> = {
   "/admin/leads": "All Leads",
   "/admin/activity": "Activity Log",
   "/admin/follow-ups": "Follow Up Queue",
+  "/dashboard/rotator-team": "Rotator Team",
   "/admin/audit": "Audit Log",
   "/admin/api-key": "AI API Key",
   "/admin/settings": "Settings",

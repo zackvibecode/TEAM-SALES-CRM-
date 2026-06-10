@@ -7,7 +7,7 @@ import { resolveUserRole } from "@/lib/auth-context";
 const PUBLIC_PATHS = ["/", "/pricing", "/login"];
 
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.includes(pathname);
+  return PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/r/");
 }
 
 function loginRedirect(request: NextRequest) {
@@ -136,6 +136,12 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith("/dashboard/sales") && role !== "sales") {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/admin/dashboard";
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    if (pathname.startsWith("/dashboard/rotator-team") && role !== "admin") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/dashboard/sales";
       return NextResponse.redirect(redirectUrl);
     }
 
