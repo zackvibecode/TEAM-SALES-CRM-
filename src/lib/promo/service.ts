@@ -79,6 +79,9 @@ function snapshotPromo(promo: Promo | PromoInput & { id?: string }) {
     sort_order: promo.sort_order ?? 0,
     ends_at: promo.ends_at ?? null,
     departure_dates,
+    destination: promo.destination ?? null,
+    seats_left: promo.seats_left ?? 0,
+    image_url: promo.image_url ?? null,
   };
 }
 
@@ -93,6 +96,9 @@ function buildPromoRow(input: PromoInput) {
     sort_order: input.sort_order ?? 0,
     departure_dates,
     ends_at: syncPromoEndsAt(departure_dates),
+    destination: input.destination ?? null,
+    seats_left: input.seats_left ?? 0,
+    image_url: input.image_url ?? null,
   };
 }
 
@@ -139,6 +145,9 @@ export async function updatePromo(
   if (input.poster_url !== undefined) updates.poster_url = input.poster_url;
   if (input.is_active !== undefined) updates.is_active = input.is_active;
   if (input.sort_order !== undefined) updates.sort_order = input.sort_order;
+  if (input.destination !== undefined) updates.destination = input.destination;
+  if (input.seats_left !== undefined) updates.seats_left = input.seats_left;
+  if (input.image_url !== undefined) updates.image_url = input.image_url;
 
   if (input.departure_dates !== undefined || input.ends_at !== undefined) {
     const departure_dates = normalizeInputDepartures({

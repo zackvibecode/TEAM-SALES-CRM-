@@ -19,6 +19,9 @@ export interface Promo {
   sort_order: number;
   ends_at: string | null;
   departure_dates?: PromoDepartureEntry[] | string[] | null;
+  destination?: string | null;
+  seats_left?: number | null;
+  image_url?: string | null;
   created_by: string;
   updated_by: string | null;
   created_at: string;
@@ -45,6 +48,9 @@ export interface PromoInput {
   sort_order?: number;
   ends_at?: string | null;
   departure_dates?: PromoDepartureEntry[];
+  destination?: string | null;
+  seats_left?: number | null;
+  image_url?: string | null;
 }
 
 export interface PromoCountdownResult {

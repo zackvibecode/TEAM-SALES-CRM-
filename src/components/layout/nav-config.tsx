@@ -13,24 +13,28 @@ import {
   LogOut,
   RotateCw,
   Megaphone,
+  Package,
 } from "lucide-react";
 import type { AppCopy } from "@/lib/i18n/get-copy";
 
 export interface NavItem {
   label: string;
-  href: string;
-  icon: React.ReactNode;
+  href?: string;
+  icon?: React.ReactNode;
+  isSectionHeader?: boolean;
 }
 
 export function getAdminNavItems(t: AppCopy): NavItem[] {
   return [
     { label: t.nav.dashboard, href: "/admin/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: t.nav.promos, href: "/admin/promos", icon: <Megaphone className="w-4 h-4" /> },
+    { label: t.nav.packages, href: "/admin/packages", icon: <Package className="w-4 h-4" /> },
+    { label: t.nav.activityLog, href: "/admin/activity", icon: <Activity className="w-4 h-4" /> },
+    { label: t.nav.sales, isSectionHeader: true },
     { label: t.nav.salesUsers, href: "/admin/sales-users", icon: <Users className="w-4 h-4" /> },
     { label: t.nav.assignUpload, href: "/admin/upload", icon: <Upload className="w-4 h-4" /> },
     { label: t.nav.campaigns, href: "/admin/files", icon: <FileText className="w-4 h-4" /> },
     { label: t.nav.allLeads, href: "/admin/leads", icon: <List className="w-4 h-4" /> },
-    { label: t.nav.activityLog, href: "/admin/activity", icon: <Activity className="w-4 h-4" /> },
+    { label: t.nav.promotion, isSectionHeader: true },
     { label: t.nav.followUpQueue, href: "/admin/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
     { label: t.nav.rotatorTeam, href: "/dashboard/rotator-team", icon: <RotateCw className="w-4 h-4" /> },
     { label: t.nav.auditLog, href: "/admin/audit", icon: <ClipboardList className="w-4 h-4" /> },

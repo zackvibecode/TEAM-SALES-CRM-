@@ -1,5 +1,6 @@
 export const enNav = {
   dashboard: "Dashboard",
+  packages: "Package Update",
   salesUsers: "Sales Users",
   assignUpload: "Assign / Upload",
   campaigns: "Campaigns",
@@ -13,8 +14,11 @@ export const enNav = {
   myTasks: "My Tasks",
   whatsappMessage: "WhatsApp Message",
   promos: "Package Update",
+  sales: "Sales",
+  promotion: "Promotion",
   pageTitles: {
     "/admin/dashboard": "Dashboard",
+    "/admin/packages": "Package Update",
     "/admin/sales-users": "Sales Users",
     "/admin/upload": "Assign / Upload",
     "/admin/files": "Campaigns",
@@ -37,6 +41,7 @@ export const enNav = {
 
 export const bmNav = {
   dashboard: "Dashboard",
+  packages: "Kemas Kini Pakej",
   salesUsers: "Pengguna Sales",
   assignUpload: "Assign / Muat Naik",
   campaigns: "Kempen",
@@ -50,8 +55,11 @@ export const bmNav = {
   myTasks: "Tugasan Saya",
   whatsappMessage: "Mesej WhatsApp",
   promos: "Kemas Kini Pakej",
+  sales: "Sales",
+  promotion: "Promosi",
   pageTitles: {
     "/admin/dashboard": "Dashboard",
+    "/admin/packages": "Kemas Kini Pakej",
     "/admin/sales-users": "Pengguna Sales",
     "/admin/upload": "Assign / Muat Naik",
     "/admin/files": "Kempen",

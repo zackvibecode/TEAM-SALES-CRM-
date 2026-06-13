@@ -72,11 +72,26 @@ export function AppSidebar({
 
       <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
+          if (item.isSectionHeader) {
+            return (
+              <div
+                key={item.label}
+                className="px-3 pt-3 pb-1"
+              >
+                <p
+                  className="text-[10px] font-bold uppercase tracking-wider"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {item.label}
+                </p>
+              </div>
+            );
+          }
           const active = pathname === item.href;
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={item.href!}
               onClick={onCloseMobile}
               className={cn(
                 "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors",

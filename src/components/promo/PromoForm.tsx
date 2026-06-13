@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, ImageIcon, MessageSquare, Settings2 } from "lucide-react";
+import { CalendarDays, ImageIcon, MapPin, MessageSquare, Settings2 } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { departureRowsToStored, storedToDepartureRows } from "@/lib/promo/countdown";
 import { PromoDepartureCountdowns } from "./PromoDepartureCountdowns";
@@ -52,6 +52,8 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
   );
   const [isActive, setIsActive] = useState(promo?.is_active ?? true);
   const [sortOrder, setSortOrder] = useState(promo?.sort_order ?? 0);
+  const [destination, setDestination] = useState(promo?.destination || "");
+  const [seatsLeft, setSeatsLeft] = useState(promo?.seats_left ?? 0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -76,6 +78,8 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
         .map((row) => ({ name: row.name.trim(), date: row.date.trim() })),
       is_active: isActive,
       sort_order: sortOrder,
+      destination: destination.trim() || null,
+      seats_left: seatsLeft,
     };
 
     try {
@@ -107,6 +111,35 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
             className="input-field w-full resize-none text-sm"
             placeholder={t.promo.promoTextHint}
           />
+        </FormSection>
+
+        <FormSection icon={MapPin} title={t.admin.packages.destination}>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>
+                {t.admin.packages.destination}
+              </label>
+              <input
+                type="text"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                className="input-field w-full text-sm"
+                placeholder="e.g. Greece, Makassar"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>
+                {t.admin.packages.seatLeft}
+              </label>
+              <input
+                type="number"
+                value={seatsLeft}
+                onChange={(e) => setSeatsLeft(Number(e.target.value))}
+                className="input-field w-full text-sm"
+                min={0}
+              />
+            </div>
+          </div>
         </FormSection>
 
         <FormSection icon={CalendarDays} title={t.promo.departureDates}>

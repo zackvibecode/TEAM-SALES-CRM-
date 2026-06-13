@@ -51,8 +51,11 @@ function parseBody(input: Record<string, unknown>) {
   const poster_url = (input.poster_url as string) || null;
   const is_active = input.is_active !== false;
   const sort_order = Number(input.sort_order ?? 0);
+  const destination = (input.destination as string)?.trim() || null;
+  const seats_left = input.seats_left !== undefined ? Number(input.seats_left) : undefined;
+  const image_url = (input.image_url as string) || null;
 
-  return { title, promo_text, poster_url, is_active, sort_order, departure_dates };
+  return { title, promo_text, poster_url, is_active, sort_order, departure_dates, destination, seats_left, image_url };
 }
 
 export async function GET(request: NextRequest) {
