@@ -1,16 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Image from "next/image";
 import { Upload, X } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
+import { PromoPosterViewer } from "./PromoPosterViewer";
 
 interface UploadPromoImageProps {
   value: string | null;
   onChange: (url: string | null) => void;
+  title?: string;
 }
 
-export function UploadPromoImage({ value, onChange }: UploadPromoImageProps) {
+export function UploadPromoImage({ value, onChange, title = "Package poster" }: UploadPromoImageProps) {
   const { t } = useAppLocale();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(value);
@@ -43,17 +44,21 @@ export function UploadPromoImage({ value, onChange }: UploadPromoImageProps) {
 
   return (
     <div className="space-y-3">
-      <div className="mx-auto w-full max-w-xs rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-white aspect-[3/4] relative">
-        {displayUrl ? (
-          <Image src={displayUrl} alt="Promo poster" fill className="object-cover" unoptimized />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-sm" style={{ color: "var(--text-muted)" }}>
+      <PromoPosterViewer
+        src={displayUrl}
+        title={title}
+        thumbnailClassName="relative mx-auto w-full max-w-xs aspect-square rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-white"
+        placeholder={
+          <div
+            className="absolute inset-0 flex items-center justify-center text-sm"
+            style={{ color: "var(--text-muted)" }}
+          >
             {t.promo.poster}
           </div>
-        )}
-      </div>
+        }
+      />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 justify-center">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
@@ -89,7 +94,7 @@ export function UploadPromoImage({ value, onChange }: UploadPromoImageProps) {
         }}
       />
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </div>
   );
 }

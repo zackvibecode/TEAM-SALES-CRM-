@@ -138,7 +138,7 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
           <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
             {t.promo.poster}
           </label>
-          <UploadPromoImage value={posterUrl} onChange={setPosterUrl} />
+          <UploadPromoImage value={posterUrl} onChange={setPosterUrl} title={title || t.promo.poster} />
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}

@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { getPromoCountdown } from "@/lib/promo/countdown";
 import { PromoCountdown } from "./PromoCountdown";
+import { PromoPosterViewer } from "./PromoPosterViewer";
 import type { Promo } from "@/types/promo";
 
 interface PromoCardProps {
@@ -28,18 +28,7 @@ export function PromoCard({
   return (
     <div className="surface-card overflow-hidden card-padded">
       <div className="flex gap-4">
-        <div className="relative size-24 shrink-0 rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-white">
-          {promo.poster_url ? (
-            <Image src={promo.poster_url} alt={promo.title} fill className="object-cover" unoptimized />
-          ) : (
-            <div
-              className="absolute inset-0 flex items-center justify-center text-[10px] text-center px-1"
-              style={{ color: "var(--text-muted)" }}
-            >
-              {t.promo.poster}
-            </div>
-          )}
-        </div>
+        <PromoPosterViewer src={promo.poster_url} title={promo.title} />
 
         <div className="flex-1 min-w-0 space-y-2">
           <div className="flex items-start justify-between gap-2">

@@ -28,6 +28,9 @@ export const enPromo = {
   promoEnded: "Promo ended",
   endsOnLabel: "Departure date",
   mytNote: "All times shown in Malaysia Time (UTC+8)",
+  downloadPoster: "Download poster",
+  viewFullPoster: "View full size poster",
+  closeViewer: "Close",
 };
 
 export const bmPromo = {
@@ -60,4 +63,7 @@ export const bmPromo = {
   promoEnded: "Promo tamat",
   endsOnLabel: "Tarikh berlepas",
   mytNote: "Semua masa dipaparkan dalam Masa Malaysia (UTC+8)",
+  downloadPoster: "Muat turun poster",
+  viewFullPoster: "Lihat poster saiz penuh",
+  closeViewer: "Tutup",
 };
