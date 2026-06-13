@@ -307,6 +307,15 @@
     background: var(--surface-hover);
   }
 
+  .table-row--multi-package {
+    background: rgba(59, 102, 255, 0.18);
+    box-shadow: inset 3px 0 0 #3b66ff;
+  }
+
+  .table-row--multi-package:hover {
+    background: rgba(59, 102, 255, 0.24);
+  }
+
   .table-row:last-child {
     border-bottom: none;
   }
@@ -465,6 +474,15 @@
 
   .dark .table-row td {
     color: var(--text-secondary);
+  }
+
+  .dark .table-row--multi-package {
+    background: rgba(59, 102, 255, 0.32);
+    box-shadow: inset 3px 0 0 #5b7fff;
+  }
+
+  .dark .table-row--multi-package:hover {
+    background: rgba(59, 102, 255, 0.4);
   }
 
   .dark .stat-label {

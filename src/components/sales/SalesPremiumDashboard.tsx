@@ -6,7 +6,7 @@ import { SalesDashboardExtras, type SalesBatchCard } from "./SalesDashboardExtra
 import { SalesDashboardOverview } from "./SalesDashboardOverview";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TeamLeaderboard } from "@/components/shared/TeamLeaderboard";
-import { ActivePromoWidget } from "@/components/promo/ActivePromoWidget";
+import { ActivePackagesButton } from "@/components/promo/ActivePackagesButton";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { ArrowRight } from "lucide-react";
 
@@ -48,14 +48,15 @@ export function SalesPremiumDashboard(props: Props) {
         subtitle={t.sales.dashboard.subtitle}
         compact
         actions={
-          <Link href="/dashboard/sales/customers" className="btn-primary-solid shrink-0 gap-2 text-sm">
-            {t.nav.myTasks}
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <>
+            <ActivePackagesButton href="/dashboard/sales/promos" />
+            <Link href="/dashboard/sales/customers" className="btn-primary-solid shrink-0 gap-2 text-sm">
+              {t.nav.myTasks}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </>
         }
       />
-
-      <ActivePromoWidget viewAllHref="/dashboard/sales/promos" />
 
       <SalesDashboardOverview
         stats={{

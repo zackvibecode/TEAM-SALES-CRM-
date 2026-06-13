@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { formatDate, formatDateTime } from "@/lib/i18n/format";
+import { normalizeDepartureEntries } from "@/lib/promo/countdown";
 import { cn } from "@/lib/utils";
 import type { Promo, PromoDepartureEntry } from "@/types/promo";
 
@@ -29,17 +30,12 @@ interface PackageTableProps {
 const actionBtnClass =
   "inline-flex items-center justify-center min-w-[32px] h-8 px-2 rounded-md border text-[11px] font-medium transition-all duration-150 hover:bg-[var(--surface-hover)] active:scale-[0.96] active:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b66ff]/35";
 
-function normalizeDepartures(promo: Promo): PromoDepartureEntry[] {
-  if (!Array.isArray(promo.departure_dates)) return [];
-  return promo.departure_dates.map((entry) =>
-    typeof entry === "string" ? { name: "", date: entry } : entry
-  );
+function sortedDepartures(promo: Promo): PromoDepartureEntry[] {
+  return normalizeDepartureEntries(promo);
 }
 
-function sortedDepartures(promo: Promo): PromoDepartureEntry[] {
-  return normalizeDepartures(promo)
-    .filter((d) => d.date)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+function hasMultiplePackages(promo: Promo): boolean {
+  return normalizeDepartureEntries(promo).length > 1;
 }
 
 function earliestDepartureMs(promo: Promo): number {
@@ -56,11 +52,21 @@ function packageCode(promo: Promo): string {
 }
 
 function destinationNames(promo: Promo): string[] {
-  if (promo.destination?.trim()) return [promo.destination.trim()];
-  const names = normalizeDepartures(promo)
-    .map((e) => e.name?.trim())
+  const names = normalizeDepartureEntries(promo)
+    .map((entry) => entry.name?.trim())
     .filter(Boolean) as string[];
-  return [...new Set(names)];
+  const unique = [...new Set(names)];
+  if (unique.length > 0) return unique;
+
+  if (promo.destination?.trim()) {
+    const parts = promo.destination
+      .split("·")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    return parts.length > 0 ? parts : [promo.destination.trim()];
+  }
+
+  return [];
 }
 
 function destinationLabel(promo: Promo): string {
@@ -70,7 +76,7 @@ function destinationLabel(promo: Promo): string {
 }
 
 function packageTitle(promo: Promo): string {
-  const first = normalizeDepartures(promo).find((e) => e.name)?.name;
+  const first = normalizeDepartureEntries(promo).find((entry) => entry.name)?.name;
   return (first || promo.title || "Package").toUpperCase();
 }
 
@@ -176,7 +182,7 @@ export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) 
           image_url: promo.image_url,
           destination: promo.destination,
           seats_left: promo.seats_left ?? 0,
-          departure_dates: normalizeDepartures(promo),
+          departure_dates: normalizeDepartureEntries(promo),
           is_active: false,
           sort_order: promo.sort_order ?? 0,
         }),
@@ -293,14 +299,19 @@ export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) 
                 paginated.map((promo) => {
                   const imageSrc = promo.image_url || promo.poster_url;
                   const departures = sortedDepartures(promo);
-                  const destNames = destinationNames(promo);
                   const hasMultipleDates = departures.length > 1;
-                  const hasMultiplePackages = destNames.length > 1;
+                  const isMultiPackage = hasMultiplePackages(promo);
                   const seats = promo.seats_left ?? 0;
                   const seatPct = Math.min(100, Math.round((seats / maxSeats) * 100));
 
                   return (
-                    <tr key={promo.id} className="table-row align-top">
+                    <tr
+                      key={promo.id}
+                      className={cn(
+                        "table-row align-top",
+                        isMultiPackage && "table-row--multi-package"
+                      )}
+                    >
                       {/* Package */}
                       <td className="px-3 py-2.5">
                         <div className="flex items-start gap-2.5 min-w-[200px]">
@@ -331,13 +342,8 @@ export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) 
                             >
                               {packageTitle(promo)}
                             </p>
-                            <p className="text-[10px] truncate leading-tight" style={{ color: "var(--text-muted)" }}>
-                              {packageCode(promo)}
-                            </p>
-                            {hasMultiplePackages && (
-                              <BluePill>
-                                {t.admin.packages.multiplePackages} · {destNames.length}
-                              </BluePill>
+                            {isMultiPackage && (
+                              <BluePill>{t.admin.packages.multiplePackages}</BluePill>
                             )}
                           </div>
                         </div>
@@ -345,57 +351,72 @@ export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) 
 
                       {/* Destination */}
                       <td className="px-3 py-2.5 max-w-[160px]">
-                        <div className="space-y-1">
-                          <p
-                            className="text-[11px] leading-snug line-clamp-2"
-                            style={{ color: "var(--text-secondary)" }}
-                            title={destinationLabel(promo)}
-                          >
-                            {destinationLabel(promo)}
-                          </p>
-                          {hasMultiplePackages && (
-                            <BluePill>{t.admin.packages.multiplePackages}</BluePill>
+                        <p
+                          className={cn(
+                            "text-[11px] leading-snug",
+                            isMultiPackage ? "truncate" : "line-clamp-2"
                           )}
-                        </div>
+                          style={{ color: "var(--text-secondary)" }}
+                          title={destinationLabel(promo)}
+                        >
+                          {destinationLabel(promo)}
+                        </p>
                       </td>
 
                       {/* Departure dates — earliest first */}
                       <td className="px-3 py-2.5 min-w-[130px]">
                         {departures.length > 0 ? (
-                          <div className="space-y-1">
-                            {hasMultipleDates && (
+                          isMultiPackage ? (
+                            <div className="space-y-1">
                               <BluePill>
                                 {t.admin.packages.multipleDates} · {departures.length}
                               </BluePill>
-                            )}
-                            {departures.slice(0, 4).map((entry, idx) => (
-                              <div key={`${entry.date}-${idx}`} className="leading-tight">
-                                <p
-                                  className={cn(
-                                    "tabular-nums",
-                                    idx === 0
-                                      ? "text-[12px] font-bold"
-                                      : "text-[10px] font-medium"
-                                  )}
-                                  style={{
-                                    color: idx === 0 ? "var(--text-primary)" : "var(--text-muted)",
-                                  }}
-                                >
-                                  {formatDate(entry.date, locale)}
-                                </p>
-                                {entry.name && (
-                                  <p className="text-[10px] truncate max-w-[120px]" style={{ color: "var(--text-muted)" }}>
-                                    {entry.name}
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                            {departures.length > 4 && (
-                              <p className="text-[10px] font-medium" style={{ color: "#3b66ff" }}>
-                                +{departures.length - 4} {t.admin.packages.moreDates}
+                              <p
+                                className="text-[11px] font-semibold tabular-nums leading-tight"
+                                style={{ color: "var(--text-primary)" }}
+                              >
+                                {formatDate(departures[0].date, locale)}
                               </p>
-                            )}
-                          </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              {hasMultipleDates && (
+                                <BluePill>
+                                  {t.admin.packages.multipleDates} · {departures.length}
+                                </BluePill>
+                              )}
+                              {departures.slice(0, 4).map((entry, idx) => (
+                                <div key={`${entry.date}-${idx}`} className="leading-tight">
+                                  <p
+                                    className={cn(
+                                      "tabular-nums",
+                                      idx === 0
+                                        ? "text-[12px] font-bold"
+                                        : "text-[10px] font-medium"
+                                    )}
+                                    style={{
+                                      color: idx === 0 ? "var(--text-primary)" : "var(--text-muted)",
+                                    }}
+                                  >
+                                    {formatDate(entry.date, locale)}
+                                  </p>
+                                  {entry.name && (
+                                    <p
+                                      className="text-[10px] truncate max-w-[120px]"
+                                      style={{ color: "var(--text-muted)" }}
+                                    >
+                                      {entry.name}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                              {departures.length > 4 && (
+                                <p className="text-[10px] font-medium" style={{ color: "#3b66ff" }}>
+                                  +{departures.length - 4} {t.admin.packages.moreDates}
+                                </p>
+                              )}
+                            </div>
+                          )
                         ) : (
                           <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
                             -

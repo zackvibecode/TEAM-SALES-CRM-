@@ -6,7 +6,7 @@ import { AdminPerformanceGraph } from "@/components/admin/AdminPerformanceGraph"
 import { DashboardTable } from "@/components/shared/DashboardTable";
 import { TeamLeaderboard } from "@/components/shared/TeamLeaderboard";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { ActivePromoWidget } from "@/components/promo/ActivePromoWidget";
+import { ActivePackagesButton } from "@/components/promo/ActivePackagesButton";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 interface SalesProfile {
@@ -84,9 +84,8 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
         title={t.admin.dashboard.title}
         subtitle={t.admin.dashboard.subtitle}
         compact
+        actions={<ActivePackagesButton href="/admin/promos" />}
       />
-
-      <ActivePromoWidget viewAllHref="/admin/promos" />
 
       <AdminDashboardOverview
         stats={currentStats}
