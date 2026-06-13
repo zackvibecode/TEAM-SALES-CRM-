@@ -6,6 +6,7 @@ export const enAdmin = {
   },
   packages: {
     title: "Package",
+    subtitle: "Manage travel packages and destinations",
     pageTitle: "Package Update",
     pageSubtitle:
       "Manage package posters and messages for your team. Keep promotions fresh and updated.",
@@ -100,6 +101,7 @@ export const bmAdmin = {
   },
   packages: {
     title: "Pakej",
+    subtitle: "Urus pakej travel dan destinasi",
     pageTitle: "Kemas Kini Pakej",
     pageSubtitle:
       "Urus poster pakej dan mesej untuk pasukan anda. Pastikan promosi sentiasa dikemas kini.",
