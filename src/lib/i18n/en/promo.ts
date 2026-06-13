@@ -42,6 +42,7 @@ export const enPromo = {
   allMonths: "All months",
   noPromosForMonth: "No packages with departure dates in this month.",
   viewDetails: "Package details",
+  packageCount: "{count} packages",
   tapForDetails: "Tap for full details",
 };
 
@@ -89,5 +90,6 @@ export const bmPromo = {
   allMonths: "Semua bulan",
   noPromosForMonth: "Tiada pakej dengan tarikh berlepas pada bulan ini.",
   viewDetails: "Butiran pakej",
+  packageCount: "{count} pakej",
   tapForDetails: "Tekan untuk butiran penuh",
 };

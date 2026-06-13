@@ -21,7 +21,7 @@ interface PromoPosterViewerProps {
 export function PromoPosterViewer({
   src,
   title,
-  thumbnailClassName = "relative size-24 shrink-0 rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-white",
+  thumbnailClassName = "relative size-24 shrink-0 aspect-square rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-white",
   placeholder,
 }: PromoPosterViewerProps) {
   const { t } = useAppLocale();
@@ -127,12 +127,12 @@ export function PromoPosterViewer({
               </div>
             </div>
 
-            <div className="relative flex-1 min-h-0 rounded-xl overflow-hidden bg-black/40 border border-white/10">
+            <div className="relative flex-1 min-h-0 rounded-xl overflow-hidden bg-black/40 border border-white/10 aspect-square max-w-lg mx-auto w-full">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
                 alt={title}
-                className="w-full h-full max-h-[calc(92vh-5rem)] object-contain mx-auto block"
+                className="w-full h-full object-contain mx-auto block"
               />
             </div>
           </div>

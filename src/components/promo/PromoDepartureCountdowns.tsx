@@ -29,6 +29,7 @@ export function PromoDepartureCountdowns({
           key={`${entry.name}-${entry.date}`}
           endsAt={entry.date}
           packageName={entry.name || undefined}
+          size={compact ? "sm" : "lg"}
         />
       ))}
       {hiddenCount > 0 && (

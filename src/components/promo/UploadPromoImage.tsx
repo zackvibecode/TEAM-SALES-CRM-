@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Upload, X } from "lucide-react";
+import { ImagePlus, Trash2, Upload } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { PromoPosterViewer } from "./PromoPosterViewer";
 
@@ -44,44 +44,55 @@ export function UploadPromoImage({ value, onChange, title = "Package poster" }: 
 
   return (
     <div className="space-y-3">
-      <PromoPosterViewer
-        src={displayUrl}
-        title={title}
-        thumbnailClassName="relative mx-auto w-full max-w-xs aspect-square rounded-lg overflow-hidden border border-[var(--border-subtle)] bg-white"
-        placeholder={
-          <div
-            className="absolute inset-0 flex items-center justify-center text-sm"
-            style={{ color: "var(--text-muted)" }}
-          >
-            {t.promo.poster}
-          </div>
-        }
-      />
-
-      <div className="flex flex-wrap gap-2 justify-center">
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className="btn-secondary text-sm inline-flex items-center gap-2"
-        >
-          <Upload className="w-4 h-4" />
-          {uploading ? t.common.saving : t.promo.uploadPoster}
-        </button>
-        {value && (
+      <div
+        className="relative rounded-xl overflow-hidden border-2 border-dashed"
+        style={{ borderColor: displayUrl ? "var(--border-color)" : "#3b66ff40" }}
+      >
+        {displayUrl ? (
+          <PromoPosterViewer
+            src={displayUrl}
+            title={title}
+            thumbnailClassName="relative w-full max-w-sm mx-auto aspect-square overflow-hidden bg-white"
+          />
+        ) : (
           <button
             type="button"
-            onClick={() => {
-              onChange(null);
-              setPreview(null);
-            }}
-            className="btn-secondary text-sm inline-flex items-center gap-2"
+            onClick={() => inputRef.current?.click()}
+            className="w-full aspect-square max-w-sm mx-auto flex flex-col items-center justify-center gap-2 transition hover:bg-[#3b66ff]/5"
+            style={{ color: "var(--text-muted)" }}
           >
-            <X className="w-4 h-4" />
-            {t.promo.removePoster}
+            <ImagePlus className="w-10 h-10 text-[#3b66ff]/60" />
+            <span className="text-sm font-medium">{t.promo.uploadPoster}</span>
           </button>
         )}
       </div>
+
+      {displayUrl && (
+        <div className="flex flex-wrap gap-2 justify-center">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="btn-secondary text-sm inline-flex items-center gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            {uploading ? t.common.saving : t.promo.uploadPoster}
+          </button>
+          {value && (
+            <button
+              type="button"
+              onClick={() => {
+                onChange(null);
+                setPreview(null);
+              }}
+              className="btn-secondary text-sm inline-flex items-center gap-2 text-red-500"
+            >
+              <Trash2 className="w-4 h-4" />
+              {t.promo.removePoster}
+            </button>
+          )}
+        </div>
+      )}
 
       <input
         ref={inputRef}

@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CalendarDays, ImageIcon, MessageSquare, Settings2 } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
-import {
-  departureRowsToStored,
-  storedToDepartureRows,
-} from "@/lib/promo/countdown";
+import { departureRowsToStored, storedToDepartureRows } from "@/lib/promo/countdown";
 import { PromoDepartureCountdowns } from "./PromoDepartureCountdowns";
 import { PromoDepartureDatesEditor } from "./PromoDepartureDatesEditor";
 import { UploadPromoImage } from "./UploadPromoImage";
@@ -15,6 +13,33 @@ import type { Promo, PromoDepartureRow } from "@/types/promo";
 interface PromoFormProps {
   promo?: Promo;
   basePath: string;
+}
+
+function FormSection({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="surface-card card-padded space-y-4">
+      <div className="flex items-center gap-2.5 pb-1 border-b" style={{ borderColor: "var(--border-color)" }}>
+        <div
+          className="p-1.5 rounded-lg shrink-0"
+          style={{ background: "var(--surface-hover)", color: "#3b66ff" }}
+        >
+          <Icon className="w-4 h-4" />
+        </div>
+        <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+          {title}
+        </h3>
+      </div>
+      {children}
+    </div>
+  );
 }
 
 export function PromoForm({ promo, basePath }: PromoFormProps) {
@@ -72,64 +97,70 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid lg:grid-cols-2 gap-8">
-      <div className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
-            {t.promo.promoText}
-          </label>
+    <form onSubmit={handleSubmit} className="grid lg:grid-cols-5 gap-6">
+      <div className="lg:col-span-3 space-y-5">
+        <FormSection icon={MessageSquare} title={t.promo.promoText}>
           <textarea
             value={promoText}
             onChange={(e) => setPromoText(e.target.value)}
             rows={3}
-            className="input-field w-full resize-none"
+            className="input-field w-full resize-none text-sm"
             placeholder={t.promo.promoTextHint}
           />
-        </div>
+        </FormSection>
 
-        <PromoDepartureDatesEditor rows={departureRows} onChange={setDepartureRows} />
+        <FormSection icon={CalendarDays} title={t.promo.departureDates}>
+          <p className="text-xs -mt-2" style={{ color: "var(--text-muted)" }}>
+            {t.promo.endDateHint}
+          </p>
+          <PromoDepartureDatesEditor rows={departureRows} onChange={setDepartureRows} />
+        </FormSection>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
-              {t.promo.sortOrder}
+        <FormSection icon={Settings2} title={t.promo.sortOrder}>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>
+                {t.promo.sortOrder}
+              </label>
+              <input
+                type="number"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(Number(e.target.value))}
+                className="input-field w-full text-sm"
+              />
+              <p className="text-[11px] mt-1" style={{ color: "var(--text-muted)" }}>
+                {t.promo.sortOrderHint}
+              </p>
+            </div>
+            <label
+              className="flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition hover:border-[#3b66ff]/40"
+              style={{ borderColor: "var(--border-color)", background: "var(--surface-hover)" }}
+            >
+              <input
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="w-4 h-4 rounded accent-[#3b66ff]"
+              />
+              <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                {t.common.active}
+              </span>
             </label>
-            <input
-              type="number"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(Number(e.target.value))}
-              className="input-field w-full"
-            />
-            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-              {t.promo.sortOrderHint}
-            </p>
           </div>
+        </FormSection>
 
-          <div className="flex items-center gap-3 pt-6">
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-              className="w-4 h-4 rounded"
-            />
-            <label htmlFor="is_active" className="text-sm" style={{ color: "var(--text-primary)" }}>
-              {t.common.active}
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
-            {t.promo.poster}
-          </label>
+        <FormSection icon={ImageIcon} title={t.promo.poster}>
           <UploadPromoImage value={posterUrl} onChange={setPosterUrl} title={posterTitle} />
-        </div>
+        </FormSection>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && (
+          <p className="text-sm text-red-500 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/30 px-3 py-2">
+            {error}
+          </p>
+        )}
 
-        <div className="flex gap-3">
-          <button type="submit" disabled={saving} className="btn-primary-solid">
+        <div className="flex gap-3 sticky bottom-4 z-10">
+          <button type="submit" disabled={saving} className="btn-primary-solid flex-1 sm:flex-none">
             {saving ? t.common.saving : t.common.save}
           </button>
           <button type="button" onClick={() => router.push(basePath)} className="btn-secondary">
@@ -138,20 +169,31 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="surface-card card-padded">
-          <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>
-            {t.promo.countdown}
-          </h3>
+      <div className="lg:col-span-2">
+        <div className="surface-card card-padded lg:sticky lg:top-4 space-y-4">
+          <div className="flex items-center gap-2 pb-1 border-b" style={{ borderColor: "var(--border-color)" }}>
+            <div
+              className="p-1.5 rounded-lg"
+              style={{ background: "var(--surface-hover)", color: "#3b66ff" }}
+            >
+              <CalendarDays className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+              {t.promo.countdown}
+            </h3>
+          </div>
+
           {previewEntries.length > 0 ? (
             <>
-              <PromoDepartureCountdowns promo={{ departure_dates: previewEntries }} />
-              <p className="text-[10px] mt-2" style={{ color: "var(--text-muted)" }}>
+              <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                <PromoDepartureCountdowns promo={{ departure_dates: previewEntries }} />
+              </div>
+              <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
                 {t.promo.mytNote}
               </p>
             </>
           ) : (
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            <p className="text-sm py-6 text-center rounded-xl" style={{ color: "var(--text-muted)", background: "var(--surface-hover)" }}>
               {t.promo.endDateHint}
             </p>
           )}

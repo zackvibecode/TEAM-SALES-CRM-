@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import type { PromoDepartureRow } from "@/types/promo";
 
@@ -29,42 +29,45 @@ export function PromoDepartureDatesEditor({ rows, onChange }: PromoDepartureDate
 
   return (
     <div className="space-y-3">
-      <div>
-        <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
-          {t.promo.departureDates}
-        </label>
-        <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>
-          {t.promo.endDateHint}
-        </p>
-      </div>
-
       <div className="space-y-2">
         {list.map((row, index) => (
-          <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div
+            key={index}
+            className="rounded-xl border p-3 space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-3"
+            style={{ borderColor: "var(--border-color)", background: "var(--surface-hover)" }}
+          >
+            <span
+              className="hidden sm:flex w-7 h-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold"
+              style={{ background: "var(--surface-card)", color: "var(--text-muted)" }}
+            >
+              {index + 1}
+            </span>
+
             <input
               type="text"
               value={row.name}
               onChange={(e) => updateRow(index, { name: e.target.value })}
-              className="input-field w-full sm:flex-1"
+              className="input-field w-full sm:flex-1 text-sm"
               placeholder={t.promo.packageNameHint}
               aria-label={`${t.promo.packageName} ${index + 1}`}
             />
-            <div className="flex items-center gap-2 sm:w-[11rem] shrink-0">
+
+            <div className="flex items-center gap-2 sm:w-44 shrink-0">
               <input
                 type="date"
                 value={row.date}
                 onChange={(e) => updateRow(index, { date: e.target.value })}
-                className="input-field w-full"
+                className="input-field w-full text-base font-semibold min-h-11"
                 aria-label={`${t.promo.endDate} ${index + 1}`}
               />
               {list.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeRow(index)}
-                  className="btn-secondary p-2 shrink-0"
+                  className="p-2 rounded-lg shrink-0 transition hover:bg-red-500/10 text-red-500"
                   aria-label={t.promo.removeDepartureDate}
                 >
-                  <X className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -72,7 +75,11 @@ export function PromoDepartureDatesEditor({ rows, onChange }: PromoDepartureDate
         ))}
       </div>
 
-      <button type="button" onClick={addRow} className="btn-secondary text-sm inline-flex items-center gap-2">
+      <button
+        type="button"
+        onClick={addRow}
+        className="w-full btn-secondary text-sm inline-flex items-center justify-center gap-2 border-dashed"
+      >
         <Plus className="w-4 h-4" />
         {t.promo.addPackageDate}
       </button>
