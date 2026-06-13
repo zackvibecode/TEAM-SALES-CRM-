@@ -1,6 +1,5 @@
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
 import { AdminDashboardClient } from "./client";
 
 export const dynamic = "force-dynamic";
@@ -78,13 +77,6 @@ export default async function AdminDashboardPage() {
 
   return (
     <AppLayout role="admin">
-      <PageHeader
-        badge="Admin"
-        title="Admin Dashboard"
-        subtitle="Overview of all sales activity — live KPIs and team performance"
-        compact
-      />
-
       <AdminDashboardClient
           salesProfiles={salesProfiles || []}
           performanceData={performanceData}

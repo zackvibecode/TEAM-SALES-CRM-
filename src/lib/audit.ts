@@ -9,7 +9,10 @@ export type AuditAction =
   | "create_sales_user"
   | "update_kpi"
   | "reset_all_crm_data"
-  | "rotate_agent_api_key";
+  | "rotate_agent_api_key"
+  | "create_promo"
+  | "update_promo"
+  | "delete_promo";
 
 export async function logAudit(params: {
   actorId: string;

@@ -3,6 +3,8 @@
 import { Bell, Menu, Moon, PanelLeftOpen, Sun } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { getPageTitle } from "./nav-config";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
+import { AppLangToggle } from "@/components/i18n/AppLangToggle";
 
 export function TopHeader({
   role,
@@ -22,8 +24,9 @@ export function TopHeader({
   onOpenSidebar: () => void;
 }) {
   const { theme, setTheme } = useTheme();
-  const pageTitle = getPageTitle(pathname);
-  const displayName = userName || userEmail.split("@")[0] || "User";
+  const { t } = useAppLocale();
+  const pageTitle = getPageTitle(pathname, t);
+  const displayName = userName || userEmail.split("@")[0] || t.common.user;
 
   return (
     <header className="main-topbar sticky top-0 z-30 shrink-0">
@@ -32,7 +35,7 @@ export function TopHeader({
           type="button"
           onClick={onOpenMobile}
           className="lg:hidden p-2 rounded-md hover:bg-[var(--surface-hover)] shrink-0"
-          aria-label="Open menu"
+          aria-label={t.common.openMenu}
         >
           <Menu className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
         </button>
@@ -42,7 +45,7 @@ export function TopHeader({
             type="button"
             onClick={onOpenSidebar}
             className="hidden lg:inline-flex p-2 rounded-md hover:bg-[var(--surface-hover)] shrink-0"
-            aria-label="Open sidebar"
+            aria-label={t.common.openSidebar}
           >
             <PanelLeftOpen className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
           </button>
@@ -59,12 +62,14 @@ export function TopHeader({
 
         <div className="flex-1" />
 
+        <AppLangToggle />
+
         <div className="theme-toggle shrink-0">
           <button
             type="button"
             onClick={() => setTheme("light")}
             className={`theme-toggle-btn ${theme === "light" ? "theme-toggle-btn-active" : ""}`}
-            aria-label="Light mode"
+            aria-label={t.common.lightMode}
           >
             <Sun className="w-3.5 h-3.5" />
           </button>
@@ -72,7 +77,7 @@ export function TopHeader({
             type="button"
             onClick={() => setTheme("dark")}
             className={`theme-toggle-btn ${theme === "dark" ? "theme-toggle-btn-active" : ""}`}
-            aria-label="Dark mode"
+            aria-label={t.common.darkMode}
           >
             <Moon className="w-3.5 h-3.5" />
           </button>
@@ -81,7 +86,7 @@ export function TopHeader({
         <button
           type="button"
           className="relative p-2 rounded-md hover:bg-[var(--surface-hover)] shrink-0 hidden sm:flex"
-          aria-label="Notifications"
+          aria-label={t.common.notifications}
         >
           <Bell className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
           <span
@@ -109,7 +114,7 @@ export function TopHeader({
               {displayName}
             </p>
             <p className="text-[11px] capitalize" style={{ color: "var(--text-muted)" }}>
-              {role}
+              {role === "admin" ? t.common.admin : t.common.sales}
             </p>
           </div>
         </div>

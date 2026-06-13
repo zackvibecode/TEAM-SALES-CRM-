@@ -1,0 +1,33 @@
+export const enRotator = {
+  title: "Rotator Team",
+  subtitle: "Manage WhatsApp rotator landing pages",
+  newPage: "New Rotator Page",
+  newPageSubtitle: "Create a WhatsApp rotator landing page",
+  editPage: "Edit Rotator Page",
+  pages: "Pages",
+  salesTeam: "Sales Team",
+  analytics: "Analytics",
+  posterPromo: "Promo poster",
+  imageSize: "Image size",
+  loadingText: "Loading text",
+  defaultMessage: "Default WhatsApp message",
+  slug: "Slug",
+  assignSales: "Assign sales members",
+};
+
+export const bmRotator = {
+  title: "Rotator Team",
+  subtitle: "Urus landing page rotator WhatsApp",
+  newPage: "Halaman Rotator Baru",
+  newPageSubtitle: "Cipta landing page rotator WhatsApp",
+  editPage: "Edit Halaman Rotator",
+  pages: "Halaman",
+  salesTeam: "Pasukan Sales",
+  analytics: "Analitik",
+  posterPromo: "Poster promosi",
+  imageSize: "Saiz imej",
+  loadingText: "Teks loading",
+  defaultMessage: "Mesej WhatsApp lalai",
+  slug: "Slug",
+  assignSales: "Assign ahli sales",
+};

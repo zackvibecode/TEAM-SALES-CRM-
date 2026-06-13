@@ -5,6 +5,9 @@ import { AdminDashboardOverview } from "@/components/admin/AdminDashboardOvervie
 import { AdminPerformanceGraph } from "@/components/admin/AdminPerformanceGraph";
 import { DashboardTable } from "@/components/shared/DashboardTable";
 import { TeamLeaderboard } from "@/components/shared/TeamLeaderboard";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { ActivePromoWidget } from "@/components/promo/ActivePromoWidget";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 interface SalesProfile {
   id: string;
@@ -47,6 +50,7 @@ interface Props {
 }
 
 export function AdminDashboardClient({ salesProfiles, performanceData, aggregateStats }: Props) {
+  const { t } = useAppLocale();
   const [selectedUserId, setSelectedUserId] = useState<string>("all");
 
   const currentStats = useMemo(() => {
@@ -75,6 +79,15 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
 
   return (
     <div className="dashboard-shell space-y-5">
+      <PageHeader
+        badge={t.admin.dashboard.badge}
+        title={t.admin.dashboard.title}
+        subtitle={t.admin.dashboard.subtitle}
+        compact
+      />
+
+      <ActivePromoWidget viewAllHref="/admin/promos" />
+
       <AdminDashboardOverview
         stats={currentStats}
         showWorkspace={selectedUserId === "all"}

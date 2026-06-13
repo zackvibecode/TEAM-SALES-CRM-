@@ -1,21 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { DashboardLayout } from "./DashboardLayout";
-import { adminNavItems, salesNavItems } from "./nav-config";
+import { getAdminNavItems, getSalesNavItems } from "./nav-config";
+import { AppLocaleProvider, useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 const SIDEBAR_STORAGE_KEY = "zaqone-sidebar-open";
 
-export default function AppLayout({ children, role }: { children: React.ReactNode; role: "admin" | "sales" }) {
+function AppLayoutInner({ children, role }: { children: React.ReactNode; role: "admin" | "sales" }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useAppLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userEmail, setUserEmail] = useState("");
 
-  const navItems = role === "admin" ? adminNavItems : salesNavItems;
+  const navItems = useMemo(
+    () => (role === "admin" ? getAdminNavItems(t) : getSalesNavItems(t)),
+    [role, t]
+  );
 
   useEffect(() => {
     const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
@@ -60,5 +65,13 @@ export default function AppLayout({ children, role }: { children: React.ReactNod
     >
       {children}
     </DashboardLayout>
+  );
+}
+
+export default function AppLayout({ children, role }: { children: React.ReactNode; role: "admin" | "sales" }) {
+  return (
+    <AppLocaleProvider>
+      <AppLayoutInner role={role}>{children}</AppLayoutInner>
+    </AppLocaleProvider>
   );
 }

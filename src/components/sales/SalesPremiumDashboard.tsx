@@ -6,6 +6,8 @@ import { SalesDashboardExtras, type SalesBatchCard } from "./SalesDashboardExtra
 import { SalesDashboardOverview } from "./SalesDashboardOverview";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TeamLeaderboard } from "@/components/shared/TeamLeaderboard";
+import { ActivePromoWidget } from "@/components/promo/ActivePromoWidget";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { ArrowRight } from "lucide-react";
 
 interface Props {
@@ -23,24 +25,37 @@ interface Props {
 }
 
 export function SalesPremiumDashboard(props: Props) {
+  const { t, locale } = useAppLocale();
   const hour = new Date().getHours();
   const greeting =
-    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    locale === "bm"
+      ? hour < 12
+        ? "Selamat pagi"
+        : hour < 17
+          ? "Selamat petang"
+          : "Selamat malam"
+      : hour < 12
+        ? "Good morning"
+        : hour < 17
+          ? "Good afternoon"
+          : "Good evening";
 
   return (
     <div className="dashboard-shell space-y-5">
       <PageHeader
         greeting={greeting}
-        title={props.fullName || "Sales"}
-        subtitle="Your lead book is synced. Set today's follow-up target and work your queue."
+        title={props.fullName || t.sales.dashboard.badge}
+        subtitle={t.sales.dashboard.subtitle}
         compact
         actions={
           <Link href="/dashboard/sales/customers" className="btn-primary-solid shrink-0 gap-2 text-sm">
-            Open My Tasks
+            {t.nav.myTasks}
             <ArrowRight className="w-4 h-4" />
           </Link>
         }
       />
+
+      <ActivePromoWidget viewAllHref="/dashboard/sales/promos" />
 
       <SalesDashboardOverview
         stats={{

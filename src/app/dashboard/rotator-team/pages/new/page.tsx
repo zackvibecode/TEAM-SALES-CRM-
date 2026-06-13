@@ -1,5 +1,5 @@
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { RotatorPageShell } from "@/components/i18n/PageShells";
 import { RotatorSubNav } from "@/components/rotator/RotatorSubNav";
 import { RotatorPageForm } from "@/components/rotator/RotatorPageForm";
 import { createDbClient } from "@/lib/supabase/server";
@@ -15,11 +15,10 @@ export default async function NewRotatorPage() {
 
   return (
     <AppLayout role="admin">
-      <div className="dashboard-shell space-y-6">
-        <PageHeader badge="Admin" title="New Rotator Page" subtitle="Create a WhatsApp rotator landing page" compact />
+      <RotatorPageShell subtitle={undefined}>
         <RotatorSubNav />
         <RotatorPageForm salesMembers={salesMembers || []} />
-      </div>
+      </RotatorPageShell>
     </AppLayout>
   );
 }

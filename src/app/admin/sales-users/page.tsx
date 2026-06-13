@@ -1,6 +1,6 @@
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { AdminPageShell } from "@/components/i18n/PageShells";
 import { SalesUsersClient } from "./client";
 
 export const dynamic = "force-dynamic";
@@ -20,14 +20,9 @@ export default async function AdminSalesUsersPage() {
 
   return (
     <AppLayout role="admin">
-      <div className="space-y-6">
-        <PageHeader
-          badge="Team"
-          title="Sales Users"
-          subtitle="Manage sales team members and monthly KPI targets"
-        />
+      <AdminPageShell section="salesUsers" className="space-y-6">
         <SalesUsersClient initialUsers={salesUsers || []} />
-      </div>
+      </AdminPageShell>
     </AppLayout>
   );
 }

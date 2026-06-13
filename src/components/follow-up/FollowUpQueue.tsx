@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { FollowUpFilters } from "./FollowUpFilters";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { FollowUpQueueCard, openWhatsApp } from "./FollowUpQueueCard";
 import { FollowUpModal } from "./FollowUpModal";
 import { FollowUpHistoryModal } from "./FollowUpHistoryModal";
@@ -20,6 +21,7 @@ export function FollowUpQueue({
   salesUsers?: { id: string; full_name: string }[];
   whatsappPretext?: string | null;
 }) {
+  const { t } = useAppLocale();
   const [filter, setFilter] = useState<FollowUpFilterTab>("today");
   const [customDate, setCustomDate] = useState(toDateString());
   const [sort, setSort] = useState<FollowUpSortKey>("follow_up_date");
@@ -117,7 +119,7 @@ export function FollowUpQueue({
         </div>
       ) : rows.length === 0 ? (
         <div className="card-padded-sm text-center text-sm" style={{ color: "var(--text-muted)" }}>
-          No follow ups in this view. Try another filter or contact leads via WhatsApp first.
+          {t.followUp.noFollowUps}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

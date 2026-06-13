@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { AdminPageShell } from "@/components/i18n/PageShells";
 import { AllLeadsClient } from "./client";
 
 export const dynamic = "force-dynamic";
@@ -31,8 +31,7 @@ export default async function AdminAllLeadsPage() {
 
   return (
     <AppLayout role="admin">
-      <div className="space-y-6">
-        <PageHeader badge="Database" title="All Leads" subtitle="Filter by batch, export, or re-assign owners" />
+      <AdminPageShell section="leads" className="space-y-6">
         <Suspense fallback={<p className="text-slate-500">Loading...</p>}>
           <AllLeadsClient
             salesUsers={salesUsers || []}
@@ -52,7 +51,7 @@ export default async function AdminAllLeadsPage() {
             }))}
           />
         </Suspense>
-      </div>
+      </AdminPageShell>
     </AppLayout>
   );
 }

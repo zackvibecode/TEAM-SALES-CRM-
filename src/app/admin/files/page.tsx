@@ -1,7 +1,6 @@
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { FilesClient } from "./client";
+import { AdminFilesPageClient } from "./shell";
 import { computeBatchStats } from "@/lib/campaign-stats";
 
 export const dynamic = "force-dynamic";
@@ -32,37 +31,25 @@ export default async function AdminFilesPage() {
 
   return (
     <AppLayout role="admin">
-      <div className="space-y-6">
-        <PageHeader
-          badge="Batches"
-          title="Campaigns & Batches"
-          subtitle="Track assignment progress per upload"
-          actions={
-            <a href="/api/admin/export-leads" className="btn-primary-solid text-sm">
-              Export all leads (CSV)
-            </a>
-          }
-        />
-        <FilesClient
-          salesUsers={salesUsers || []}
-          initialFiles={(files || []).map((f) => {
-            const stats = computeBatchStats(statsByFile.get(f.id) || []);
-            return {
-              id: f.id,
-              file_name: f.file_name,
-              campaign_name: f.campaign_name ?? null,
-              source_tag: f.source_tag ?? null,
-              owner_id: f.owner_user_id,
-              owner_name: (f.owner as { full_name: string })?.full_name || "Unknown",
-              total_rows: f.total_rows,
-              pending: stats.pending,
-              progress: stats.progress,
-              is_archived: f.is_archived ?? false,
-              created_at: f.created_at,
-            };
-          })}
-        />
-      </div>
+      <AdminFilesPageClient
+        salesUsers={salesUsers || []}
+        initialFiles={(files || []).map((f) => {
+          const stats = computeBatchStats(statsByFile.get(f.id) || []);
+          return {
+            id: f.id,
+            file_name: f.file_name,
+            campaign_name: f.campaign_name ?? null,
+            source_tag: f.source_tag ?? null,
+            owner_id: f.owner_user_id,
+            owner_name: (f.owner as { full_name: string })?.full_name || "Unknown",
+            total_rows: f.total_rows,
+            pending: stats.pending,
+            progress: stats.progress,
+            is_archived: f.is_archived ?? false,
+            created_at: f.created_at,
+          };
+        })}
+      />
     </AppLayout>
   );
 }

@@ -1,0 +1,31 @@
+export const enFollowUp = {
+  queue: "Follow Up Queue",
+  today: "Today",
+  overdue: "Overdue",
+  upcoming: "Upcoming",
+  completed: "Completed",
+  all: "All",
+  noFollowUps: "No follow-ups in this queue",
+  schedule: "Schedule follow-up",
+  markComplete: "Mark complete",
+  dueDate: "Due date",
+  notes: "Notes",
+  lead: "Lead",
+  salesUser: "Sales user",
+};
+
+export const bmFollowUp = {
+  queue: "Barisan Follow Up",
+  today: "Hari ini",
+  overdue: "Tertunggak",
+  upcoming: "Akan datang",
+  completed: "Selesai",
+  all: "Semua",
+  noFollowUps: "Tiada follow-up dalam barisan ini",
+  schedule: "Jadualkan follow-up",
+  markComplete: "Tandakan selesai",
+  dueDate: "Tarikh due",
+  notes: "Nota",
+  lead: "Lead",
+  salesUser: "Sales",
+};

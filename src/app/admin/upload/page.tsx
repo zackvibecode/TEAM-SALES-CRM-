@@ -1,6 +1,6 @@
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { AdminPageShell } from "@/components/i18n/PageShells";
 import { UploadClient } from "./client";
 
 export const dynamic = "force-dynamic";
@@ -19,17 +19,12 @@ export default async function AdminUploadPage() {
 
   return (
     <AppLayout role="admin">
-      <div className="space-y-6">
-        <PageHeader
-          badge="Campaigns"
-          title="Upload File"
-          subtitle="Assign campaigns to sales users — single or round-robin split"
-        />
+      <AdminPageShell section="upload" className="space-y-6">
         <UploadClient
           salesUsers={salesUsers || []}
           whatsappPretext={profile?.whatsapp_pretext ?? null}
         />
-      </div>
+      </AdminPageShell>
     </AppLayout>
   );
 }

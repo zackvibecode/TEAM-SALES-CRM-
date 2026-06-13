@@ -1,6 +1,6 @@
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { AdminPageShell } from "@/components/i18n/PageShells";
 import { FollowUpQueue } from "@/components/follow-up/FollowUpQueue";
 
 export const dynamic = "force-dynamic";
@@ -20,18 +20,13 @@ export default async function AdminFollowUpsPage() {
 
   return (
     <AppLayout role="admin">
-      <div className="space-y-6">
-        <PageHeader
-          badge="Queue"
-          title="Follow Up Queue"
-          subtitle="Leads that need follow up after WhatsApp contact — all sales users"
-        />
+      <AdminPageShell section="followUps" className="space-y-6">
         <FollowUpQueue
           role="admin"
           salesUsers={salesUsers ?? []}
           whatsappPretext={profile?.whatsapp_pretext ?? null}
         />
-      </div>
+      </AdminPageShell>
     </AppLayout>
   );
 }

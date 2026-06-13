@@ -1,8 +1,7 @@
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { ActivityLogTable } from "@/components/activity/ActivityLogTable";
 import { fetchWhatsAppActivityLogs } from "@/lib/activity-log";
+import { SalesActivityShell } from "./shell";
 
 export const dynamic = "force-dynamic";
 
@@ -24,17 +23,10 @@ export default async function SalesActivityPage() {
 
   return (
     <AppLayout role="sales">
-      <div className="space-y-6">
-        <PageHeader
-          badge="Live"
-          title="My Activity Log"
-          subtitle={`WhatsApp clicks · ${profile?.full_name ?? user.email}`}
-        />
-        <ActivityLogTable
-          initialActivities={activities}
-          showSalesUserColumn={false}
-        />
-      </div>
+      <SalesActivityShell
+        activities={activities}
+        subtitle={`WhatsApp · ${profile?.full_name ?? user.email}`}
+      />
     </AppLayout>
   );
 }

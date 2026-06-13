@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { SalesPageShell } from "@/components/i18n/PageShells";
 import { WhatsAppPretextEditor } from "@/components/settings/WhatsAppPretextEditor";
 
 export const dynamic = "force-dynamic";
@@ -14,14 +14,9 @@ export default async function SalesWhatsAppMessagePage() {
 
   return (
     <AppLayout role="sales">
-      <div className="space-y-6">
-        <PageHeader
-          badge="WhatsApp"
-          title="WhatsApp Message"
-          subtitle="Optionally set opening text for WhatsApp contacts from the CRM"
-        />
+      <SalesPageShell section="message" className="space-y-6">
         <WhatsAppPretextEditor />
-      </div>
+      </SalesPageShell>
     </AppLayout>
   );
 }

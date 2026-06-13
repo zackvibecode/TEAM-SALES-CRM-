@@ -6,6 +6,7 @@ import type { NavItem } from "./nav-config";
 import { logoutIcon } from "./nav-config";
 import { PanelLeftClose } from "lucide-react";
 import { BrandLogo } from "@/components/shared/BrandLogo";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 export function AppSidebar({
   navItems,
@@ -28,6 +29,7 @@ export function AppSidebar({
   onLogout: () => void;
   showCloseMobile?: boolean;
 }) {
+  const { t } = useAppLocale();
   return (
     <aside
       className={cn(
@@ -102,7 +104,7 @@ export function AppSidebar({
           style={{ color: "var(--text-secondary)" }}
         >
           <span className="nav-icon-wrap">{logoutIcon}</span>
-          Sign Out
+          {t.common.logout}
         </button>
       </div>
     </aside>

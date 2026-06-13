@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { AlertTriangle, Activity } from "lucide-react";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { LocalizedAdminHeader } from "@/components/i18n/LocalizedPageHeader";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { ActivityLogTable } from "@/components/activity/ActivityLogTable";
 import { WhatsAppWarningLogTable } from "@/components/activity/WhatsAppWarningLogTable";
 import type { ActivityLogItem, WhatsAppWarningLogItem } from "@/lib/activity-log";
@@ -18,17 +19,17 @@ export function AdminActivityView({
   warnings: WhatsAppWarningLogItem[];
   salesUsers: string[];
 }) {
+  const { t } = useAppLocale();
   const [view, setView] = useState<View>("clicks");
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        badge="Live"
-        title="Activity Log"
+      <LocalizedAdminHeader
+        section="activity"
         subtitle={
           view === "clicks"
-            ? "WhatsApp clicks across the team"
-            : "Rate limit warnings — users reminded to slow down"
+            ? t.admin.activity.subtitle
+            : t.activity.rateLimitWarning
         }
         actions={
           <>
@@ -40,7 +41,7 @@ export function AdminActivityView({
               }`}
             >
               <Activity className="w-4 h-4" />
-              WhatsApp clicks
+              {t.activity.filterWhatsapp}
             </button>
             <button
               type="button"
@@ -50,7 +51,7 @@ export function AdminActivityView({
               }`}
             >
               <AlertTriangle className="w-4 h-4" />
-              Rate limit warnings
+              {t.activity.rateLimitWarning}
               {warnings.length > 0 && (
                 <span className="ml-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                   {warnings.length > 99 ? "99+" : warnings.length}

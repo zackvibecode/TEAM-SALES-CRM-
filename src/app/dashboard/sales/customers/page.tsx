@@ -1,8 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { DailyGoalPanel } from "@/components/sales/DailyGoalPanel";
-import { CustomersClient } from "./client";
+import { SalesCustomersShell } from "./shell";
 
 export const dynamic = "force-dynamic";
 
@@ -50,37 +48,17 @@ export default async function SalesCustomersPage() {
 
   return (
     <AppLayout role="sales">
-      <div className="space-y-6">
-        <PageHeader
-          badge="Queue"
-          title="My Tasks"
-          subtitle={`${profile?.full_name} · ${profile?.email}`}
-        />
-
-        {dbError && (
-          <div className="alert-error">
-            Cannot load your leads: {dbError}. Ask admin to run{" "}
-            <code className="text-xs">supabase-migrations/003_fix_rls_recursion.sql</code>
-          </div>
-        )}
-
-        {!dbError && effectiveRole !== "sales" && (
-          <div className="alert-error">
-            Account role is &quot;{effectiveRole || "empty"}&quot;, not sales. Run migration 003 or set role=sales in Supabase profiles for {user.email}.
-          </div>
-        )}
-
-        <DailyGoalPanel />
-
-        <CustomersClient
-          initialLeads={[]}
-          batches={batches}
-          pendingCount={pendingCount}
-          totalCount={totalCount ?? 0}
-          userEmail={profile?.email || user.email || ""}
-          whatsappPretext={profile?.whatsapp_pretext ?? null}
-        />
-      </div>
+      <SalesCustomersShell
+        fullName={profile?.full_name}
+        email={profile?.email}
+        batches={batches}
+        whatsappPretext={profile?.whatsapp_pretext ?? null}
+        totalCount={totalCount ?? 0}
+        pendingCount={pendingCount}
+        effectiveRole={effectiveRole}
+        userEmail={profile?.email || user.email || ""}
+        dbError={dbError}
+      />
     </AppLayout>
   );
 }
