@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UserRole } from "@/lib/auth-context";
-import type { Promo, PromoActivityAction, PromoInput } from "@/types/promo";
+import { normalizeDepartureEntries, syncPromoEndsAt } from "@/lib/promo/countdown";
+import type { Promo, PromoActivityAction, PromoDepartureEntry, PromoInput } from "@/types/promo";
 
 const PROMO_SELECT =
   "*, creator:created_by(full_name, email), updater:updated_by(full_name, email)";
@@ -57,7 +58,19 @@ export async function logPromoActivity(
   });
 }
 
+function normalizeInputDepartures(input: PromoInput): PromoDepartureEntry[] {
+  if (Array.isArray(input.departure_dates)) {
+    return input.departure_dates.filter((entry) => entry.date);
+  }
+  if (input.ends_at) return [{ name: input.title?.trim() || "", date: input.ends_at }];
+  return [];
+}
+
 function snapshotPromo(promo: Promo | PromoInput & { id?: string }) {
+  const departure_dates =
+    "departure_dates" in promo && Array.isArray(promo.departure_dates)
+      ? normalizeInputDepartures(promo as PromoInput)
+      : normalizeDepartureEntries(promo as Promo);
   return {
     title: promo.title,
     promo_text: promo.promo_text,
@@ -65,6 +78,21 @@ function snapshotPromo(promo: Promo | PromoInput & { id?: string }) {
     is_active: promo.is_active ?? true,
     sort_order: promo.sort_order ?? 0,
     ends_at: promo.ends_at ?? null,
+    departure_dates,
+  };
+}
+
+function buildPromoRow(input: PromoInput) {
+  const departure_dates = normalizeInputDepartures(input);
+  const firstName = departure_dates.find((entry) => entry.name)?.name;
+  return {
+    title: input.title.trim() || firstName || "Package",
+    promo_text: input.promo_text.trim(),
+    poster_url: input.poster_url ?? null,
+    is_active: input.is_active !== false,
+    sort_order: input.sort_order ?? 0,
+    departure_dates,
+    ends_at: syncPromoEndsAt(departure_dates),
   };
 }
 
@@ -74,12 +102,7 @@ export async function createPromo(
   input: PromoInput
 ) {
   const row = {
-    title: input.title.trim(),
-    promo_text: input.promo_text.trim(),
-    poster_url: input.poster_url ?? null,
-    is_active: input.is_active !== false,
-    sort_order: input.sort_order ?? 0,
-    ends_at: input.ends_at ?? null,
+    ...buildPromoRow(input),
     created_by: userId,
     updated_by: userId,
   };
@@ -116,7 +139,22 @@ export async function updatePromo(
   if (input.poster_url !== undefined) updates.poster_url = input.poster_url;
   if (input.is_active !== undefined) updates.is_active = input.is_active;
   if (input.sort_order !== undefined) updates.sort_order = input.sort_order;
-  if (input.ends_at !== undefined) updates.ends_at = input.ends_at;
+
+  if (input.departure_dates !== undefined || input.ends_at !== undefined) {
+    const departure_dates = normalizeInputDepartures({
+      title: input.title ?? existing.title,
+      promo_text: input.promo_text ?? existing.promo_text,
+      departure_dates:
+        input.departure_dates ?? normalizeDepartureEntries(existing),
+      ends_at: input.ends_at,
+    });
+    updates.departure_dates = departure_dates;
+    updates.ends_at = syncPromoEndsAt(departure_dates);
+    if (!input.title) {
+      const firstName = departure_dates.find((entry) => entry.name)?.name;
+      if (firstName) updates.title = firstName;
+    }
+  }
 
   const { data, error } = await db
     .from("promos")

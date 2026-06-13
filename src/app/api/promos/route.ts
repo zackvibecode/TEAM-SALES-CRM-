@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedContext } from "@/lib/auth-context";
 import { logAudit } from "@/lib/audit";
-import { mytDateInputToISO } from "@/lib/promo/countdown";
+import { departureRowsToStored, mytDateInputToISO } from "@/lib/promo/countdown";
 import {
   canModifyPromo,
   createPromo,
@@ -10,26 +10,49 @@ import {
   listPromos,
   updatePromo,
 } from "@/lib/promo/service";
+import type { PromoDepartureEntry, PromoDepartureRow } from "@/types/promo";
+
+function parseDepartureEntries(input: Record<string, unknown>): PromoDepartureEntry[] {
+  const raw = input.departure_dates;
+  if (Array.isArray(raw)) {
+    const rows: PromoDepartureRow[] = raw
+      .map((item) => {
+        if (typeof item === "string") {
+          return { name: "", date: item };
+        }
+        if (item && typeof item === "object") {
+          const obj = item as { name?: unknown; date?: unknown };
+          return {
+            name: typeof obj.name === "string" ? obj.name : "",
+            date: typeof obj.date === "string" ? obj.date : "",
+          };
+        }
+        return null;
+      })
+      .filter((row): row is PromoDepartureRow => row !== null);
+    return departureRowsToStored(rows);
+  }
+
+  if (input.ends_at === null || input.ends_at === "") return [];
+  if (typeof input.ends_at === "string") {
+    const date =
+      /^\d{4}-\d{2}-\d{2}$/.test(input.ends_at) ? mytDateInputToISO(input.ends_at) : input.ends_at;
+    return [{ name: "", date }];
+  }
+
+  return [];
+}
 
 function parseBody(input: Record<string, unknown>) {
-  const title = (input.title as string)?.trim();
+  const departure_dates = parseDepartureEntries(input);
+  const firstName = departure_dates.find((entry) => entry.name)?.name;
+  const title = ((input.title as string)?.trim() || firstName || "Package").trim();
   const promo_text = (input.promo_text as string)?.trim() ?? "";
   const poster_url = (input.poster_url as string) || null;
   const is_active = input.is_active !== false;
   const sort_order = Number(input.sort_order ?? 0);
-  let ends_at: string | null = null;
 
-  if (input.ends_at === null || input.ends_at === "") {
-    ends_at = null;
-  } else if (typeof input.ends_at === "string") {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(input.ends_at)) {
-      ends_at = mytDateInputToISO(input.ends_at);
-    } else {
-      ends_at = input.ends_at;
-    }
-  }
-
-  return { title, promo_text, poster_url, is_active, sort_order, ends_at };
+  return { title, promo_text, poster_url, is_active, sort_order, departure_dates };
 }
 
 export async function GET(request: NextRequest) {

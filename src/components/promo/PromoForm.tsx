@@ -3,10 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
-import { isoToMytDateInput } from "@/lib/promo/countdown";
+import {
+  departureRowsToStored,
+  storedToDepartureRows,
+} from "@/lib/promo/countdown";
+import { PromoDepartureCountdowns } from "./PromoDepartureCountdowns";
+import { PromoDepartureDatesEditor } from "./PromoDepartureDatesEditor";
 import { UploadPromoImage } from "./UploadPromoImage";
-import { PromoCountdown } from "./PromoCountdown";
-import type { Promo } from "@/types/promo";
+import type { Promo, PromoDepartureRow } from "@/types/promo";
 
 interface PromoFormProps {
   promo?: Promo;
@@ -16,27 +20,35 @@ interface PromoFormProps {
 export function PromoForm({ promo, basePath }: PromoFormProps) {
   const router = useRouter();
   const { t } = useAppLocale();
-  const [title, setTitle] = useState(promo?.title || "");
   const [promoText, setPromoText] = useState(promo?.promo_text || "");
   const [posterUrl, setPosterUrl] = useState<string | null>(promo?.poster_url || null);
-  const [endsAtDate, setEndsAtDate] = useState(isoToMytDateInput(promo?.ends_at));
+  const [departureRows, setDepartureRows] = useState<PromoDepartureRow[]>(() =>
+    storedToDepartureRows(promo ?? {})
+  );
   const [isActive, setIsActive] = useState(promo?.is_active ?? true);
   const [sortOrder, setSortOrder] = useState(promo?.sort_order ?? 0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const previewEndsAt = endsAtDate ? `${endsAtDate}T23:59:59+08:00` : null;
+  const previewEntries = departureRowsToStored(departureRows);
+  const posterTitle =
+    previewEntries.find((entry) => entry.name)?.name || promo?.title || t.promo.poster;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError("");
 
+    const departure_dates = departureRowsToStored(departureRows);
+    const firstName = departure_dates.find((entry) => entry.name)?.name;
+
     const payload = {
-      title,
+      title: firstName || promo?.title || "Package",
       promo_text: promoText,
       poster_url: posterUrl,
-      ends_at: endsAtDate || null,
+      departure_dates: departureRows
+        .filter((row) => row.name.trim() || row.date.trim())
+        .map((row) => ({ name: row.name.trim(), date: row.date.trim() })),
       is_active: isActive,
       sort_order: sortOrder,
     };
@@ -64,20 +76,6 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
       <div className="space-y-5">
         <div>
           <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
-            {t.promo.promoTitle} *
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="input-field w-full"
-            placeholder={t.promo.promoTitle}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
             {t.promo.promoText}
           </label>
           <textarea
@@ -89,20 +87,7 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
-            {t.promo.endDate}
-          </label>
-          <input
-            type="date"
-            value={endsAtDate}
-            onChange={(e) => setEndsAtDate(e.target.value)}
-            className="input-field w-full"
-          />
-          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-            {t.promo.endDateHint}
-          </p>
-        </div>
+        <PromoDepartureDatesEditor rows={departureRows} onChange={setDepartureRows} />
 
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -138,7 +123,7 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
           <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
             {t.promo.poster}
           </label>
-          <UploadPromoImage value={posterUrl} onChange={setPosterUrl} title={title || t.promo.poster} />
+          <UploadPromoImage value={posterUrl} onChange={setPosterUrl} title={posterTitle} />
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
@@ -158,11 +143,13 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
           <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>
             {t.promo.countdown}
           </h3>
-          {previewEndsAt ? (
-            <PromoCountdown
-              endsAt={new Date(`${endsAtDate}T23:59:59+08:00`).toISOString()}
-              showMytNote
-            />
+          {previewEntries.length > 0 ? (
+            <>
+              <PromoDepartureCountdowns promo={{ departure_dates: previewEntries }} />
+              <p className="text-[10px] mt-2" style={{ color: "var(--text-muted)" }}>
+                {t.promo.mytNote}
+              </p>
+            </>
           ) : (
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
               {t.promo.endDateHint}

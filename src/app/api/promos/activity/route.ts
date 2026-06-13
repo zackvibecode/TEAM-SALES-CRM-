@@ -7,6 +7,10 @@ export async function GET(request: NextRequest) {
     const ctx = await getAuthenticatedContext();
     if (!ctx) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
+    if (ctx.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const promoId = searchParams.get("promo_id") ?? undefined;
     const limit = Number(searchParams.get("limit") ?? 50);

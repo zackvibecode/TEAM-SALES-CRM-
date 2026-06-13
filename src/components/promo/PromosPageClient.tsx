@@ -34,7 +34,7 @@ export function PromosPageClient({
         currentUserId={currentUserId}
         isAdmin={isAdmin}
       />
-      <PromoActivityPanel limit={20} />
+      {isAdmin && <PromoActivityPanel limit={20} />}
     </div>
   );
 }

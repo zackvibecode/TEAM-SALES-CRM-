@@ -10,6 +10,7 @@ import {
 
 interface PromoCountdownProps {
   endsAt: string | null | undefined;
+  packageName?: string;
   showEndDate?: boolean;
   showMytNote?: boolean;
   className?: string;
@@ -17,6 +18,7 @@ interface PromoCountdownProps {
 
 export function PromoCountdown({
   endsAt,
+  packageName,
   showEndDate = true,
   showMytNote = false,
   className = "",
@@ -43,6 +45,11 @@ export function PromoCountdown({
 
   return (
     <div className={`space-y-0.5 ${className}`}>
+      {packageName && (
+        <p className="text-xs font-semibold leading-snug" style={{ color: "var(--text-primary)" }}>
+          {packageName}
+        </p>
+      )}
       <p
         className={`text-sm font-semibold tabular-nums ${
           countdown.expired ? "text-red-500" : "text-[#3b66ff]"

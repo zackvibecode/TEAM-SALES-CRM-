@@ -1,5 +1,15 @@
 export type PromoActivityAction = "created" | "updated" | "deleted";
 
+export interface PromoDepartureEntry {
+  name: string;
+  date: string;
+}
+
+export interface PromoDepartureRow {
+  name: string;
+  date: string;
+}
+
 export interface Promo {
   id: string;
   title: string;
@@ -8,6 +18,7 @@ export interface Promo {
   is_active: boolean;
   sort_order: number;
   ends_at: string | null;
+  departure_dates?: PromoDepartureEntry[] | string[] | null;
   created_by: string;
   updated_by: string | null;
   created_at: string;
@@ -33,6 +44,7 @@ export interface PromoInput {
   is_active?: boolean;
   sort_order?: number;
   ends_at?: string | null;
+  departure_dates?: PromoDepartureEntry[];
 }
 
 export interface PromoCountdownResult {

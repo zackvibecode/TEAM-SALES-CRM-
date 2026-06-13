@@ -111,7 +111,7 @@ export function PromoPosterViewer({
                   type="button"
                   onClick={handleDownload}
                   disabled={downloading}
-                  className="btn-secondary text-sm inline-flex items-center gap-2 bg-white/95"
+                  className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-white text-slate-900 border border-slate-200 hover:bg-slate-100 transition disabled:opacity-50"
                 >
                   <Download className="w-4 h-4" />
                   {downloading ? t.common.saving : t.promo.downloadPoster}
@@ -119,10 +119,10 @@ export function PromoPosterViewer({
                 <button
                   type="button"
                   onClick={close}
-                  className="p-2 rounded-lg bg-white/95 hover:bg-white transition"
+                  className="p-2 rounded-lg bg-white text-slate-900 border border-slate-200 hover:bg-slate-100 transition"
                   aria-label={t.promo.closeViewer}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4 text-slate-900" />
                 </button>
               </div>
             </div>

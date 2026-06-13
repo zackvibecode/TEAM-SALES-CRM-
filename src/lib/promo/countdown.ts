@@ -1,5 +1,5 @@
 import type { Locale } from "@/lib/i18n/locale";
-import type { PromoCountdownResult } from "@/types/promo";
+import type { PromoCountdownResult, PromoDepartureEntry, PromoDepartureRow } from "@/types/promo";
 
 export const MYT_TIMEZONE = "Asia/Kuala_Lumpur";
 
@@ -191,6 +191,153 @@ export function getPromoCountdown(
 export function mytDateInputToISO(dateStr: string): string {
   // dateStr: YYYY-MM-DD — end of that day 23:59:59 MYT (UTC+8)
   return new Date(`${dateStr}T23:59:59+08:00`).toISOString();
+}
+
+function sortDepartureIsoDates(dates: string[]): string[] {
+  return [...dates].sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+}
+
+function sortDepartureEntries(entries: PromoDepartureEntry[]): PromoDepartureEntry[] {
+  return [...entries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
+
+function isDepartureEntryObject(value: unknown): value is { name?: string; date?: string } {
+  return typeof value === "object" && value !== null && "date" in value;
+}
+
+/** Normalize stored promo departures (supports legacy string[] and ends_at). */
+export function normalizeDepartureEntries(promo: {
+  title?: string;
+  ends_at?: string | null;
+  departure_dates?: unknown[] | null;
+}): PromoDepartureEntry[] {
+  const raw = promo.departure_dates;
+  if (Array.isArray(raw) && raw.length > 0) {
+    const entries: PromoDepartureEntry[] = [];
+    for (const item of raw) {
+      if (typeof item === "string" && item) {
+        entries.push({ name: promo.title?.trim() || "", date: item });
+        continue;
+      }
+      if (isDepartureEntryObject(item) && item.date) {
+        entries.push({ name: String(item.name ?? "").trim(), date: item.date });
+      }
+    }
+    return sortDepartureEntries(entries);
+  }
+  if (promo.ends_at) {
+    return [{ name: promo.title?.trim() || "", date: promo.ends_at }];
+  }
+  return [];
+}
+
+/** ISO dates only (legacy helper). */
+export function getPromoDepartureDates(promo: {
+  title?: string;
+  ends_at?: string | null;
+  departure_dates?: unknown[] | null;
+}): string[] {
+  return normalizeDepartureEntries(promo).map((entry) => entry.date);
+}
+
+export function storedToDepartureRows(
+  promo: { title?: string; ends_at?: string | null; departure_dates?: unknown[] | null }
+): PromoDepartureRow[] {
+  const entries = normalizeDepartureEntries(promo);
+  if (entries.length === 0) return [{ name: "", date: "" }];
+  return entries.map((entry) => ({
+    name: entry.name,
+    date: isoToMytDateInput(entry.date),
+  }));
+}
+
+export function departureRowsToStored(rows: PromoDepartureRow[]): PromoDepartureEntry[] {
+  const entries: PromoDepartureEntry[] = [];
+  for (const row of rows) {
+    const date = row.date.trim();
+    if (!date) continue;
+    entries.push({
+      name: row.name.trim(),
+      date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? mytDateInputToISO(date) : date,
+    });
+  }
+  return sortDepartureEntries(entries);
+}
+
+/** Convert MYT date inputs (YYYY-MM-DD) to stored ISO values. */
+export function mytDateInputsToISO(dates: string[]): string[] {
+  const unique = new Set<string>();
+  for (const date of dates) {
+    const trimmed = date.trim();
+    if (!trimmed) continue;
+    unique.add(/^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? mytDateInputToISO(trimmed) : trimmed);
+  }
+  return sortDepartureIsoDates([...unique]);
+}
+
+/** Nearest upcoming departure; if all passed, returns the latest date. */
+export function syncPromoEndsAt(departureDates: PromoDepartureEntry[] | string[]): string | null {
+  const isoDates = Array.isArray(departureDates)
+    ? departureDates.map((item) => (typeof item === "string" ? item : item.date)).filter(Boolean)
+    : [];
+  if (isoDates.length === 0) return null;
+  const sorted = sortDepartureIsoDates(isoDates);
+  const now = Date.now();
+  const upcoming = sorted.filter((d) => new Date(d).getTime() - now > 0);
+  if (upcoming.length > 0) return upcoming[0];
+  return sorted[sorted.length - 1];
+}
+
+export function isPromoFullyExpired(
+  promo: { title?: string; ends_at?: string | null; departure_dates?: unknown[] | null },
+  now = Date.now()
+): boolean {
+  const dates = getPromoDepartureDates(promo);
+  if (dates.length === 0) return false;
+  return dates.every((d) => new Date(d).getTime() - now <= 0);
+}
+
+/** YYYY-MM in MYT for grouping departure dates by month. */
+export function isoToMytMonthKey(iso: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: MYT_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+  }).formatToParts(new Date(iso));
+  const year = parts.find((p) => p.type === "year")?.value ?? "";
+  const month = parts.find((p) => p.type === "month")?.value ?? "";
+  return `${year}-${month}`;
+}
+
+export function formatMonthKeyLabel(monthKey: string, locale: Locale): string {
+  const [year, month] = monthKey.split("-");
+  const date = new Date(`${year}-${month}-01T12:00:00+08:00`);
+  const loc = locale === "bm" ? "ms-MY" : "en-MY";
+  return date.toLocaleDateString(loc, {
+    timeZone: MYT_TIMEZONE,
+    month: "long",
+    year: "numeric",
+  });
+}
+
+export function collectPromoMonthKeys(
+  promos: { title?: string; ends_at?: string | null; departure_dates?: unknown[] | null }[]
+): string[] {
+  const months = new Set<string>();
+  for (const promo of promos) {
+    for (const date of getPromoDepartureDates(promo)) {
+      months.add(isoToMytMonthKey(date));
+    }
+  }
+  return [...months].sort((a, b) => b.localeCompare(a));
+}
+
+export function promoMatchesMonth(
+  promo: { title?: string; ends_at?: string | null; departure_dates?: unknown[] | null },
+  monthKey: string | null
+): boolean {
+  if (!monthKey) return true;
+  return getPromoDepartureDates(promo).some((d) => isoToMytMonthKey(d) === monthKey);
 }
 
 /** Format ends_at for date input (YYYY-MM-DD in MYT). */
