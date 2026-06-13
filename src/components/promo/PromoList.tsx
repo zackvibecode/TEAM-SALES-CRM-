@@ -8,6 +8,7 @@ import {
   collectPromoMonthKeys,
   formatMonthKeyLabel,
   promoMatchesMonth,
+  sortPromosByNearestDeparture,
 } from "@/lib/promo/countdown";
 import { PromoCard } from "./PromoCard";
 import type { Promo } from "@/types/promo";
@@ -32,11 +33,13 @@ export function PromoList({
   const [monthFilter, setMonthFilter] = useState<string>("");
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  const monthOptions = useMemo(() => collectPromoMonthKeys(items), [items]);
+  const sortedItems = useMemo(() => sortPromosByNearestDeparture(items), [items]);
+
+  const monthOptions = useMemo(() => collectPromoMonthKeys(sortedItems), [sortedItems]);
 
   const filteredItems = useMemo(
-    () => items.filter((promo) => promoMatchesMonth(promo, monthFilter || null)),
-    [items, monthFilter]
+    () => sortedItems.filter((promo) => promoMatchesMonth(promo, monthFilter || null)),
+    [sortedItems, monthFilter]
   );
 
   const canModify = useCallback(

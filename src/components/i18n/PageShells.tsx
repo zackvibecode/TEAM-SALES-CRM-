@@ -10,7 +10,7 @@ export function AdminPageShell({
   children,
   compact,
   actions,
-  className = "dashboard-shell space-y-6",
+  className = "dashboard-shell",
 }: {
   section: keyof AppCopy["admin"];
   children: React.ReactNode;
@@ -31,7 +31,7 @@ export function SalesPageShell({
   children,
   compact,
   actions,
-  className = "dashboard-shell space-y-6",
+  className = "dashboard-shell",
   subtitle,
 }: {
   section: keyof AppCopy["sales"];
@@ -68,7 +68,7 @@ export function RotatorPageShell({
 }) {
   const { t } = useAppLocale();
   return (
-    <div className="dashboard-shell space-y-6">
+    <div className="dashboard-shell">
       <PageHeader
         badge={t.admin.dashboard.badge}
         title={t.rotator.title}

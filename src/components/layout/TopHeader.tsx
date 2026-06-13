@@ -30,7 +30,7 @@ export function TopHeader({
 
   return (
     <header className="main-topbar sticky top-0 z-30 shrink-0">
-      <div className="h-14 flex items-center px-4 lg:px-6 gap-3">
+      <div className="h-12 flex items-center px-4 lg:px-6 gap-3">
         <button
           type="button"
           onClick={onOpenMobile}

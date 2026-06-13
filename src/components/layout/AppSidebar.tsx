@@ -33,16 +33,16 @@ export function AppSidebar({
   return (
     <aside
       className={cn(
-        "fixed top-0 left-0 z-50 h-full w-[240px] flex flex-col sidebar-panel transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen",
+        "fixed top-0 left-0 z-50 h-full w-[224px] flex flex-col sidebar-panel transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen",
         showCloseMobile
           ? "translate-x-0"
           : "-translate-x-full lg:translate-x-0",
         sidebarOpen
-          ? "lg:relative lg:w-[240px] lg:opacity-100"
+          ? "lg:relative lg:w-[224px] lg:opacity-100"
           : "lg:-translate-x-full lg:w-0 lg:opacity-0 lg:overflow-hidden lg:pointer-events-none lg:fixed"
       )}
     >
-      <div className="px-4 h-14 flex items-center shrink-0 w-[240px] border-b border-[var(--border-color)]">
+      <div className="px-4 h-12 flex items-center shrink-0 border-b border-[var(--border-color)]">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="min-w-0 flex-1">
             <BrandLogo size="sm" />
@@ -70,7 +70,7 @@ export function AppSidebar({
         </div>
       </div>
 
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto w-[240px]">
+      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const active = pathname === item.href;
           return (
@@ -79,7 +79,7 @@ export function AppSidebar({
               href={item.href}
               onClick={onCloseMobile}
               className={cn(
-                "flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors",
+                "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors",
                 active ? "sidebar-nav-active" : "hover:bg-[var(--surface-hover)]"
               )}
               style={active ? undefined : { color: "var(--text-secondary)" }}
@@ -91,7 +91,7 @@ export function AppSidebar({
         })}
       </nav>
 
-      <div className="p-3 border-t shrink-0 w-[240px]" style={{ borderColor: "var(--border-color)" }}>
+      <div className="p-3 border-t shrink-0" style={{ borderColor: "var(--border-color)" }}>
         {userEmail && (
           <p className="px-2.5 text-[11px] truncate mb-2" style={{ color: "var(--text-muted)" }} title={userEmail}>
             {userEmail}

@@ -25,11 +25,11 @@ export interface NavItem {
 export function getAdminNavItems(t: AppCopy): NavItem[] {
   return [
     { label: t.nav.dashboard, href: "/admin/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
+    { label: t.nav.promos, href: "/admin/promos", icon: <Megaphone className="w-4 h-4" /> },
     { label: t.nav.salesUsers, href: "/admin/sales-users", icon: <Users className="w-4 h-4" /> },
     { label: t.nav.assignUpload, href: "/admin/upload", icon: <Upload className="w-4 h-4" /> },
     { label: t.nav.campaigns, href: "/admin/files", icon: <FileText className="w-4 h-4" /> },
     { label: t.nav.allLeads, href: "/admin/leads", icon: <List className="w-4 h-4" /> },
-    { label: t.nav.promos, href: "/admin/promos", icon: <Megaphone className="w-4 h-4" /> },
     { label: t.nav.activityLog, href: "/admin/activity", icon: <Activity className="w-4 h-4" /> },
     { label: t.nav.followUpQueue, href: "/admin/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
     { label: t.nav.rotatorTeam, href: "/dashboard/rotator-team", icon: <RotateCw className="w-4 h-4" /> },
@@ -42,8 +42,8 @@ export function getAdminNavItems(t: AppCopy): NavItem[] {
 export function getSalesNavItems(t: AppCopy): NavItem[] {
   return [
     { label: t.nav.dashboard, href: "/dashboard/sales", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: t.nav.myTasks, href: "/dashboard/sales/customers", icon: <List className="w-4 h-4" /> },
     { label: t.nav.promos, href: "/dashboard/sales/promos", icon: <Megaphone className="w-4 h-4" /> },
+    { label: t.nav.myTasks, href: "/dashboard/sales/customers", icon: <List className="w-4 h-4" /> },
     { label: t.nav.activityLog, href: "/dashboard/sales/activity", icon: <Activity className="w-4 h-4" /> },
     { label: t.nav.followUpQueue, href: "/dashboard/sales/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
     { label: t.nav.whatsappMessage, href: "/dashboard/sales/message", icon: <MessageCircle className="w-4 h-4" /> },

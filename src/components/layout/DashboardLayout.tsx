@@ -111,7 +111,7 @@ export function DashboardLayout({
           onOpenMobile={onOpenMobile}
           onOpenSidebar={onToggleSidebar}
         />
-        <main className="flex-1 p-5 lg:p-8 max-w-[1400px] w-full mx-auto overflow-y-auto bg-[var(--surface-bg)]">
+        <main className="flex-1 p-4 lg:p-6 max-w-[1400px] w-full mx-auto overflow-y-auto bg-[var(--surface-bg)]">
           {children}
         </main>
       </div>

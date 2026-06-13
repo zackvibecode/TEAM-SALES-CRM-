@@ -371,3 +371,32 @@ export function countdownRefreshMs(totalMs: number): number {
   if (totalMs < 60 * 60 * 1000) return 1000;
   return 60000;
 }
+
+/** Sort promos by nearest upcoming departure date (closest first, expired last). */
+export function sortPromosByNearestDeparture<T extends {
+  title?: string;
+  ends_at?: string | null;
+  departure_dates?: unknown[] | null;
+}>(promos: T[], now = Date.now()): T[] {
+  return [...promos].sort((a, b) => {
+    const datesA = getPromoDepartureDates(a).map((d) => new Date(d).getTime());
+    const datesB = getPromoDepartureDates(b).map((d) => new Date(d).getTime());
+
+    const upcomingA = datesA.filter((ms) => ms - now > 0).sort((x, y) => x - y);
+    const upcomingB = datesB.filter((ms) => ms - now > 0).sort((x, y) => x - y);
+
+    // Both have upcoming dates — sort by nearest
+    if (upcomingA.length > 0 && upcomingB.length > 0) {
+      return upcomingA[0] - upcomingB[0];
+    }
+
+    // Only one has upcoming — that one comes first
+    if (upcomingA.length > 0) return -1;
+    if (upcomingB.length > 0) return 1;
+
+    // Both fully expired — sort by latest expired date (newest first)
+    const latestA = datesA.length > 0 ? Math.max(...datesA) : 0;
+    const latestB = datesB.length > 0 ? Math.max(...datesB) : 0;
+    return latestB - latestA;
+  });
+}
