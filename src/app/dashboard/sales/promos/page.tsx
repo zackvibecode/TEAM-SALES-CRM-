@@ -1,8 +1,7 @@
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { PromosPageClient } from "@/components/promo/PromosPageClient";
-import { listPromos } from "@/lib/promo/service";
-import type { Promo } from "@/types/promo";
+import { PackagesPageClient } from "@/components/packages/PackagesPageClient";
+import { listPromos } from "@/lib/promo/service";import type { Promo } from "@/types/promo";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +20,10 @@ export default async function SalesPromosPage() {
 
   return (
     <AppLayout role="sales">
-      <PromosPageClient
+      <PackagesPageClient
         promos={promos}
-        currentUserId={user.id}
-        isAdmin={false}
+        readOnly
         basePath="/dashboard/sales/promos"
-      />
-    </AppLayout>
+      />    </AppLayout>
   );
 }

@@ -11,10 +11,12 @@ import {
   ImageIcon,
   ChevronLeft,
   ChevronRight,
+  Eye,
 } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { formatDate, formatDateTime } from "@/lib/i18n/format";
 import { normalizeDepartureEntries } from "@/lib/promo/countdown";
+import { PromoDetailModal } from "@/components/promo/PromoDetailModal";
 import { cn } from "@/lib/utils";
 import type { Promo, PromoDepartureEntry } from "@/types/promo";
 
@@ -24,7 +26,8 @@ type SortKey = "departure" | "updated" | "title" | "seats";
 interface PackageTableProps {
   promos: Promo[];
   basePath: string;
-  onDelete: (id: string) => void;
+  readOnly?: boolean;
+  onDelete?: (id: string) => void;
 }
 
 const actionBtnClass =
@@ -95,7 +98,7 @@ function BluePill({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) {
+export function PackageTable({ promos, basePath, readOnly = false, onDelete }: PackageTableProps) {
   const router = useRouter();
   const { t, locale } = useAppLocale();
   const [search, setSearch] = useState("");
@@ -104,6 +107,7 @@ export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [viewPromo, setViewPromo] = useState<Promo | null>(null);
 
   const maxSeats = useMemo(
     () => Math.max(1, ...promos.map((p) => p.seats_left ?? 0)),
@@ -160,6 +164,7 @@ export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) 
   ];
 
   const handleDelete = async (promo: Promo) => {
+    if (!onDelete) return;
     if (!window.confirm(t.admin.packages.deleteConfirm)) return;
     try {
       const res = await fetch(`/api/promos?id=${promo.id}`, { method: "DELETE" });
@@ -285,7 +290,9 @@ export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) 
                 <th className="table-th !text-[10px] !py-2.5">{t.admin.packages.seatLeft}</th>
                 <th className="table-th !text-[10px] !py-2.5">{t.common.status}</th>
                 <th className="table-th !text-[10px] !py-2.5">{t.admin.packages.updatedCol}</th>
-                <th className="table-th !text-[10px] !py-2.5 text-right">{t.common.actions}</th>
+                <th className="table-th !text-[10px] !py-2.5 text-right">
+                  {readOnly ? t.promo.viewDetails : t.common.actions}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -464,8 +471,21 @@ export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) 
                         </p>
                       </td>
 
-                      {/* Actions */}
+                      {/* Actions / View */}
                       <td className="px-3 py-2.5">
+                        {readOnly ? (
+                          <div className="flex items-center justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setViewPromo(promo)}
+                              className={actionBtnClass}
+                              style={{ borderColor: "var(--border-color)", color: "#3b66ff" }}
+                              title={t.promo.viewDetails}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
                         <div className="flex items-center justify-end gap-1 relative">
                           <div
                             className="inline-flex items-center gap-1 rounded-lg p-0.5"
@@ -524,6 +544,7 @@ export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) 
                             </div>
                           )}
                         </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -599,6 +620,14 @@ export function PackageTable({ promos, basePath, onDelete }: PackageTableProps) 
             <option value={20}>20 {t.admin.packages.perPage}</option>
           </select>
         </div>
+      )}
+
+      {viewPromo && (
+        <PromoDetailModal
+          promo={viewPromo}
+          open={Boolean(viewPromo)}
+          onClose={() => setViewPromo(null)}
+        />
       )}
     </div>
   );

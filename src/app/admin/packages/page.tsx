@@ -23,7 +23,6 @@ export default async function AdminPackagesPage() {
     <AppLayout role="admin">
       <PackagesPageClient
         promos={promos}
-        currentUserId={user.id}
       />
     </AppLayout>
   );
