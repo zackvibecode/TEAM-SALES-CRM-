@@ -1,10 +1,11 @@
 "use client";
 
-import { Bell, Menu, Moon, PanelLeftOpen, Sun } from "lucide-react";
+import { Menu, Moon, PanelLeftOpen, Sun } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { getPageTitle } from "./nav-config";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { AppLangToggle } from "@/components/i18n/AppLangToggle";
+import { BellNotification } from "./BellNotification";
 
 export function TopHeader({
   role,
@@ -83,17 +84,7 @@ export function TopHeader({
           </button>
         </div>
 
-        <button
-          type="button"
-          className="relative p-2 rounded-md hover:bg-[var(--surface-hover)] shrink-0 hidden sm:flex"
-          aria-label={t.common.notifications}
-        >
-          <Bell className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
-          <span
-            className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-            style={{ background: "var(--text-primary)" }}
-          />
-        </button>
+        <BellNotification />
 
         <div className="flex items-center gap-2 shrink-0 pl-1">
           <div

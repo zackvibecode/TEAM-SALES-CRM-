@@ -11,6 +11,37 @@ import {
   updatePromo,
 } from "@/lib/promo/service";
 import type { PromoDepartureEntry, PromoDepartureRow } from "@/types/promo";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Promo } from "@/types/promo";
+
+async function notifyAllSalesUsers(
+  db: SupabaseClient,
+  promo: Promo,
+  action: "created" | "updated"
+) {
+  const { data: salesUsers } = await db
+    .from("profiles")
+    .select("id")
+    .eq("role", "sales");
+
+  if (!salesUsers || salesUsers.length === 0) return;
+
+  const prefix = action === "created" ? "Promo Baru" : "Promo Dikemaskini";
+  const message = promo.promo_text
+    ? promo.promo_text.substring(0, 150) + (promo.promo_text.length > 150 ? "…" : "")
+    : "";
+
+  const notifications = salesUsers.map((u) => ({
+    user_id: u.id,
+    title: `${prefix}: ${promo.title}`,
+    message,
+    type: "promo",
+    entity_type: "promo",
+    entity_id: promo.id,
+  }));
+
+  await db.from("notifications").insert(notifications);
+}
 
 function parseDepartureEntries(input: Record<string, unknown>): PromoDepartureEntry[] {
   const raw = input.departure_dates;
@@ -90,6 +121,8 @@ export async function POST(request: NextRequest) {
 
     const promo = await createPromo(ctx.db, ctx.user.id, parsed);
 
+    await notifyAllSalesUsers(ctx.db, promo, "created");
+
     if (ctx.role === "admin") {
       await logAudit({
         actorId: ctx.user.id,
@@ -132,6 +165,8 @@ export async function PUT(request: NextRequest) {
 
     const promo = await updatePromo(ctx.db, ctx.user.id, id, parsed);
     if (!promo) return NextResponse.json({ error: "Promo not found" }, { status: 404 });
+
+    await notifyAllSalesUsers(ctx.db, promo, "updated");
 
     if (ctx.role === "admin") {
       await logAudit({

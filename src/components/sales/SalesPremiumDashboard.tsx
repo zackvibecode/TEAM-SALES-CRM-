@@ -50,7 +50,7 @@ export function SalesPremiumDashboard(props: Props) {
         actions={
           <>
             <ActivePackagesButton href="/dashboard/sales/promos" />
-            <Link href="/dashboard/sales/customers" className="btn-primary-solid shrink-0 gap-2 text-sm">
+            <Link href="/dashboard/sales/tasks" className="btn-primary-solid shrink-0 gap-2 text-sm">
               {t.nav.myTasks}
               <ArrowRight className="w-4 h-4" />
             </Link>

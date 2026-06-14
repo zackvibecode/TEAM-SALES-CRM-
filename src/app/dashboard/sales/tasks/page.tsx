@@ -1,10 +1,10 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { SalesCustomersShell } from "./shell";
+import { SalesTasksShell } from "./shell";
 
 export const dynamic = "force-dynamic";
 
-export default async function SalesCustomersPage() {
+export default async function SalesTasksPage() {
   const auth = await createServerSupabaseClient();
   const { data: { user } } = await auth.auth.getUser();
   if (!user) return null;
@@ -48,7 +48,7 @@ export default async function SalesCustomersPage() {
 
   return (
     <AppLayout role="sales">
-      <SalesCustomersShell
+      <SalesTasksShell
         fullName={profile?.full_name}
         email={profile?.email}
         batches={batches}

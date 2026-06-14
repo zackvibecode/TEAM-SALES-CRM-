@@ -20,7 +20,7 @@ const TASK_STATUSES: { value: LeadStatus; label: string }[] = [
   { value: "Follow Up", label: "Follow Up" },
 ];
 
-interface CustomersClientProps {
+interface TasksClientProps {
   initialLeads: Lead[];
   batches: BatchOption[];
   pendingCount: number;
@@ -34,13 +34,13 @@ interface BatchOption {
   label: string;
 }
 
-function CustomersClientInner({
+function TasksClientInner({
   initialLeads,
   pendingCount,
   totalCount,
   userEmail,
   whatsappPretext,
-}: CustomersClientProps) {
+}: TasksClientProps) {
   const [leads, setLeads] = useState(initialLeads);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -277,7 +277,7 @@ function CustomersClientInner({
               </button>
             )}
             <span className="text-sm self-center" style={{ color: "var(--text-muted)" }}>
-              {filtered.length} customers
+              {filtered.length} tasks
             </span>
           </div>
         </div>
@@ -357,7 +357,7 @@ function CustomersClientInner({
               {paginated.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center" style={{ color: "var(--text-muted)" }}>
-                    {queueMode ? "Queue clear — great job!" : "No customers found."}
+                    {queueMode ? "Queue clear — great job!" : "No tasks found."}
                   </td>
                 </tr>
               )}
@@ -394,7 +394,7 @@ function CustomersClientInner({
         ))}
         {paginated.length === 0 && (
           <div className="card-padded-sm text-center py-10" style={{ color: "var(--text-muted)" }}>
-            {queueMode ? "Queue clear — great job!" : "No customers found."}
+            {queueMode ? "Queue clear — great job!" : "No tasks found."}
           </div>
         )}
       </div>
@@ -427,10 +427,10 @@ function CustomersClientInner({
   );
 }
 
-export function CustomersClient(props: CustomersClientProps) {
+export function TasksClient(props: TasksClientProps) {
   return (
     <Suspense fallback={<p style={{ color: "var(--text-muted)" }}>Loading...</p>}>
-      <CustomersClientInner {...props} />
+      <TasksClientInner {...props} />
     </Suspense>
   );
 }

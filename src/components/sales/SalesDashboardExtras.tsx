@@ -36,7 +36,7 @@ export function SalesDashboardExtras({
           <ListChecks className="w-4 h-4 shrink-0" />
           <span>
             <strong>{newBatchCount}</strong> new batch(es) assigned in the last 7 days.{" "}
-            <Link href="/dashboard/sales/customers" className="underline font-medium">
+            <Link href="/dashboard/sales/tasks" className="underline font-medium">
               Start your queue →
             </Link>
           </span>
@@ -70,7 +70,7 @@ export function SalesDashboardExtras({
             {activeBatches.map((b) => (
               <Link
                 key={b.id}
-                href="/dashboard/sales/customers"
+                href="/dashboard/sales/tasks"
                 className="block p-4 rounded-xl border transition hover:shadow-md"
                 style={{ background: "var(--surface-card)", borderColor: "var(--border-color)" }}
               >

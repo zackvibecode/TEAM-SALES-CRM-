@@ -1,8 +1,6 @@
-"use client";
-
 import { SalesPageShell } from "@/components/i18n/PageShells";
 import { DailyGoalPanel } from "@/components/sales/DailyGoalPanel";
-import { CustomersClient } from "./client";
+import { TasksClient } from "./client";
 
 interface BatchOption {
   id: string;
@@ -21,11 +19,11 @@ interface Props {
   dbError?: string;
 }
 
-export function SalesCustomersShell(props: Props) {
+export function SalesTasksShell(props: Props) {
   const subtitle = [props.fullName, props.email].filter(Boolean).join(" · ");
 
   return (
-    <SalesPageShell section="customers" subtitle={subtitle} className="space-y-6">
+    <SalesPageShell section="tasks" subtitle={subtitle} className="space-y-6">
       {props.dbError && (
         <div className="alert-error">Cannot load your leads: {props.dbError}</div>
       )}
@@ -38,7 +36,7 @@ export function SalesCustomersShell(props: Props) {
 
       <DailyGoalPanel />
 
-      <CustomersClient
+      <TasksClient
         initialLeads={[]}
         batches={props.batches}
         pendingCount={props.pendingCount}

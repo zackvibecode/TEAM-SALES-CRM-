@@ -4,7 +4,7 @@ export const enSales = {
     subtitle: "Your daily goals, leads, and performance",
     badge: "Sales",
   },
-  customers: {
+  tasks: {
     title: "My Tasks",
     subtitle: "Your assigned leads and contact queue",
     badge: "Tasks",
@@ -32,7 +32,7 @@ export const bmSales = {
     subtitle: "Matlamat harian, lead, dan prestasi anda",
     badge: "Sales",
   },
-  customers: {
+  tasks: {
     title: "Tugasan Saya",
     subtitle: "Lead yang diassign dan barisan hubungan anda",
     badge: "Tugasan",

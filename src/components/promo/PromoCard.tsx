@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { ChevronRight, Eye, Pencil, Trash2 } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { isPromoFullyExpired, normalizeDepartureEntries } from "@/lib/promo/countdown";
 import { PromoDepartureCountdowns } from "./PromoDepartureCountdowns";
@@ -29,13 +29,10 @@ export function PromoCard({
   const [detailOpen, setDetailOpen] = useState(false);
   const isExpired = isPromoFullyExpired(promo);
   const isActivePromo = promo.is_active && !isExpired;
-  const canOpenDetail = clickableWhenActive && isActivePromo;
   const packages = normalizeDepartureEntries(promo);
   const packageCount = packages.length;
 
-  const openDetail = () => {
-    if (canOpenDetail) setDetailOpen(true);
-  };
+  const openDetail = () => setDetailOpen(true);
 
   const statusBadge = (
     <span
@@ -52,25 +49,17 @@ export function PromoCard({
   return (
     <>
       <article
-        className={`group surface-card overflow-hidden flex flex-col h-full transition-all duration-200 ${
-          canOpenDetail
-            ? "cursor-pointer hover:shadow-lg hover:-translate-y-0.5 hover:border-[#3b66ff]/30"
-            : ""
-        }`}
-        onClick={canOpenDetail ? openDetail : undefined}
-        onKeyDown={
-          canOpenDetail
-            ? (e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  openDetail();
-                }
-              }
-            : undefined
-        }
-        role={canOpenDetail ? "button" : undefined}
-        tabIndex={canOpenDetail ? 0 : undefined}
-        aria-label={canOpenDetail ? `${t.promo.viewDetails}: ${promo.title}` : undefined}
+        className="group surface-card overflow-hidden flex flex-col h-full transition-all duration-200 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 hover:border-[#3b66ff]/30"
+        onClick={openDetail}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openDetail();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={`${t.promo.viewDetails}: ${promo.title}`}
       >
         <div className="relative aspect-square bg-[var(--surface-muted)] overflow-hidden">
           {promo.poster_url ? (
@@ -133,15 +122,13 @@ export function PromoCard({
               <span className="flex-1" />
             )}
 
-            {canOpenDetail && (
-              <span className="text-[10px] font-semibold text-[#3b66ff] inline-flex items-center gap-0.5 shrink-0">
-                {t.promo.viewDetails}
-                <ChevronRight className="w-3 h-3" />
-              </span>
-            )}
+            <span className="text-[10px] font-semibold text-[#3b66ff] inline-flex items-center gap-0.5 shrink-0">
+              {t.promo.viewDetails}
+              <ChevronRight className="w-3 h-3" />
+            </span>
           </div>
 
-          {canEdit && editHref && (
+          {canEdit && editHref ? (
             <div
               className="flex gap-2"
               onClick={(e) => e.stopPropagation()}
@@ -165,13 +152,24 @@ export function PromoCard({
                 </button>
               )}
             </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openDetail();
+              }}
+              className="btn-secondary text-xs w-full mt-0.5 inline-flex items-center justify-center gap-1.5 py-1.5 font-medium"
+              style={{ color: "#3b66ff", borderColor: "rgba(59,102,255,0.3)" }}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              {t.promo.viewDetails}
+            </button>
           )}
         </div>
       </article>
 
-      {canOpenDetail && (
-        <PromoDetailModal promo={promo} open={detailOpen} onClose={() => setDetailOpen(false)} />
-      )}
+      <PromoDetailModal promo={promo} open={detailOpen} onClose={() => setDetailOpen(false)} />
     </>
   );
 }
