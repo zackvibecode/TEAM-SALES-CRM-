@@ -15,7 +15,6 @@ interface PromoCardProps {
   editHref?: string;
   canEdit?: boolean;
   onDelete?: (id: string) => void;
-  clickableWhenActive?: boolean;
 }
 
 export function PromoCard({
@@ -23,12 +22,10 @@ export function PromoCard({
   editHref,
   canEdit = false,
   onDelete,
-  clickableWhenActive = false,
 }: PromoCardProps) {
   const { t } = useAppLocale();
   const [detailOpen, setDetailOpen] = useState(false);
   const isExpired = isPromoFullyExpired(promo);
-  const isActivePromo = promo.is_active && !isExpired;
   const packages = normalizeDepartureEntries(promo);
   const packageCount = packages.length;
 

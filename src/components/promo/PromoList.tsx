@@ -141,7 +141,6 @@ export function PromoList({
               promo={promo}
               editHref={canModify(promo) ? `${basePath}/${promo.id}/edit` : undefined}
               canEdit={canModify(promo)}
-              clickableWhenActive
               onDelete={
                 canModify(promo) && deleting !== promo.id
                   ? () => handleDelete(promo.id)

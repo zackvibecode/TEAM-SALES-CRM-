@@ -72,7 +72,7 @@ export function ActivePromoWidget({ viewAllHref, limit = 3 }: ActivePromoWidgetP
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {promos.map((promo) => (
-          <PromoCard key={promo.id} promo={promo} clickableWhenActive />
+          <PromoCard key={promo.id} promo={promo} />
         ))}
       </div>
     </div>
