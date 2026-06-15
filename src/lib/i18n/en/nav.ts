@@ -14,6 +14,7 @@ export const enNav = {
   myTasks: "My Tasks",
   whatsappMessage: "WhatsApp Message",
   promos: "Package Update",
+  teamSales: "Team Sales",
   sales: "Sales",
   promotion: "Promotion",
   pageTitles: {
@@ -36,6 +37,8 @@ export const enNav = {
     "/dashboard/sales/follow-ups": "Follow Up Queue",
     "/dashboard/sales/message": "WhatsApp Message",
     "/dashboard/sales/promos": "Package Update",
+    "/dashboard/sales/team-sales": "Team Sales",
+    "/admin/team-sales": "Team Sales",
   } as Record<string, string>,
 };
 
@@ -55,6 +58,7 @@ export const bmNav = {
   myTasks: "Tugasan Saya",
   whatsappMessage: "Mesej WhatsApp",
   promos: "Kemas Kini Pakej",
+  teamSales: "Jualan Pasukan",
   sales: "Sales",
   promotion: "Promosi",
   pageTitles: {
@@ -77,5 +81,7 @@ export const bmNav = {
     "/dashboard/sales/follow-ups": "Barisan Follow Up",
     "/dashboard/sales/message": "Mesej WhatsApp",
     "/dashboard/sales/promos": "Kemas Kini Pakej",
+    "/dashboard/sales/team-sales": "Jualan Pasukan",
+    "/admin/team-sales": "Jualan Pasukan",
   } as Record<string, string>,
 };

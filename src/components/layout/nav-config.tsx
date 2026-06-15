@@ -14,6 +14,7 @@ import {
   RotateCw,
   Megaphone,
   Package,
+  TrendingUp,
 } from "lucide-react";
 import type { AppCopy } from "@/lib/i18n/get-copy";
 
@@ -30,6 +31,7 @@ export function getAdminNavItems(t: AppCopy): NavItem[] {
     { label: t.nav.packages, href: "/admin/packages", icon: <Package className="w-4 h-4" /> },
     { label: t.nav.activityLog, href: "/admin/activity", icon: <Activity className="w-4 h-4" /> },
     { label: t.nav.sales, isSectionHeader: true },
+    { label: t.nav.teamSales, href: "/admin/team-sales", icon: <TrendingUp className="w-4 h-4" /> },
     { label: t.nav.salesUsers, href: "/admin/sales-users", icon: <Users className="w-4 h-4" /> },
     { label: t.nav.assignUpload, href: "/admin/upload", icon: <Upload className="w-4 h-4" /> },
     { label: t.nav.campaigns, href: "/admin/files", icon: <FileText className="w-4 h-4" /> },
@@ -51,6 +53,7 @@ export function getSalesNavItems(t: AppCopy): NavItem[] {
     { label: t.nav.activityLog, href: "/dashboard/sales/activity", icon: <Activity className="w-4 h-4" /> },
     { label: t.nav.followUpQueue, href: "/dashboard/sales/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
     { label: t.nav.whatsappMessage, href: "/dashboard/sales/message", icon: <MessageCircle className="w-4 h-4" /> },
+    { label: t.nav.teamSales, href: "/dashboard/sales/team-sales", icon: <TrendingUp className="w-4 h-4" /> },
   ];
 }
 

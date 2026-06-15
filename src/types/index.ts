@@ -118,6 +118,19 @@ export interface SalesDashboardStats {
   thisWeekClicks: number;
 }
 
+export interface TeamSale {
+  id: string;
+  sales_user_id: string;
+  lead_id: string | null;
+  package_name: string;
+  lead_source: string;
+  sale_amount: number;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+  sales_user_name?: string;
+}
+
 export interface LeadRow {
   name: string;
   whatsapp: string;
