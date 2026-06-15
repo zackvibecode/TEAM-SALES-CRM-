@@ -17,8 +17,10 @@ interface TeamSalesReportProps {
     editSale: string;
     salesPerson: string;
     packageName: string;
+    customerName: string;
     leadSource: string;
     saleAmount: string;
+    pax: string;
     notes: string;
     totalTeamSales: string;
     totalAmount: string;
@@ -124,8 +126,10 @@ export function TeamSalesReport({
 
   const handleSave = async (data: {
     package_name: string;
+    customer_name: string;
     lead_source: string;
     sale_amount: number;
+    pax: number;
     notes: string;
     sales_user_id?: string;
   }) => {
@@ -279,8 +283,10 @@ export function TeamSalesReport({
                 <tr>
                   <SortHeader field="sales_user_name">{labels.salesPerson}</SortHeader>
                   <SortHeader field="package_name">{labels.packageName}</SortHeader>
+                  <th className="table-th">{labels.customerName}</th>
                   <SortHeader field="lead_source">{labels.leadSource}</SortHeader>
                   <SortHeader field="sale_amount">{labels.saleAmount}</SortHeader>
+                  <th className="table-th">{labels.pax}</th>
                   <SortHeader field="created_at">{labels.date}</SortHeader>
                   <th className="table-th">{labels.actions}</th>
                 </tr>
@@ -296,9 +302,13 @@ export function TeamSalesReport({
                       {sale.sales_user_name || "Unknown"}
                     </td>
                     <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>{sale.package_name}</td>
+                    <td className="px-4 py-3 font-medium" style={{ color: "var(--text-primary)" }}>{sale.customer_name || "-"}</td>
                     <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>{sale.lead_source || "-"}</td>
                     <td className="px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400">
                       RM {sale.sale_amount.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-4 py-3 text-center font-medium" style={{ color: "var(--text-secondary)" }}>
+                      {sale.pax ?? 1}
                     </td>
                     <td className="px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
                       {new Date(sale.created_at).toLocaleDateString("en-MY", {
@@ -350,10 +360,18 @@ export function TeamSalesReport({
                 <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
                   {sale.package_name}
                 </p>
+                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                  {sale.customer_name || "-"}
+                </p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                     {sale.lead_source || "-"}
                   </span>
+                  <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+                    PAX: {sale.pax ?? 1}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
                   <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
                     RM {sale.sale_amount.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
@@ -393,8 +411,10 @@ export function TeamSalesReport({
           addSale: labels.addSale,
           editSale: labels.editSale,
           packageName: labels.packageName,
+          customerName: labels.customerName,
           leadSource: labels.leadSource,
           saleAmount: labels.saleAmount,
+          pax: labels.pax,
           notes: labels.notes,
           salesPerson: labels.salesPerson,
           save: labels.save,

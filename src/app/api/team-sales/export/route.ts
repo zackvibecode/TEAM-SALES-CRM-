@@ -23,16 +23,18 @@ export async function GET(request: NextRequest) {
 
     const esc = (v: string) => `"${String(v || "").replace(/"/g, '""')}"`;
 
-    const header = "Sales Person,Package,Lead Source,Amount (RM),Notes,Date\n";
+    const header = "Sales Person,Customer Name,Package,Lead Source,Amount (RM),PAX,Notes,Date\n";
     const rows = (data || [])
       .map((row: Record<string, unknown>) => {
         const profile = row.profiles as { full_name?: string } | null;
         const name = profile?.full_name || "Unknown";
         return [
           esc(name),
+          esc((row.customer_name as string) || ""),
           esc(row.package_name as string),
           esc((row.lead_source as string) || ""),
           Number(row.sale_amount ?? 0).toFixed(2),
+          String(row.pax ?? 1),
           esc((row.notes as string) || ""),
           esc(new Date(row.created_at as string).toLocaleDateString("en-MY")),
         ].join(",");

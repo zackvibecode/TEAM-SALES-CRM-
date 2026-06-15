@@ -1,0 +1,6 @@
+{"sessionId":"de1d24","runId":"post-fix","location":"assign/route.ts","message":"new rpc assign","data":{"slug":"nusa","sales":"CIK FADLIN"},"timestamp":1781077413141,"hypothesisId":"H1"}
+{"sessionId":"de1d24","runId":"post-fix","location":"assign/route.ts","message":"cached assign returned","data":{"slug":"nusa","visitorId":"test-tri"},"timestamp":1781077413414,"hypothesisId":"H1"}
+{"sessionId":"de1d24","runId":"post-fix","location":"assign/route.ts","message":"cached assign returned","data":{"slug":"nusa","visitorId":"test-tri"},"timestamp":1781077413678,"hypothesisId":"H1"}
+{"sessionId":"de1d24","runId":"post-fix","location":"assign/route.ts","message":"new rpc assign","data":{"slug":"nusa","sales":"ENCIK ALIF"},"timestamp":1781077493899,"hypothesisId":"H1"}
+{"sessionId":"de1d24","runId":"post-fix","location":"assign/route.ts","message":"cached assign returned","data":{"slug":"nusa","visitorId":"verify-f"},"timestamp":1781077494295,"hypothesisId":"H1"}
+{"sessionId":"de1d24","runId":"post-fix","location":"assign/route.ts","message":"cached assign returned","data":{"slug":"nusa","visitorId":"verify-f"},"timestamp":1781077494704,"hypothesisId":"H1"}

@@ -125,6 +125,8 @@ export interface TeamSale {
   package_name: string;
   lead_source: string;
   sale_amount: number;
+  pax: number;
+  customer_name: string;
   notes: string;
   created_at: string;
   updated_at: string;

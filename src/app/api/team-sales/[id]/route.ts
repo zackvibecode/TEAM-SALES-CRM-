@@ -29,6 +29,8 @@ export async function PUT(
     const package_name = (body.package_name as string)?.trim();
     const lead_source = (body.lead_source as string)?.trim() ?? "";
     const sale_amount = Number(body.sale_amount ?? 0);
+    const pax = Number(body.pax ?? 1);
+    const customer_name = (body.customer_name as string)?.trim() ?? "";
     const notes = (body.notes as string)?.trim() ?? "";
 
     if (!package_name) {
@@ -41,6 +43,8 @@ export async function PUT(
         package_name,
         lead_source,
         sale_amount,
+        pax,
+        customer_name,
         notes,
       })
       .eq("id", id)

@@ -7,7 +7,7 @@ import type { TeamSale } from "@/types";
 interface TeamSaleFormModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: { package_name: string; lead_source: string; sale_amount: number; notes: string; sales_user_id?: string }) => Promise<void>;
+  onSave: (data: { package_name: string; customer_name: string; lead_source: string; sale_amount: number; pax: number; notes: string; sales_user_id?: string }) => Promise<void>;
   editing?: TeamSale | null;
   isAdmin?: boolean;
   salesUsers?: { id: string; full_name: string }[];
@@ -15,8 +15,10 @@ interface TeamSaleFormModalProps {
     addSale: string;
     editSale: string;
     packageName: string;
+    customerName: string;
     leadSource: string;
     saleAmount: string;
+    pax: string;
     notes: string;
     salesPerson: string;
     save: string;
@@ -34,8 +36,10 @@ export function TeamSaleFormModal({
   labels,
 }: TeamSaleFormModalProps) {
   const [packageName, setPackageName] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [leadSource, setLeadSource] = useState("");
   const [saleAmount, setSaleAmount] = useState("");
+  const [pax, setPax] = useState("");
   const [notes, setNotes] = useState("");
   const [salesUserId, setSalesUserId] = useState("");
   const [saving, setSaving] = useState(false);
@@ -57,14 +61,18 @@ export function TeamSaleFormModal({
   useEffect(() => {
     if (editing) {
       setPackageName(editing.package_name);
+      setCustomerName(editing.customer_name || "");
       setLeadSource(editing.lead_source);
       setSaleAmount(editing.sale_amount.toString());
+      setPax(String(editing.pax ?? 1));
       setNotes(editing.notes);
       setSalesUserId(editing.sales_user_id);
     } else {
       setPackageName("");
+      setCustomerName("");
       setLeadSource("");
       setSaleAmount("");
+      setPax("");
       setNotes("");
       setSalesUserId("");
     }
@@ -90,8 +98,10 @@ export function TeamSaleFormModal({
     try {
       await onSave({
         package_name: packageName.trim(),
+        customer_name: customerName.trim(),
         lead_source: leadSource.trim(),
         sale_amount: amount,
+        pax: parseInt(pax, 10) || 1,
         notes: notes.trim(),
         ...(salesUserId ? { sales_user_id: salesUserId } : {}),
       });
@@ -167,6 +177,19 @@ export function TeamSaleFormModal({
 
           <div>
             <label className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text-secondary)" }}>
+              {labels.customerName}
+            </label>
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className="input-field"
+              placeholder="Customer name..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text-secondary)" }}>
               {labels.leadSource}
             </label>
             <input
@@ -191,6 +214,20 @@ export function TeamSaleFormModal({
               className="input-field"
               placeholder="0.00"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text-secondary)" }}>
+              {labels.pax}
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={pax}
+              onChange={(e) => setPax(e.target.value)}
+              className="input-field"
+              placeholder="1"
             />
           </div>
 
