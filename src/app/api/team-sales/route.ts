@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     const package_name = (body.package_name as string)?.trim();
     const lead_source = (body.lead_source as string)?.trim() ?? "";
     const sale_amount = Number(body.sale_amount ?? 0);
-    const pax = Number(body.pax ?? 1);
+    const pax = Number(body.pax ?? 1) || 1;
     const customer_name = (body.customer_name as string)?.trim() ?? "";
     const notes = (body.notes as string)?.trim() ?? "";
 
@@ -62,22 +62,27 @@ export async function POST(request: NextRequest) {
         ? (body.sales_user_id as string)
         : ctx.user.id;
 
+    const insertPayload = {
+      sales_user_id: salesUserId,
+      package_name,
+      lead_source,
+      sale_amount,
+      pax,
+      customer_name,
+      notes,
+    };
+
+    console.log("[team-sales POST] insert payload:", JSON.stringify(insertPayload));
+
     const { data, error } = await ctx.db
       .from("team_sales")
-      .insert({
-        sales_user_id: salesUserId,
-        package_name,
-        lead_source,
-        sale_amount,
-        pax,
-        customer_name,
-        notes,
-      })
+      .insert(insertPayload)
       .select("*, profiles!team_sales_sales_user_id_fkey(full_name)")
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("[team-sales POST] db error:", error);
+      return NextResponse.json({ error: error.message, code: error.code, details: error.details }, { status: 500 });
     }
 
     const profile = (data as Record<string, unknown>).profiles as { full_name?: string } | null;
@@ -89,6 +94,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ sale });
   } catch (err: unknown) {
+    console.error("[team-sales POST] unexpected error:", err);
     const msg = err instanceof Error ? err.message : "Failed to create team sale";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
