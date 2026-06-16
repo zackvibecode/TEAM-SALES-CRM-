@@ -60,6 +60,7 @@ export const bmNav = {
   whatsappMessage: "Mesej WhatsApp",
   promos: "Kemas Kini Pakej",
   teamSales: "Jualan Pasukan",
+  leadSources: "Sumber Lead",
   sales: "Sales",
   promotion: "Promosi",
   pageTitles: {
