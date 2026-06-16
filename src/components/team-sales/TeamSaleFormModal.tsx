@@ -44,6 +44,7 @@ export function TeamSaleFormModal({
   const [salesUserId, setSalesUserId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [leadSources, setLeadSources] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -57,6 +58,15 @@ export function TeamSaleFormModal({
       window.removeEventListener("keydown", onKey);
     };
   }, [open, onClose]);
+
+  useEffect(() => {
+    if (open) {
+      fetch("/api/lead-sources")
+        .then((res) => res.json())
+        .then((data) => setLeadSources(data.sources || []))
+        .catch(() => {});
+    }
+  }, [open]);
 
   useEffect(() => {
     if (editing) {
@@ -192,13 +202,16 @@ export function TeamSaleFormModal({
             <label className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text-secondary)" }}>
               {labels.leadSource}
             </label>
-            <input
-              type="text"
+            <select
               value={leadSource}
               onChange={(e) => setLeadSource(e.target.value)}
               className="input-field"
-              placeholder="e.g. Facebook Ads, Walk-in"
-            />
+            >
+              <option value="">-- Select lead source --</option>
+              {leadSources.map((ls) => (
+                <option key={ls.id} value={ls.name}>{ls.name}</option>
+              ))}
+            </select>
           </div>
 
           <div>

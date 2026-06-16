@@ -124,6 +124,18 @@ export function TeamSalesReport({
   const mySales = sales.filter((s) => s.sales_user_id === currentUserId);
   const myAmount = mySales.reduce((sum, s) => sum + s.sale_amount, 0);
 
+  const leadSourceBreakdown = sales.reduce<Record<string, { count: number; amount: number }>>((acc, s) => {
+    const source = s.lead_source?.trim() || "Unknown";
+    if (!acc[source]) acc[source] = { count: 0, amount: 0 };
+    acc[source].count += 1;
+    acc[source].amount += s.sale_amount;
+    return acc;
+  }, {});
+
+  const breakdownEntries = Object.entries(leadSourceBreakdown).sort(
+    (a, b) => b[1].amount - a[1].amount
+  );
+
   const handleSave = async (data: {
     package_name: string;
     customer_name: string;
@@ -264,6 +276,38 @@ export function TeamSalesReport({
           </div>
         </div>
       </div>
+
+      {breakdownEntries.length > 0 && (
+        <div className="surface-card card-padded">
+          <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>
+            Lead Source Breakdown
+          </h3>
+          <div className="space-y-2">
+            {breakdownEntries.map(([source, stats]) => {
+              const pct = totalAmount > 0 ? (stats.amount / totalAmount) * 100 : 0;
+              return (
+                <div key={source} className="flex items-center gap-3">
+                  <span className="text-sm font-medium w-36 shrink-0 truncate" style={{ color: "var(--text-primary)" }}>
+                    {source}
+                  </span>
+                  <div className="flex-1 h-5 rounded-full overflow-hidden" style={{ background: "var(--surface-secondary)" }}>
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${Math.max(pct, 2)}%`,
+                        background: "var(--accent-primary, #3b66ff)",
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold w-24 text-right shrink-0" style={{ color: "var(--text-primary)" }}>
+                    {stats.count} sale{stats.count !== 1 ? "s" : ""} &middot; RM {stats.amount.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div className="text-center py-8 text-sm" style={{ color: "var(--text-muted)" }}>Loading...</div>

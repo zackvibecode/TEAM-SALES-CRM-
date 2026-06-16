@@ -133,6 +133,15 @@ export interface TeamSale {
   sales_user_name?: string;
 }
 
+export interface LeadSource {
+  id: string;
+  name: string;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface LeadRow {
   name: string;
   whatsapp: string;

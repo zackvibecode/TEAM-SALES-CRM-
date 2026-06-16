@@ -32,6 +32,7 @@ export function getAdminNavItems(t: AppCopy): NavItem[] {
     { label: t.nav.activityLog, href: "/admin/activity", icon: <Activity className="w-4 h-4" /> },
     { label: t.nav.sales, isSectionHeader: true },
     { label: t.nav.teamSales, href: "/admin/team-sales", icon: <TrendingUp className="w-4 h-4" /> },
+    { label: t.nav.leadSources, href: "/admin/settings", icon: <Settings className="w-4 h-4" /> },
     { label: t.nav.salesUsers, href: "/admin/sales-users", icon: <Users className="w-4 h-4" /> },
     { label: t.nav.assignUpload, href: "/admin/upload", icon: <Upload className="w-4 h-4" /> },
     { label: t.nav.campaigns, href: "/admin/files", icon: <FileText className="w-4 h-4" /> },

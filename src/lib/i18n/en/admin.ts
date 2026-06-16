@@ -91,6 +91,21 @@ export const enAdmin = {
     subtitle: "CRM configuration and data management",
     badge: "Settings",
   },
+  leadSources: {
+    title: "Lead Sources",
+    subtitle: "Manage where leads come from. Changes sync to all users.",
+    badge: "Lead Sources",
+    addNew: "Add Lead Source",
+    edit: "Edit Lead Source",
+    sourceName: "Source Name",
+    namePlaceholder: "e.g. Facebook Ads, Walk-in",
+    active: "Active",
+    inactive: "Inactive",
+    noSources: "No lead sources yet. Add one to get started.",
+    deleteConfirm: "Delete this lead source? It will still appear in existing records.",
+    alreadyExists: "This lead source already exists.",
+    syncedNote: "All lead sources are shared across the team automatically.",
+  },
 };
 
 export const bmAdmin = {
@@ -185,5 +200,20 @@ export const bmAdmin = {
     title: "Tetapan",
     subtitle: "Konfigurasi CRM dan pengurusan data",
     badge: "Tetapan",
+  },
+  leadSources: {
+    title: "Sumber Lead",
+    subtitle: "Urus dari mana lead datang. Perubahan diselaraskan ke semua pengguna.",
+    badge: "Sumber Lead",
+    addNew: "Tambah Sumber Lead",
+    edit: "Edit Sumber Lead",
+    sourceName: "Nama Sumber",
+    namePlaceholder: "cth. Facebook Ads, Walk-in",
+    active: "Aktif",
+    inactive: "Tidak Aktif",
+    noSources: "Tiada sumber lead lagi. Tambah satu untuk mula.",
+    deleteConfirm: "Padam sumber lead ini? Ia masih akan muncul dalam rekod sedia ada.",
+    alreadyExists: "Sumber lead ini sudah wujud.",
+    syncedNote: "Semua sumber lead dikongsi merentasi pasukan secara automatik.",
   },
 };

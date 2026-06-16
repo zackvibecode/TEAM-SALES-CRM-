@@ -4,6 +4,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { AdminPageShell } from "@/components/i18n/PageShells";
 import { WhatsAppPretextEditor } from "@/components/settings/WhatsAppPretextEditor";
 import { AdminResetData } from "@/components/admin/AdminResetData";
+import { LeadSourceManager } from "@/components/admin/LeadSourceManager";
 import Link from "next/link";
 import { Bot, ArrowRight } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
@@ -35,6 +36,29 @@ function SettingsContent() {
           style={{ color: "var(--text-muted)" }}
         />
       </Link>
+
+      <div className="surface-card card-padded">
+        <LeadSourceManager
+          labels={{
+            title: t.admin.leadSources.title,
+            subtitle: t.admin.leadSources.subtitle,
+            addNew: t.admin.leadSources.addNew,
+            edit: t.admin.leadSources.edit,
+            sourceName: t.admin.leadSources.sourceName,
+            namePlaceholder: t.admin.leadSources.namePlaceholder,
+            active: t.admin.leadSources.active,
+            inactive: t.admin.leadSources.inactive,
+            noSources: t.admin.leadSources.noSources,
+            deleteConfirm: t.admin.leadSources.deleteConfirm,
+            alreadyExists: t.admin.leadSources.alreadyExists,
+            syncedNote: t.admin.leadSources.syncedNote,
+            save: t.common.save,
+            cancel: t.common.cancel,
+            delete: t.common.delete,
+          }}
+        />
+      </div>
+
       <WhatsAppPretextEditor />
       <AdminResetData variant="panel" />
     </>

@@ -15,6 +15,7 @@ export const enNav = {
   whatsappMessage: "WhatsApp Message",
   promos: "Package Update",
   teamSales: "Team Sales",
+  leadSources: "Lead Sources",
   sales: "Sales",
   promotion: "Promotion",
   pageTitles: {
