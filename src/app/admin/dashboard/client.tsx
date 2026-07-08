@@ -143,16 +143,38 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
             {filteredPerformance.map((p) => (
               <tr key={p.id} className="table-row">
                 <td className="px-4 py-4 font-medium" style={{ color: "var(--text-primary)" }}>
-                  {p.full_name}
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                      style={{
+                        background: "var(--surface-muted)",
+                        color: "var(--text-secondary)",
+                        border: "1px solid var(--border-color)",
+                      }}
+                    >
+                      {p.full_name.charAt(0).toUpperCase()}
+                    </span>
+                    {p.full_name}
+                  </div>
                 </td>
                 <td className="px-4 py-4 text-xs" style={{ color: "var(--text-muted)" }}>
                   {p.email}
                 </td>
-                <td className="px-4 py-4 text-right">{p.total_data}</td>
-                <td className="px-4 py-4 text-right">{p.clicked}</td>
-                <td className="px-4 py-4 text-right">{p.pending}</td>
-                <td className="px-4 py-4 text-right">{p.today_clicks}</td>
-                <td className="px-4 py-4 text-right">{p.this_week_clicks}</td>
+                <td className="px-4 py-4 text-right font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>
+                  {p.total_data}
+                </td>
+                <td className="px-4 py-4 text-right tabular-nums" style={{ color: "var(--text-secondary)" }}>
+                  {p.clicked}
+                </td>
+                <td className="px-4 py-4 text-right tabular-nums" style={{ color: "var(--text-secondary)" }}>
+                  {p.pending}
+                </td>
+                <td className="px-4 py-4 text-right tabular-nums" style={{ color: "var(--text-secondary)" }}>
+                  {p.today_clicks}
+                </td>
+                <td className="px-4 py-4 text-right tabular-nums" style={{ color: "var(--text-secondary)" }}>
+                  {p.this_week_clicks}
+                </td>
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--surface-muted)" }}>

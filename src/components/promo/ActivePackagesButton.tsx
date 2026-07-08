@@ -32,12 +32,12 @@ export function ActivePackagesButton({ href }: ActivePackagesButtonProps) {
 
   return (
     <Link href={href} className="btn-secondary shrink-0 gap-2 text-sm inline-flex items-center">
-      <Package className="w-4 h-4 text-[#3b66ff]" />
+      <Package className="w-4 h-4 text-[#465fff] dark:text-brand-400" />
       {t.promo.activePromos}
       {count > 0 && (
         <span
           className="min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold inline-flex items-center justify-center tabular-nums"
-          style={{ background: "#3b66ff", color: "#fff" }}
+          style={{ background: "#465fff", color: "#fff" }}
         >
           {count}
         </span>

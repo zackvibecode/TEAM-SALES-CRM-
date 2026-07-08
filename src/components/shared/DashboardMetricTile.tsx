@@ -6,7 +6,7 @@ export function DashboardMetricTile({
   label,
   value,
   icon: Icon,
-  accent = "blue",
+  accent = "gray",
   highlight,
 }: {
   label: string;

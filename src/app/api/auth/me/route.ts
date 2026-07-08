@@ -2,13 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
+function applyCookies(
+  target: NextResponse,
+  cookiesToApply: { name: string; value: string; options?: CookieOptions }[]
+) {
+  cookiesToApply.forEach(({ name, value, options }) => {
+    target.cookies.set(name, value, options);
+  });
+}
+
 export async function GET(request: NextRequest) {
   const { url, anonKey, valid } = getSupabasePublicEnv();
   if (!valid) {
     return NextResponse.json({ user: null, configured: false });
   }
 
-  const response = NextResponse.json({ user: null, configured: true });
+  const cookiesToApply: { name: string; value: string; options?: CookieOptions }[] = [];
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
@@ -16,16 +25,21 @@ export async function GET(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
+        cookiesToSet.forEach((cookie) => {
+          cookiesToApply.push(cookie);
         });
       },
     },
   });
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
-    return NextResponse.json({ user: null, configured: true });
+    const out = NextResponse.json({ user: null, configured: true });
+    applyCookies(out, cookiesToApply);
+    return out;
   }
 
   let role: string | null = null;
@@ -47,9 +61,6 @@ export async function GET(request: NextRequest) {
     configured: true,
   });
 
-  response.cookies.getAll().forEach((cookie) => {
-    out.cookies.set(cookie.name, cookie.value);
-  });
-
+  applyCookies(out, cookiesToApply);
   return out;
 }

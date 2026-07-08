@@ -83,19 +83,21 @@ export function AdminPerformanceGraph() {
     ? `${data.startDate}${data.startDate !== data.endDate ? ` → ${data.endDate}` : ""}`
     : "";
 
-  const graphPanel = (
+  return (
     <section className="card-padded-sm flex flex-col gap-5 h-full min-h-0">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 shrink-0">
-        <div>
-          <h2 className="font-bold flex items-center gap-2 text-base" style={{ color: "var(--text-primary)" }}>
-            <span className="icon-stat">
-              <BarChart3 />
-            </span>
-            Overall sales clicks
-          </h2>
-          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-            WhatsApp clicks by sales team for the selected date range.
-          </p>
+        <div className="flex items-center gap-2">
+          <span className="icon-stat">
+            <BarChart3 />
+          </span>
+          <div>
+            <h2 className="font-bold flex items-center gap-2 text-base" style={{ color: "var(--text-primary)" }}>
+              Overall sales clicks
+            </h2>
+            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+              WhatsApp clicks by sales team for the selected date range.
+            </p>
+          </div>
         </div>
         <select
           className="input-field max-w-[220px] py-2 text-sm shrink-0"
@@ -154,16 +156,16 @@ export function AdminPerformanceGraph() {
 
       {data && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
-          <StatCard label="Total Clicks" value={data.summary.total_clicks} icon={MousePointerClick} variant="primary" />
+          <StatCard label="Total Clicks" value={data.summary.total_clicks} icon={MousePointerClick} accent="brand" />
           <StatCard
             label="Top Sales User"
             value={data.summary.top_sales_user ?? "—"}
             icon={Crown}
-            accent="amber"
+            accent="warning"
             valueSize="compact"
           />
-          <StatCard label="Active Sales Users" value={data.summary.active_sales_users} icon={Users} accent="sky" />
-          <StatCard label="Average Clicks" value={data.summary.average_clicks} icon={TrendingUp} accent="mint" />
+          <StatCard label="Active Sales Users" value={data.summary.active_sales_users} icon={Users} accent="info" />
+          <StatCard label="Average Clicks" value={data.summary.average_clicks} icon={TrendingUp} accent="success" />
         </div>
       )}
 
@@ -223,7 +225,7 @@ export function AdminPerformanceGraph() {
                       <div
                         className={cn(
                           "w-full max-w-[44px] rounded-t-xl rounded-b-sm transition-all duration-300 relative mt-12",
-                          isTop && (isDark ? "ring-1 ring-[var(--border-color)]" : "ring-2 ring-[#3b66ff]/40 ring-offset-2")
+                          isTop && (isDark ? "ring-1 ring-[var(--border-color)]" : "ring-2 ring-[#465fff]/40 ring-offset-2")
                         )}
                         style={{
                           height: `${heightPct}%`,
@@ -233,13 +235,13 @@ export function AdminPerformanceGraph() {
                               ? "linear-gradient(180deg, #ededed 0%, #a1a1a1 100%)"
                               : "linear-gradient(180deg, #525252 0%, #333333 100%)"
                             : isTop
-                              ? "linear-gradient(180deg, #6b8cff 0%, #3b66ff 55%, #2952e6 100%)"
-                              : "linear-gradient(180deg, #a5b8ff 0%, #3b66ff 70%, #2952e6 100%)",
+                              ? "linear-gradient(180deg, #7592ff 0%, #465fff 55%, #3641f5 100%)"
+                              : "linear-gradient(180deg, #9cb9ff 0%, #465fff 70%, #3641f5 100%)",
                           boxShadow: isDark
                             ? "none"
                             : isHovered
-                              ? "0 10px 24px -6px rgba(59, 102, 255, 0.5)"
-                              : "0 6px 16px -6px rgba(59, 102, 255, 0.35)",
+                              ? "0 10px 24px -6px rgba(70, 95, 255, 0.5)"
+                              : "0 6px 16px -6px rgba(70, 95, 255, 0.35)",
                           transform: isHovered ? "translateY(-3px)" : undefined,
                         }}
                       >
@@ -253,7 +255,7 @@ export function AdminPerformanceGraph() {
                     <p
                       className={cn(
                         "mt-3 text-xs font-semibold text-center truncate w-full px-1",
-                        isTop && !isDark ? "text-[#3b66ff]" : ""
+                        isTop && !isDark ? "text-[#465fff]" : ""
                       )}
                       style={{ color: "var(--text-primary)" }}
                       title={row.sales_user_name}
@@ -280,6 +282,4 @@ export function AdminPerformanceGraph() {
       )}
     </section>
   );
-
-  return graphPanel;
 }

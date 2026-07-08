@@ -104,11 +104,11 @@ export function RotatorOverviewClient() {
       <RotatorResetClicks onReset={loadData} />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <StatCard label="Total Clicks" value={stats?.totalClicks ?? 0} icon={MousePointerClick} accent="blue" />
-        <StatCard label="Unique Clicks" value={stats?.uniqueClicks ?? 0} icon={TrendingUp} accent="mint" />
-        <StatCard label="Duplicate Clicks" value={stats?.duplicateClicks ?? 0} icon={Copy} accent="amber" />
-        <StatCard label="Today Clicks" value={stats?.todayClicks ?? 0} accent="sky" />
-        <StatCard label="This Month" value={stats?.monthClicks ?? 0} accent="slate" />
+        <StatCard label="Total Clicks" value={stats?.totalClicks ?? 0} icon={MousePointerClick} accent="brand" />
+        <StatCard label="Unique Clicks" value={stats?.uniqueClicks ?? 0} icon={TrendingUp} accent="success" />
+        <StatCard label="Duplicate Clicks" value={stats?.duplicateClicks ?? 0} icon={Copy} accent="warning" />
+        <StatCard label="Today Clicks" value={stats?.todayClicks ?? 0} accent="info" />
+        <StatCard label="This Month" value={stats?.monthClicks ?? 0} accent="gray" />
       </div>
 
       <div className="space-y-3">

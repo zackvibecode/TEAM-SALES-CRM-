@@ -120,7 +120,7 @@ export function AdminAgentApiKeyPanel() {
             className="absolute inset-0 opacity-[0.07] pointer-events-none"
             style={{
               background:
-                "radial-gradient(ellipse 80% 60% at 100% 0%, #3b66ff 0%, transparent 55%), radial-gradient(ellipse 60% 50% at 0% 100%, #6366f1 0%, transparent 50%)",
+                "radial-gradient(ellipse 80% 60% at 100% 0%, #2563eb 0%, transparent 55%), radial-gradient(ellipse 60% 50% at 0% 100%, #6366f1 0%, transparent 50%)",
             }}
           />
           <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -325,7 +325,7 @@ export function AdminAgentApiKeyPanel() {
               "Guna https://salescrm.zaqone.com/api/agent/... — jangan buka halaman web.",
             ]).map((note) => (
               <li key={note} className="flex gap-2">
-                <span className="text-[#3b66ff] shrink-0">•</span>
+                <span className="text-[#2563eb] shrink-0">•</span>
                 <span>{note}</span>
               </li>
             ))}
@@ -396,7 +396,7 @@ export function AdminAgentApiKeyPanel() {
                     {info.endpoints.map((ep) => (
                       <tr key={ep.path} className="border-t" style={{ borderColor: "var(--border-color)" }}>
                         <td className="px-4 py-3">
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#3b66ff]/15 text-[#3b66ff]">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#2563eb]/15 text-[#2563eb]">
                             {ep.method}
                           </span>
                         </td>

@@ -31,7 +31,7 @@ interface PackageTableProps {
 }
 
 const actionBtnClass =
-  "inline-flex items-center justify-center min-w-[32px] h-8 px-2 rounded-md border text-[11px] font-medium transition-all duration-150 hover:bg-[var(--surface-hover)] active:scale-[0.96] active:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b66ff]/35";
+  "inline-flex items-center justify-center min-w-[32px] h-8 px-2 rounded-md border text-[11px] font-medium transition-all duration-150 hover:bg-[var(--surface-hover)] active:scale-[0.96] active:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb]/35";
 
 function sortedDepartures(promo: Promo): PromoDepartureEntry[] {
   return normalizeDepartureEntries(promo);
@@ -89,7 +89,7 @@ function BluePill({ children }: { children: React.ReactNode }) {
       className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold leading-none"
       style={{
         background: "rgba(59, 102, 255, 0.12)",
-        color: "#3b66ff",
+        color: "#2563eb",
         border: "1px solid rgba(59, 102, 255, 0.25)",
       }}
     >
@@ -418,7 +418,7 @@ export function PackageTable({ promos, basePath, readOnly = false, onDelete }: P
                                 </div>
                               ))}
                               {departures.length > 4 && (
-                                <p className="text-[10px] font-medium" style={{ color: "#3b66ff" }}>
+                                <p className="text-[10px] font-medium" style={{ color: "#2563eb" }}>
                                   +{departures.length - 4} {t.admin.packages.moreDates}
                                 </p>
                               )}
@@ -479,7 +479,7 @@ export function PackageTable({ promos, basePath, readOnly = false, onDelete }: P
                               type="button"
                               onClick={() => setViewPromo(promo)}
                               className={actionBtnClass}
-                              style={{ borderColor: "var(--border-color)", color: "#3b66ff" }}
+                              style={{ borderColor: "var(--border-color)", color: "#2563eb" }}
                               title={t.promo.viewDetails}
                             >
                               <Eye className="w-3.5 h-3.5" />

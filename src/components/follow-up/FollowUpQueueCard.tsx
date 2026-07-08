@@ -55,11 +55,11 @@ export function FollowUpQueueCard({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm" style={{ color: "var(--text-secondary)" }}>
         <span className="flex items-center gap-1.5">
-          <MessageCircle className="w-3.5 h-3.5 text-[#3b66ff] shrink-0" />
+          <MessageCircle className="w-3.5 h-3.5 text-[#2563eb] shrink-0" />
           Last: <strong>{formatDateTime(lastFollowUp)}</strong>
         </span>
         <span className="flex items-center gap-1.5">
-          <Calendar className="w-3.5 h-3.5 text-[#3b66ff] shrink-0" />
+          <Calendar className="w-3.5 h-3.5 text-[#2563eb] shrink-0" />
           Next: <strong>{row.follow_up_date}</strong>
         </span>
         <span>Follow up count: <strong>{followUpCount}</strong></span>

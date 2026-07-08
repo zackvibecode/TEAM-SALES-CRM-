@@ -21,9 +21,9 @@ export function FollowUpKpiCards({ compact }: { compact?: boolean }) {
 
   return (
     <DashboardMetricSection title={compact ? undefined : "Follow ups"} columns={3}>
-      <DashboardMetricTile label="Follow Up Today" value={kpis.today} icon={CalendarClock} accent="sky" />
-      <DashboardMetricTile label="Overdue" value={kpis.overdue} icon={AlertTriangle} accent="amber" />
-      <DashboardMetricTile label="Total Follow Ups" value={kpis.total} icon={ListChecks} accent="blue" />
+      <DashboardMetricTile label="Follow Up Today" value={kpis.today} icon={CalendarClock} accent="info" />
+      <DashboardMetricTile label="Overdue" value={kpis.overdue} icon={AlertTriangle} accent="error" />
+      <DashboardMetricTile label="Total Follow Ups" value={kpis.total} icon={ListChecks} accent="brand" />
     </DashboardMetricSection>
   );
 }

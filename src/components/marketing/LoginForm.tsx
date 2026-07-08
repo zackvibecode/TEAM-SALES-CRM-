@@ -42,7 +42,14 @@ export function LoginForm() {
           setChecking(false);
           return;
         }
+      } catch {
+        setError(login.networkError);
+        setServerOk(false);
+        setChecking(false);
+        return;
+      }
 
+      try {
         const res = await fetch("/api/auth/me", {
           credentials: "include",
           cache: "no-store",
@@ -54,9 +61,9 @@ export function LoginForm() {
           return;
         }
       } catch {
-        setError(login.networkError);
-        setServerOk(false);
+        // Session check failed — still allow manual login.
       }
+
       setChecking(false);
     }
     checkSession();
@@ -81,8 +88,8 @@ export function LoginForm() {
         throw new Error(data.error || "Login failed");
       }
 
-      router.replace(data.role === "admin" ? "/admin/dashboard" : "/dashboard/sales");
-      router.refresh();
+      const destination = data.role === "admin" ? "/admin/dashboard" : "/dashboard/sales";
+      window.location.assign(destination);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login failed";
       setError(message);

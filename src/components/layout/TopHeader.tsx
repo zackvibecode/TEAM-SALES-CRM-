@@ -31,11 +31,11 @@ export function TopHeader({
 
   return (
     <header className="main-topbar sticky top-0 z-30 shrink-0">
-      <div className="h-12 flex items-center px-4 lg:px-6 gap-3">
+      <div className="h-14 flex items-center px-4 lg:px-6 gap-3">
         <button
           type="button"
           onClick={onOpenMobile}
-          className="lg:hidden p-2 rounded-md hover:bg-[var(--surface-hover)] shrink-0"
+          className="lg:hidden p-2 rounded-lg hover:bg-[var(--surface-hover)] shrink-0 transition-colors"
           aria-label={t.common.openMenu}
         >
           <Menu className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
@@ -45,7 +45,7 @@ export function TopHeader({
           <button
             type="button"
             onClick={onOpenSidebar}
-            className="hidden lg:inline-flex p-2 rounded-md hover:bg-[var(--surface-hover)] shrink-0"
+            className="hidden lg:inline-flex p-2 rounded-lg hover:bg-[var(--surface-hover)] shrink-0 transition-colors"
             aria-label={t.common.openSidebar}
           >
             <PanelLeftOpen className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
@@ -54,7 +54,7 @@ export function TopHeader({
 
         <div className="min-w-0">
           <h1
-            className="text-sm font-medium truncate tracking-tight"
+            className="text-sm font-semibold truncate tracking-tight"
             style={{ color: "var(--text-primary)" }}
           >
             {pageTitle}
@@ -65,12 +65,13 @@ export function TopHeader({
 
         <AppLangToggle />
 
-        <div className="theme-toggle shrink-0">
+        <div className="theme-toggle shrink-0" role="group" aria-label="Theme">
           <button
             type="button"
             onClick={() => setTheme("light")}
             className={`theme-toggle-btn ${theme === "light" ? "theme-toggle-btn-active" : ""}`}
             aria-label={t.common.lightMode}
+            aria-pressed={theme === "light"}
           >
             <Sun className="w-3.5 h-3.5" />
           </button>
@@ -79,6 +80,7 @@ export function TopHeader({
             onClick={() => setTheme("dark")}
             className={`theme-toggle-btn ${theme === "dark" ? "theme-toggle-btn-active" : ""}`}
             aria-label={t.common.darkMode}
+            aria-pressed={theme === "dark"}
           >
             <Moon className="w-3.5 h-3.5" />
           </button>
@@ -86,13 +88,13 @@ export function TopHeader({
 
         <BellNotification />
 
-        <div className="flex items-center gap-2 shrink-0 pl-1">
+        <div className="flex items-center gap-2.5 shrink-0 pl-1 border-l border-[var(--border-color)] ml-1">
           <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium border"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border"
             style={{
-              background: "var(--surface-muted)",
+              background: "var(--dash-accent-soft, var(--surface-muted))",
               borderColor: "var(--border-color)",
-              color: "var(--text-primary)",
+              color: "var(--dash-accent, var(--text-primary))",
             }}
           >
             {displayName.charAt(0).toUpperCase()}

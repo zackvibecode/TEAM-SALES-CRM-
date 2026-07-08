@@ -77,7 +77,7 @@ export function DashboardLayout({
   onLogout: () => void;
 }) {
   return (
-    <div className="min-h-screen flex app-shell">
+    <div className="min-h-screen flex dashboard-shell">
       <MobileSidebar
         open={mobileOpen}
         onClose={onCloseMobile}
@@ -111,7 +111,7 @@ export function DashboardLayout({
           onOpenMobile={onOpenMobile}
           onOpenSidebar={onToggleSidebar}
         />
-        <main className="flex-1 p-4 lg:p-6 max-w-[1400px] w-full mx-auto overflow-y-auto bg-[var(--surface-bg)]">
+        <main className="flex-1 p-4 lg:p-8 max-w-[1440px] w-full mx-auto overflow-y-auto bg-[var(--surface-bg)] transition-colors duration-200">
           {children}
         </main>
       </div>

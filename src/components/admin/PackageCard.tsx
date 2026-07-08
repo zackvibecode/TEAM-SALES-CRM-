@@ -50,7 +50,7 @@ export function PackageCard({ promo, basePath, onDelete, onUpdateSeats }: Packag
 
   return (
     <div
-      className="surface-card rounded-lg overflow-hidden transition hover:border-[#3b66ff]/30"
+      className="surface-card rounded-lg overflow-hidden transition hover:border-[#2563eb]/30"
       style={{ borderColor: "var(--border-color)" }}
     >
       {/* Image Section - Square */}
@@ -118,7 +118,7 @@ export function PackageCard({ promo, basePath, onDelete, onUpdateSeats }: Packag
                 >
                   <CalendarDays
                     className="w-5 h-5 shrink-0"
-                    style={{ color: "#3b66ff" }}
+                    style={{ color: "#2563eb" }}
                   />
                   <div className="min-w-0">
                     {entryObj.name && (

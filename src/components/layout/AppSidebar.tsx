@@ -33,16 +33,16 @@ export function AppSidebar({
   return (
     <aside
       className={cn(
-        "fixed top-0 left-0 z-50 h-full w-[224px] flex flex-col sidebar-panel transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen",
+        "fixed top-0 left-0 z-50 h-full w-[240px] flex flex-col sidebar-panel transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen",
         showCloseMobile
           ? "translate-x-0"
           : "-translate-x-full lg:translate-x-0",
         sidebarOpen
-          ? "lg:relative lg:w-[224px] lg:opacity-100"
+          ? "lg:relative lg:w-[240px] lg:opacity-100"
           : "lg:-translate-x-full lg:w-0 lg:opacity-0 lg:overflow-hidden lg:pointer-events-none lg:fixed"
       )}
     >
-      <div className="px-4 h-12 flex items-center shrink-0 border-b border-[var(--border-color)]">
+      <div className="px-4 h-14 flex items-center shrink-0 border-b border-[var(--border-color)]">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="min-w-0 flex-1">
             <BrandLogo size="sm" />
@@ -70,16 +70,16 @@ export function AppSidebar({
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           if (item.isSectionHeader) {
             return (
               <div
                 key={item.label}
-                className="px-3 pt-3 pb-1"
+                className="px-3 pt-4 pb-1.5 first:pt-1"
               >
                 <p
-                  className="text-[10px] font-bold uppercase tracking-wider"
+                  className="text-[10px] font-bold uppercase tracking-[0.14em]"
                   style={{ color: "var(--text-muted)" }}
                 >
                   {item.label}
@@ -94,7 +94,7 @@ export function AppSidebar({
               href={item.href!}
               onClick={onCloseMobile}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150",
                 active ? "sidebar-nav-active" : "hover:bg-[var(--surface-hover)]"
               )}
               style={active ? undefined : { color: "var(--text-secondary)" }}

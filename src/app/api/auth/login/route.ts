@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Email and password required" }, { status: 400 });
   }
 
-  const response = NextResponse.json({ success: false });
+  const cookiesToApply: { name: string; value: string; options?: CookieOptions }[] = [];
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
+        cookiesToSet.forEach((cookie) => {
+          cookiesToApply.push(cookie);
         });
       },
     },
@@ -90,15 +90,8 @@ export async function POST(request: NextRequest) {
     email: data.user.email,
   });
 
-  response.cookies.getAll().forEach((cookie) => {
-    success.cookies.set(cookie.name, cookie.value, {
-      path: cookie.path,
-      domain: cookie.domain,
-      maxAge: cookie.maxAge,
-      httpOnly: cookie.httpOnly,
-      secure: cookie.secure,
-      sameSite: cookie.sameSite as "lax" | "strict" | "none" | undefined,
-    });
+  cookiesToApply.forEach(({ name, value, options }) => {
+    success.cookies.set(name, value, options);
   });
 
   return success;

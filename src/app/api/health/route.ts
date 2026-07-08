@@ -39,7 +39,10 @@ export async function GET() {
   const loginOk = pub.valid;
 
   if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ ok: loginOk && svc.valid });
+    return NextResponse.json({
+      ok: loginOk && svc.valid,
+      loginOk,
+    });
   }
 
   return NextResponse.json({

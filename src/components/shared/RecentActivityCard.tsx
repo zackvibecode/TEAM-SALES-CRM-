@@ -95,7 +95,7 @@ export function RecentActivityCard({
                     className={cn(
                       "text-[10px] font-bold shrink-0 px-1.5 py-0.5 rounded-md",
                       item.meta === "You"
-                        ? "bg-[#3b66ff]/10 text-[#3b66ff] dark:bg-[var(--surface-muted)] dark:text-white dark:border dark:border-[var(--border-color)]"
+                        ? "bg-brand-50 text-brand-600 dark:bg-[var(--surface-muted)] dark:text-white dark:border dark:border-[var(--border-color)]"
                         : ""
                     )}
                     style={item.meta !== "You" ? { color: "var(--text-muted)" } : undefined}

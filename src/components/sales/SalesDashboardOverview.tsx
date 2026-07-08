@@ -36,17 +36,17 @@ export function SalesDashboardOverview({ stats }: { stats: Stats }) {
   return (
     <div className="space-y-5">
       <DashboardMetricSection title="Follow ups" columns={3}>
-        <DashboardMetricTile label="Follow Up Today" value={followUp?.today ?? "—"} icon={CalendarClock} accent="sky" />
-        <DashboardMetricTile label="Overdue Follow Ups" value={followUp?.overdue ?? "—"} icon={AlertTriangle} accent="amber" />
-        <DashboardMetricTile label="Total Follow Ups" value={followUp?.total ?? "—"} icon={ListChecks} accent="blue" />
+        <DashboardMetricTile label="Follow Up Today" value={followUp?.today ?? "—"} icon={CalendarClock} accent="info" />
+        <DashboardMetricTile label="Overdue Follow Ups" value={followUp?.overdue ?? "—"} icon={AlertTriangle} accent="error" />
+        <DashboardMetricTile label="Total Follow Ups" value={followUp?.total ?? "—"} icon={ListChecks} accent="brand" />
       </DashboardMetricSection>
 
       <DashboardMetricSection title="Leads & WhatsApp clicks" columns={5}>
-        <DashboardMetricTile label="Total Leads" value={stats.total} icon={List} accent="blue" highlight />
-        <DashboardMetricTile label="Pending Leads" value={stats.pending} icon={Clock} accent="amber" />
-        <DashboardMetricTile label="Total Clicked" value={stats.clicked} icon={MousePointerClick} accent="mint" />
-        <DashboardMetricTile label="Today Clicks" value={stats.todayClicks} icon={TrendingUp} accent="sky" />
-        <DashboardMetricTile label="This Week Clicks" value={stats.weekClicks} icon={TrendingUp} accent="blue" />
+        <DashboardMetricTile label="Total Leads" value={stats.total} icon={List} accent="brand" highlight />
+        <DashboardMetricTile label="Pending Leads" value={stats.pending} icon={Clock} accent="warning" />
+        <DashboardMetricTile label="Total Clicked" value={stats.clicked} icon={MousePointerClick} accent="success" />
+        <DashboardMetricTile label="Today Clicks" value={stats.todayClicks} icon={TrendingUp} accent="info" />
+        <DashboardMetricTile label="This Week Clicks" value={stats.weekClicks} icon={TrendingUp} accent="brand" />
       </DashboardMetricSection>
     </div>
   );

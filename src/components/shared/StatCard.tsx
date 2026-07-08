@@ -1,14 +1,48 @@
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { ArrowDownIcon, ArrowUpIcon, type LucideIcon } from "lucide-react";
 
-export type StatAccent = "blue" | "sky" | "slate" | "mint" | "amber";
+export type StatAccent =
+  | "brand"
+  | "success"
+  | "error"
+  | "warning"
+  | "info"
+  | "gray";
 
-const iconTint: Record<StatAccent, string> = {
-  blue: "text-[#3b66ff] dark:text-[var(--text-secondary)]",
-  sky: "text-sky-500 dark:text-[var(--text-secondary)]",
-  slate: "text-slate-500 dark:text-[var(--text-secondary)]",
-  mint: "text-teal-500 dark:text-[var(--text-secondary)]",
-  amber: "text-amber-500 dark:text-[var(--text-secondary)]",
+const accentBadge: Record<
+  StatAccent,
+  { light: string; dark: string; icon: string }
+> = {
+  brand: {
+    light: "bg-brand-50 text-brand-600",
+    dark: "dark:bg-brand-500/15 dark:text-brand-400",
+    icon: "text-brand-600 dark:text-brand-400",
+  },
+  success: {
+    light: "bg-success-50 text-success-600",
+    dark: "dark:bg-success-500/15 dark:text-success-500",
+    icon: "text-success-600 dark:text-success-500",
+  },
+  error: {
+    light: "bg-error-50 text-error-600",
+    dark: "dark:bg-error-500/15 dark:text-error-500",
+    icon: "text-error-600 dark:text-error-500",
+  },
+  warning: {
+    light: "bg-warning-50 text-warning-600",
+    dark: "dark:bg-warning-500/15 dark:text-orange-400",
+    icon: "text-warning-600 dark:text-orange-400",
+  },
+  info: {
+    light: "bg-blue-light-50 text-blue-light-500",
+    dark: "dark:bg-blue-light-500/15 dark:text-blue-light-500",
+    icon: "text-blue-light-500 dark:text-blue-light-400",
+  },
+  gray: {
+    light: "bg-gray-100 text-gray-700",
+    dark: "dark:bg-white/5 dark:text-white/80",
+    icon: "text-gray-600 dark:text-white/80",
+  },
 };
 
 interface StatCardProps {
@@ -16,17 +50,19 @@ interface StatCardProps {
   value: string | number;
   icon?: LucideIcon;
   accent?: StatAccent;
-  color?: string;
-  subtext?: string;
   variant?: "default" | "primary";
   valueSize?: "default" | "compact";
+  delta?: { value: string; trend: "up" | "down" | "neutral" };
+  subtext?: string;
+  color?: string;
 }
 
-function accentFromLegacy(color?: string): StatAccent {
-  if (!color) return "blue";
-  if (color.includes("amber")) return "amber";
-  if (color.includes("emerald") || color.includes("green")) return "mint";
-  return "blue";
+function legacyToAccent(color?: string): StatAccent {
+  if (!color) return "gray";
+  if (color.includes("amber")) return "warning";
+  if (color.includes("emerald") || color.includes("green")) return "success";
+  if (color.includes("sky")) return "info";
+  return "brand";
 }
 
 export function StatCard({
@@ -34,12 +70,14 @@ export function StatCard({
   value,
   icon: Icon,
   accent,
-  color,
-  subtext,
   variant = "default",
   valueSize = "default",
+  delta,
+  subtext,
+  color,
 }: StatCardProps) {
-  const tint = iconTint[accent ?? accentFromLegacy(color)];
+  const resolvedAccent = accent ?? legacyToAccent(color);
+  const styles = accentBadge[resolvedAccent];
   const isPrimary = variant === "primary";
 
   return (
@@ -51,7 +89,12 @@ export function StatCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 min-w-0">
-          <p className={cn("stat-label text-xs font-medium", isPrimary ? "" : "text-[var(--text-muted)]")}>
+          <p
+            className={cn(
+              "stat-label text-xs font-medium",
+              isPrimary ? "" : "text-[var(--text-muted)]"
+            )}
+          >
             {label}
           </p>
           <p
@@ -73,11 +116,30 @@ export function StatCard({
           )}
         </div>
         {Icon && (
-          <div className={cn("icon-stat", !isPrimary && tint)}>
+          <div className={cn("icon-stat", !isPrimary && styles.icon)}>
             <Icon />
           </div>
         )}
       </div>
+
+      {delta && (
+        <span
+          className={cn(
+            "mt-3 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+            delta.trend === "up" && styles.light,
+            delta.trend === "up" && styles.dark,
+            delta.trend === "down" &&
+              "bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500",
+            delta.trend === "neutral" && styles.light,
+            delta.trend === "neutral" && styles.dark,
+            isPrimary && "bg-white/20 text-white"
+          )}
+        >
+          {delta.trend === "up" && <ArrowUpIcon className="size-3" />}
+          {delta.trend === "down" && <ArrowDownIcon className="size-3" />}
+          {delta.value}
+        </span>
+      )}
     </div>
   );
 }
