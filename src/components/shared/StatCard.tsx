@@ -89,12 +89,7 @@ export function StatCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1 min-w-0">
-          <p
-            className={cn(
-              "stat-label text-xs font-medium",
-              isPrimary ? "" : "text-[var(--text-muted)]"
-            )}
-          >
+          <p className={cn("stat-label text-xs font-medium", isPrimary ? "" : "text-[var(--text-muted)]")}>
             {label}
           </p>
           <p
@@ -116,7 +111,12 @@ export function StatCard({
           )}
         </div>
         {Icon && (
-          <div className={cn("icon-stat", !isPrimary && styles.icon)}>
+          <div
+            className={cn(
+              "icon-stat",
+              !isPrimary && cn(styles.icon, "bg-gray-100 dark:bg-gray-800")
+            )}
+          >
             <Icon />
           </div>
         )}
