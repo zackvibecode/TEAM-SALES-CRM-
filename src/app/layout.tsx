@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import "./globals.css";
@@ -14,9 +14,24 @@ export const metadata: Metadata = {
   title: "Zaqone CRM by Zack",
   description: "Premium sales team CRM by Zack",
   icons: {
-    icon: "/favicon.svg",
-    apple: "/apple-icon.svg",
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
+  appleWebApp: {
+    capable: true,
+    title: "Zaqone CRM",
+    statusBarStyle: "default",
+  },
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#3B66FF",
 };
 
 export default function RootLayout({
