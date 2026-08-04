@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   },
   description:
     "CRM jualan & follow-up WhatsApp untuk pasukan travel. Urus lead, team performance, dan WhatsApp dalam satu tempat.",
+  verification: {
+    google: "mfchtig_bhBjX2y1aiIxiamI5GEIf9VmX4iuKmisRM4",
+  },
   icons: {
     icon: [
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
