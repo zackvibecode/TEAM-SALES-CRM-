@@ -83,6 +83,9 @@ export async function POST(request: NextRequest) {
       notes: notes || null,
     });
 
+    const { invalidateLeadCaches } = await import("@/lib/cache/invalidate");
+    await invalidateLeadCaches({ userId: user.id });
+
     return NextResponse.json({ success: true, lead: updated });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Update failed";

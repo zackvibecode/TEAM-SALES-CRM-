@@ -46,6 +46,9 @@ export async function POST(request: NextRequest) {
       phone: lead.whatsapp,
     });
 
+    const { invalidateLeadCaches } = await import("@/lib/cache/invalidate");
+    await invalidateLeadCaches({ userId: user.id });
+
     const wa = formatWhatsAppNumber(lead.whatsapp);
 
     return NextResponse.json({

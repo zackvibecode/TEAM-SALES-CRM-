@@ -397,6 +397,11 @@ export async function POST(request: NextRequest) {
       details: { campaign, source, assignMode, totalRows, assignments },
     });
 
+    const { invalidateLeadCaches } = await import("@/lib/cache/invalidate");
+    await invalidateLeadCaches({
+      userIds: assignments.map((a) => a.ownerId),
+    });
+
     debugSessionLog({
       hypothesisId: "H-DATE",
       runId: "date-fix",

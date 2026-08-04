@@ -6,6 +6,8 @@ import {
   type SalesClickDatePreset,
   type SalesClickSortKey,
 } from "@/lib/admin/sales-click-performance";
+import { cachedGet } from "@/lib/cache/cached";
+import { CACHE_TTL, cacheKeys } from "@/lib/cache/keys";
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,11 +22,16 @@ export async function GET(request: NextRequest) {
 
     const range = resolveSalesClickDateRange(preset, customStart, customEnd);
 
-    const result = await getAdminSalesClickPerformance(auth.db, {
-      startDate: range.startDate,
-      endDate: range.endDate,
-      sortBy,
-    });
+    const result = await cachedGet(
+      cacheKeys.salesClickPerformance(range.startDate, range.endDate, sortBy),
+      CACHE_TTL.SHORT,
+      () =>
+        getAdminSalesClickPerformance(auth.db, {
+          startDate: range.startDate,
+          endDate: range.endDate,
+          sortBy,
+        })
+    );
 
     return NextResponse.json({
       preset,

@@ -88,6 +88,9 @@ export async function POST(request: NextRequest) {
       assigned.whatsapp_message!
     );
 
+    const { invalidateRotatorCaches } = await import("@/lib/cache/invalidate");
+    await invalidateRotatorCaches();
+
     return NextResponse.json({ ...assigned, whatsapp_url: whatsappUrl });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Assignment failed";

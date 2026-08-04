@@ -1,20 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient, createDbClient } from "@/lib/supabase/server";
-import { getAdminSalesClickPerformance } from "@/lib/admin/sales-click-performance";
+import { getCachedLeaderboard, type LeaderboardRow } from "@/lib/cache/leaderboard";
 
-export interface LeaderboardRow {
-  id: string;
-  name: string;
-  total: number;
-  clicked: number;
-  pending: number;
-  followUp: number;
-}
-
-function todayDateString() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+export type { LeaderboardRow };
 
 export async function GET() {
   try {
@@ -28,48 +16,7 @@ export async function GET() {
     }
 
     const db = createDbClient();
-
-    const { data: salesProfiles } = await db
-      .from("profiles")
-      .select("id, full_name")
-      .in("role", ["sales", "admin"]);
-
-    if (!salesProfiles?.length) {
-      return NextResponse.json({ rows: [] });
-    }
-
-    const clickResult = await getAdminSalesClickPerformance(db, {
-      startDate: "2000-01-01",
-      endDate: todayDateString(),
-      sortBy: "highest",
-    });
-
-    const clickByUser = new Map(
-      clickResult.rows.map((row) => [row.sales_user_id, row.total_clicks])
-    );
-
-    const rows: LeaderboardRow[] = await Promise.all(
-      salesProfiles.map(async (sp) => {
-        const [
-          { count: total },
-          { count: pending },
-          { count: followUp },
-        ] = await Promise.all([
-          db.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", sp.id),
-          db.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", sp.id).eq("status", "Pending"),
-          db.from("leads").select("*", { count: "exact", head: true }).eq("owner_user_id", sp.id).eq("status", "Follow Up"),
-        ]);
-
-        return {
-          id: sp.id,
-          name: sp.full_name,
-          total: total ?? 0,
-          clicked: clickByUser.get(sp.id) ?? 0,
-          pending: pending ?? 0,
-          followUp: followUp ?? 0,
-        };
-      })
-    );
+    const rows = await getCachedLeaderboard(db);
 
     return NextResponse.json({ rows });
   } catch (err: unknown) {

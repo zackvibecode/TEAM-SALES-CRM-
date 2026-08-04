@@ -32,6 +32,11 @@ export async function POST(request: NextRequest) {
       details: { oldOwner: lead.owner_user_id, newOwner: newOwnerUserId, name: lead.name },
     });
 
+    const { invalidateLeadCaches } = await import("@/lib/cache/invalidate");
+    await invalidateLeadCaches({
+      userIds: [lead.owner_user_id, newOwnerUserId].filter(Boolean),
+    });
+
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Reassign failed";

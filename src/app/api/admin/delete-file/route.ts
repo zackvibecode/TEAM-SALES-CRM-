@@ -21,6 +21,9 @@ export async function POST(request: NextRequest) {
       entityId: fileId,
     });
 
+    const { invalidateLeadCaches } = await import("@/lib/cache/invalidate");
+    await invalidateLeadCaches();
+
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Delete failed";
