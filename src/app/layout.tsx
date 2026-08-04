@@ -11,8 +11,16 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Zaqone CRM by Zack",
-  description: "Premium sales team CRM by Zack",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_CRM_BASE_URL?.replace(/\/$/, "") ||
+      "https://salescrm.zaqone.com"
+  ),
+  title: {
+    default: "Zaqone CRM by Zack",
+    template: "%s | Zaqone CRM",
+  },
+  description:
+    "CRM jualan & follow-up WhatsApp untuk pasukan travel. Urus lead, team performance, dan WhatsApp dalam satu tempat.",
   icons: {
     icon: [
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
@@ -28,6 +36,20 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
   },
   manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    locale: "ms_MY",
+    siteName: "Zaqone CRM",
+    title: "Zaqone CRM by Zack",
+    description:
+      "CRM jualan & follow-up WhatsApp untuk pasukan travel.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Zaqone CRM by Zack",
+    description:
+      "CRM jualan & follow-up WhatsApp untuk pasukan travel.",
+  },
 };
 
 export const viewport: Viewport = {

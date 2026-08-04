@@ -4,7 +4,13 @@ import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { createDbClient } from "@/lib/supabase/server";
 import { resolveUserRole } from "@/lib/auth-context";
 
-const PUBLIC_PATHS = ["/", "/pricing", "/login"];
+const PUBLIC_PATHS = [
+  "/",
+  "/pricing",
+  "/login",
+  "/robots.txt",
+  "/sitemap.xml",
+];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/r/");
@@ -155,6 +161,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

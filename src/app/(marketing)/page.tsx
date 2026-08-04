@@ -5,9 +5,18 @@ import { getCopy } from "@/lib/marketing/copy";
 export const metadata: Metadata = {
   title: getCopy("en").meta.homeTitle,
   description: getCopy("en").meta.homeDescription,
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: getCopy("en").meta.homeTitle,
     description: getCopy("en").meta.homeDescription,
+    url: "/",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
