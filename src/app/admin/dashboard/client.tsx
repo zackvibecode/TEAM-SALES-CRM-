@@ -78,7 +78,7 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
     : salesProfiles.find((s) => s.id === selectedUserId)?.full_name || "Unknown";
 
   return (
-    <div className="dashboard-shell space-y-5">
+    <div className="dashboard-shell space-y-6">
       <PageHeader
         badge={t.admin.dashboard.badge}
         title={t.admin.dashboard.title}
@@ -113,7 +113,7 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
       />
 
       {selectedUserId === "all" ? (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 items-stretch">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
           <div className="xl:col-span-2 min-h-0 flex">
             <AdminPerformanceGraph />
           </div>

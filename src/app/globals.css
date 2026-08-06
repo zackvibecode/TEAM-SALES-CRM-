@@ -127,7 +127,7 @@
   --input-border: #d7d5ce;
   --input-bg: #ffffff;
   --radius-card: 1.25rem;
-  --dash-accent: #2e6b1c;
+  --dash-accent: #6fbf3e;
   --dash-accent-soft: #e9f7da;
   color-scheme: light;
   background: var(--surface-bg);
@@ -569,12 +569,13 @@
 
   .stat-card-primary {
     background: #9fe870;
-    border-color: #8fd95f;
+    border: 1px solid #8fd95f;
     color: #163300;
+    box-shadow: none;
   }
 
   .stat-card-primary .stat-label {
-    color: rgba(22, 51, 0, 0.7);
+    color: rgba(22, 51, 0, 0.68);
   }
 
   .stat-card-primary .stat-value {
@@ -583,7 +584,7 @@
 
   .stat-card-primary .icon-stat {
     background: rgba(22, 51, 0, 0.12);
-    border-color: rgba(22, 51, 0, 0.2);
+    border-color: rgba(22, 51, 0, 0.18);
     color: #163300;
   }
 
@@ -594,7 +595,7 @@
   }
 
   .dark .stat-card-primary .stat-label {
-    color: rgba(22, 51, 0, 0.7);
+    color: rgba(22, 51, 0, 0.68);
   }
 
   .dark .stat-card-primary .stat-value {
@@ -603,7 +604,7 @@
 
   .dark .stat-card-primary .icon-stat {
     background: rgba(22, 51, 0, 0.12);
-    border-color: rgba(22, 51, 0, 0.2);
+    border-color: rgba(22, 51, 0, 0.18);
     color: #163300;
   }
 
@@ -1073,26 +1074,6 @@
 
 .dashboard-shell .stat-card-primary {
   background: #9fe870;
-  border-color: #8fd95f;
-  color: #163300;
-}
-
-.dark .dashboard-shell .stat-card-primary {
-  background: #9fe870;
   border: 1px solid #8fd95f;
-  color: #163300;
-}
-
-.dark .dashboard-shell .stat-card-primary .stat-label {
-  color: rgba(22, 51, 0, 0.7);
-}
-
-.dark .dashboard-shell .stat-card-primary .stat-value {
-  color: #163300;
-}
-
-.dark .dashboard-shell .stat-card-primary .icon-stat {
-  background: rgba(22, 51, 0, 0.12);
-  border-color: rgba(22, 51, 0, 0.2);
   color: #163300;
 }

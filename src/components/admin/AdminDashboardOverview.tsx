@@ -11,8 +11,13 @@ import {
   CalendarClock,
   AlertTriangle,
   ListChecks,
+  LayoutDashboard,
 } from "lucide-react";
-import { DashboardMetricSection, DashboardMetricTile } from "@/components/shared/DashboardMetricTile";
+import {
+  DashboardMetricPanel,
+  DashboardMetricSection,
+  DashboardMetricTile,
+} from "@/components/shared/DashboardMetricTile";
 import type { FollowUpKpiStats } from "@/lib/follow-up/types";
 
 interface Stats {
@@ -48,38 +53,85 @@ export function AdminDashboardOverview({
   }, []);
 
   return (
-    <div className="space-y-6">
-      {(viewingLabel || filterSlot) && (
-        <div className="flex items-center gap-3 pb-1">
-          {viewingLabel && (
-            <p className="text-sm font-semibold flex-1" style={{ color: "var(--text-primary)" }}>
-              {viewingLabel}
-            </p>
-          )}
-          {filterSlot && <div className="shrink-0">{filterSlot}</div>}
-        </div>
-      )}
-
-      <DashboardMetricSection title="Key metrics" columns={5}>
-        <DashboardMetricTile label="Total Leads" value={stats.leads} icon={List} accent="brand" highlight />
-        <DashboardMetricTile label="Pending Leads" value={stats.pending} icon={Clock} accent="warning" />
-        <DashboardMetricTile label="Total Clicked" value={stats.clicked} icon={MousePointerClick} accent="success" />
-        <DashboardMetricTile label="Today Clicks" value={stats.clicksToday} icon={TrendingUp} accent="info" />
-        <DashboardMetricTile label="This Week Clicks" value={stats.clicksWeek} icon={TrendingUp} accent="brand" />
-      </DashboardMetricSection>
-
-      <DashboardMetricSection title="Follow ups" columns={3}>
-        <DashboardMetricTile label="Follow Up Today" value={followUp?.today ?? "—"} icon={CalendarClock} accent="info" />
-        <DashboardMetricTile label="Overdue Follow Ups" value={followUp?.overdue ?? "—"} icon={AlertTriangle} accent="error" />
-        <DashboardMetricTile label="Total Follow Ups" value={followUp?.total ?? "—"} icon={ListChecks} accent="brand" />
-      </DashboardMetricSection>
-
-      {showWorkspace && (
-        <DashboardMetricSection title="Workspace" columns={3}>
-          <DashboardMetricTile label="Team Members" value={stats.salesUsers} icon={Users} accent="info" />
-          <DashboardMetricTile label="Uploaded Files" value={stats.files} icon={FileText} accent="brand" />
+    <DashboardMetricPanel
+      title="Overview"
+      subtitle={viewingLabel}
+      icon={LayoutDashboard}
+      action={filterSlot}
+    >
+      <div className="space-y-4">
+        <DashboardMetricSection columns={4}>
+          <DashboardMetricTile
+            label="Total Leads"
+            value={stats.leads}
+            icon={List}
+            accent="brand"
+            highlight
+          />
+          <DashboardMetricTile
+            label="Pending Leads"
+            value={stats.pending}
+            icon={Clock}
+            accent="warning"
+          />
+          <DashboardMetricTile
+            label="Total Clicked"
+            value={stats.clicked}
+            icon={MousePointerClick}
+            accent="success"
+          />
+          <DashboardMetricTile
+            label="Today Clicks"
+            value={stats.clicksToday}
+            icon={TrendingUp}
+            accent="info"
+          />
         </DashboardMetricSection>
-      )}
-    </div>
+
+        <DashboardMetricSection columns={4}>
+          <DashboardMetricTile
+            label="This Week Clicks"
+            value={stats.clicksWeek}
+            icon={TrendingUp}
+            accent="brand"
+          />
+          <DashboardMetricTile
+            label="Follow Up Today"
+            value={followUp?.today ?? "—"}
+            icon={CalendarClock}
+            accent="info"
+          />
+          <DashboardMetricTile
+            label="Overdue Follow Ups"
+            value={followUp?.overdue ?? "—"}
+            icon={AlertTriangle}
+            accent="error"
+          />
+          <DashboardMetricTile
+            label="Total Follow Ups"
+            value={followUp?.total ?? "—"}
+            icon={ListChecks}
+            accent="brand"
+          />
+        </DashboardMetricSection>
+
+        {showWorkspace && (
+          <DashboardMetricSection columns={2}>
+            <DashboardMetricTile
+              label="Team Members"
+              value={stats.salesUsers}
+              icon={Users}
+              accent="info"
+            />
+            <DashboardMetricTile
+              label="Uploaded Files"
+              value={stats.files}
+              icon={FileText}
+              accent="brand"
+            />
+          </DashboardMetricSection>
+        )}
+      </div>
+    </DashboardMetricPanel>
   );
 }

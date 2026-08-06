@@ -33,19 +33,24 @@ export function DashboardMetricSection({
 }: {
   title?: string;
   children: ReactNode;
-  columns?: 3 | 4 | 5;
+  columns?: 2 | 3 | 4 | 5;
 }) {
   const gridClass =
     columns === 5
-      ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4"
+      ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4"
       : columns === 3
-        ? "grid grid-cols-1 sm:grid-cols-3 gap-4"
-        : "grid grid-cols-2 lg:grid-cols-4 gap-4";
+        ? "grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4"
+        : columns === 2
+          ? "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
+          : "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4";
 
   return (
     <div>
       {title && (
-        <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "var(--text-muted)" }}>
+        <h3
+          className="text-xs font-bold uppercase tracking-wider mb-3"
+          style={{ color: "var(--text-muted)" }}
+        >
           {title}
         </h3>
       )}
@@ -58,20 +63,27 @@ export function DashboardMetricPanel({
   title,
   subtitle,
   icon: Icon,
+  action,
   children,
 }: {
   title: string;
   subtitle?: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  action?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <section className="card-padded-sm space-y-5">
-      <div className="flex items-center gap-3 pb-3 border-b" style={{ borderColor: "var(--border-color)" }}>
-        <span className="icon-stat">
-          <Icon />
-        </span>
-        <div>
+      <div
+        className="flex items-center gap-3 pb-3 border-b"
+        style={{ borderColor: "var(--border-color)" }}
+      >
+        {Icon && (
+          <span className="icon-stat">
+            <Icon />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
           <h2 className="font-bold text-base" style={{ color: "var(--text-primary)" }}>
             {title}
           </h2>
@@ -81,6 +93,7 @@ export function DashboardMetricPanel({
             </p>
           )}
         </div>
+        {action && <div className="shrink-0">{action}</div>}
       </div>
       {children}
     </section>

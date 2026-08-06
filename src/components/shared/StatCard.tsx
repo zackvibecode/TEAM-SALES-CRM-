@@ -83,13 +83,18 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "rounded-lg p-4 md:p-5 transition surface-card",
+        "rounded-xl p-4 md:p-5 transition surface-card h-full",
         isPrimary && "stat-card-primary"
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1 min-w-0">
-          <p className={cn("stat-label text-xs font-medium", isPrimary ? "" : "text-[var(--text-muted)]")}>
+        <div className="space-y-1.5 min-w-0">
+          <p
+            className={cn(
+              "stat-label text-xs font-medium tracking-wide",
+              isPrimary ? "" : "text-[var(--text-muted)]"
+            )}
+          >
             {label}
           </p>
           <p
@@ -97,7 +102,7 @@ export function StatCard({
               "stat-value font-bold tracking-tight truncate",
               valueSize === "compact"
                 ? "text-sm md:text-base uppercase"
-                : "text-2xl md:text-3xl tabular-nums",
+                : "text-2xl md:text-[1.75rem] tabular-nums leading-none",
               isPrimary ? "" : "text-[var(--text-primary)]"
             )}
             title={typeof value === "string" ? value : undefined}
@@ -105,7 +110,12 @@ export function StatCard({
             {typeof value === "number" ? value.toLocaleString() : value}
           </p>
           {subtext && (
-            <p className={cn("text-xs", isPrimary ? "text-white/80" : "text-[var(--text-muted)]")}>
+            <p
+              className={cn(
+                "text-xs",
+                isPrimary ? "text-[#163300]/70" : "text-[var(--text-muted)]"
+              )}
+            >
               {subtext}
             </p>
           )}
@@ -114,7 +124,7 @@ export function StatCard({
           <div
             className={cn(
               "icon-stat",
-              !isPrimary && cn(styles.icon, "bg-gray-100 dark:bg-gray-800")
+              !isPrimary && cn(styles.icon, "bg-[var(--surface-muted)]")
             )}
           >
             <Icon />
@@ -132,7 +142,7 @@ export function StatCard({
               "bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500",
             delta.trend === "neutral" && styles.light,
             delta.trend === "neutral" && styles.dark,
-            isPrimary && "bg-white/20 text-white"
+            isPrimary && "bg-[#163300]/15 text-[#163300]"
           )}
         >
           {delta.trend === "up" && <ArrowUpIcon className="size-3" />}
