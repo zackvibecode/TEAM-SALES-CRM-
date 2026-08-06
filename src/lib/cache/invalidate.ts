@@ -18,6 +18,7 @@ export async function invalidateLeadCaches(options?: {
     cacheDel(cacheKeys.leaderboard()),
     cacheDelByPrefix(CACHE_PREFIX.clickPerf),
     cacheDelByPrefix(CACHE_PREFIX.adminDashboard),
+    cacheDelByPrefix("crm:v1:sales-dashboard:"),
   ];
 
   for (const id of userIds) {

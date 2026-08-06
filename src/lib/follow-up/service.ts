@@ -399,7 +399,17 @@ export async function followUpViaWhatsApp(
   return { leadId: lead.id, followUpNumber: fu.follow_up_number };
 }
 
+// Debounce: only run overdue update at most once every 60 seconds
+let _lastOverdueCheck = 0;
+const OVERDUE_COOLDOWN_MS = 60_000;
+
 export async function updateOverdueFollowUps(db: Db) {
+  // Skip if ran recently — avoids write-on-every-read pattern
+  if (Date.now() - _lastOverdueCheck < OVERDUE_COOLDOWN_MS) {
+    return { skipped: true, updated: 0 };
+  }
+  _lastOverdueCheck = Date.now();
+
   const today = toDateString();
   const { data: overdueRows, error } = await db
     .from("follow_ups")

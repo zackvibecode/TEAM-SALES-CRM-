@@ -1,12 +1,14 @@
 /** Shared cache key prefixes — bump version suffix to bust all keys after schema changes. */
 
 export const CACHE_TTL = {
-  /** Shared leaderboard / click aggregates */
-  SHORT: 45,
-  /** Admin dashboard / rotator analytics */
-  MEDIUM: 60,
+  /** Leaderboard / click aggregates — moderate churn */
+  SHORT: 120,
+  /** Admin dashboard / rotator analytics — heavier queries */
+  MEDIUM: 180,
   /** Per-user lead lists (invalidated on write) */
-  LEADS: 30,
+  LEADS: 120,
+  /** User role lookup in middleware */
+  ROLE: 300,
 } as const;
 
 export const cacheKeys = {

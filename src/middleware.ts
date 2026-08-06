@@ -1,8 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
-import { createDbClient } from "@/lib/supabase/server";
-import { resolveUserRole } from "@/lib/auth-context";
 
 const PUBLIC_PATHS = [
   "/",
@@ -28,11 +26,6 @@ function dashboardRedirect(request: NextRequest, role: string) {
   return NextResponse.redirect(redirectUrl);
 }
 
-async function resolveRoleForUser(userId: string) {
-  const db = createDbClient();
-  return resolveUserRole(db, userId);
-}
-
 export async function middleware(request: NextRequest) {
   const { url, anonKey, valid } = getSupabasePublicEnv();
   const pathname = request.nextUrl.pathname;
@@ -44,9 +37,7 @@ export async function middleware(request: NextRequest) {
     return loginRedirect(request);
   }
 
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
@@ -57,9 +48,7 @@ export async function middleware(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value)
         );
-        supabaseResponse = NextResponse.next({
-          request,
-        });
+        supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
           supabaseResponse.cookies.set(name, value, options)
         );
@@ -67,30 +56,26 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  let user = null;
-  try {
-    const { data } = await supabase.auth.getUser();
-    user = data.user;
-  } catch {
-    if (pathname.startsWith("/api/admin/")) {
+  // Fast cookie-only session check — no network round-trip
+  const { data: sessionData } = await supabase.auth.getSession();
+  const sessionUser = sessionData.session?.user ?? null;
+
+  // Admin API: always verify token with Supabase
+  if (pathname.startsWith("/api/admin/")) {
+    if (!sessionUser) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    if (pathname.startsWith("/api/")) {
-      return supabaseResponse;
-    }
-    if (isPublicPath(pathname)) {
-      return supabaseResponse;
-    }
-    return loginRedirect(request);
-  }
-
-  if (pathname.startsWith("/api/admin/")) {
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     try {
-      const role = await resolveRoleForUser(user.id);
-      if (role !== "admin") {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile?.role !== "admin") {
         return NextResponse.json({ error: "Admin only" }, { status: 403 });
       }
     } catch {
@@ -99,61 +84,67 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // Statics, auth callbacks, non-admin APIs: pass through
   if (
-    pathname.startsWith("/auth/") ||
     pathname.startsWith("/_next") ||
+    pathname.startsWith("/auth/") ||
     pathname.startsWith("/api/")
   ) {
     return supabaseResponse;
   }
 
-  if (!user && !isPublicPath(pathname)) {
+  // Public pages: pass through (logged-in users get redirected later)
+  if (isPublicPath(pathname)) {
+    if (sessionUser) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/dashboard/sales";
+      return NextResponse.redirect(redirectUrl);
+    }
+    return supabaseResponse;
+  }
+
+  // Everything else needs a session
+  if (!sessionUser) {
     return loginRedirect(request);
   }
 
-  if (user) {
-    let role: string | null = null;
-    try {
-      const { data: roleFromRpc } = await supabase.rpc("get_user_role", { user_id: user.id });
-      role = (roleFromRpc as string) || null;
-
-      if (!role) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .maybeSingle();
-        role = profile?.role ?? null;
-      }
-    } catch {
-      return loginRedirect(request);
-    }
+  // Protect /admin & /dashboard routes by role
+  let role: string | null = null;
+  try {
+    const { data: roleFromRpc } = await supabase
+      .rpc("get_user_role", { user_id: sessionUser.id });
+    role = (roleFromRpc as string) || null;
 
     if (!role) {
-      return loginRedirect(request);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", sessionUser.id)
+        .maybeSingle();
+      role = profile?.role ?? null;
     }
+  } catch {
+    return loginRedirect(request);
+  }
 
-    if (pathname.startsWith("/admin") && role !== "admin") {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/dashboard/sales";
-      return NextResponse.redirect(redirectUrl);
-    }
+  if (!role) {
+    return loginRedirect(request);
+  }
 
-    if (pathname.startsWith("/dashboard/sales") && role !== "sales") {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/admin/dashboard";
-      return NextResponse.redirect(redirectUrl);
-    }
+  if (pathname.startsWith("/admin") && role !== "admin") {
+    return dashboardRedirect(request, "sales");
+  }
+  if (
+    (pathname.startsWith("/dashboard/sales") || pathname.startsWith("/dashboard/rotator-team")) &&
+    role !== "admin"
+  ) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/dashboard/sales";
+    return NextResponse.redirect(redirectUrl);
+  }
 
-    if (pathname.startsWith("/dashboard/rotator-team") && role !== "admin") {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/dashboard/sales";
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    if (pathname === "/" || pathname === "/login") {
-      return dashboardRedirect(request, role);
-    }
+  if (pathname === "/login") {
+    return dashboardRedirect(request, role);
   }
 
   return supabaseResponse;
