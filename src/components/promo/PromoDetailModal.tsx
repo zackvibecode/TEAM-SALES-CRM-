@@ -105,7 +105,7 @@ export function PromoDetailModal({ promo, open, onClose }: PromoDetailModalProps
           {packages.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-[#3b66ff]" />
+                <CalendarDays className="w-4 h-4 text-[#9fe870]" />
                 <h4 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
                   {t.promo.departureDates}
                   <span className="ml-1.5 text-xs font-normal" style={{ color: "var(--text-muted)" }}>

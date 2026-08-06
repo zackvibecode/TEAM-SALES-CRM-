@@ -53,9 +53,19 @@ export interface MarketingCopy {
     title: string;
     steps: { title: string; description: string }[];
   };
+  audience: {
+    title: string;
+    subtitle: string;
+    cards: { title: string; description: string }[];
+  };
+  stats: {
+    title: string;
+    items: { value: string; label: string }[];
+  };
   trust: {
     title: string;
     subtitle: string;
+    points: { title: string; description: string }[];
   };
   finalCta: {
     title: string;
@@ -82,6 +92,10 @@ export interface MarketingCopy {
   footer: {
     tagline: string;
     rights: string;
+    productTitle: string;
+    productLinks: { label: string; href: string }[];
+    companyTitle: string;
+    companyLinks: { label: string; href: string; external?: boolean }[];
   };
   login: {
     title: string;
@@ -210,10 +224,62 @@ const COPY_BM: MarketingCopy = {
       },
     ],
   },
+  audience: {
+    title: "Dibina untuk setiap peranan dalam pasukan anda",
+    subtitle: "Satu workspace — admin nampak keseluruhan, sales fokus pada follow-up.",
+    cards: [
+      {
+        title: "Pemilik agensi travel",
+        description:
+          "Nampak prestasi seluruh pasukan, campaign mana yang berbaloi, dan siapa yang perlukan bantuan.",
+      },
+      {
+        title: "Admin & team leader",
+        description:
+          "Upload lead, agihkan campaign, pantau KPI harian dan audit setiap tindakan dalam satu tempat.",
+      },
+      {
+        title: "Sales agent",
+        description:
+          "Queue follow-up yang jelas, mesej WhatsApp berjenama, dan sasaran harian yang mudah dikejar.",
+      },
+      {
+        title: "Pasukan inbound",
+        description:
+          "Setiap lead baru terus masuk ke buku sales — tiada lagi mesej tenggelam dalam WhatsApp peribadi.",
+      },
+    ],
+  },
+  stats: {
+    title: "Kenapa pasukan pilih Zaqone CRM",
+    items: [
+      { value: "1", label: "Workspace untuk admin & sales" },
+      { value: "Excel / CSV", label: "Import lead terus dari campaign" },
+      { value: "WhatsApp", label: "Follow-up berjenama dengan tracking klik" },
+      { value: "24/7", label: "Akses dashboard bila-bila masa" },
+    ],
+  },
   trust: {
-    title: "Dibina untuk operasi jualan sebenar",
+    title: "Keselamatan & kebolehpercayaan",
     subtitle:
-      "Sesuai untuk agensi travel, inbound sales, dan pasukan yang bergantung pada WhatsApp.",
+      "Data pasukan anda dilindungi dengan kawalan akses peranan dan jejak audit penuh.",
+    points: [
+      {
+        title: "Akses mengikut peranan",
+        description:
+          "Admin dan sales nampak data masing-masing dengan Supabase Row Level Security.",
+      },
+      {
+        title: "Jejak audit penuh",
+        description:
+          "Setiap tindakan admin direkodkan — senang semak semula bila-bila masa.",
+      },
+      {
+        title: "Data kekal milik anda",
+        description:
+          "Export lead bila-bila masa. Tiada lock-in, tiada yuran tersembunyi.",
+      },
+    ],
   },
   finalCta: {
     title: "Sedia naik taraf operasi jualan?",
@@ -276,6 +342,17 @@ const COPY_BM: MarketingCopy = {
   footer: {
     tagline: "Premium sales team CRM by Zack",
     rights: "Hak cipta terpelihara.",
+    productTitle: "Produk",
+    productLinks: [
+      { label: "Ciri-ciri", href: "/#features" },
+      { label: "Harga", href: "/pricing" },
+      { label: "Soalan lazim", href: "/#faq" },
+    ],
+    companyTitle: "Syarikat",
+    companyLinks: [
+      { label: "Log masuk", href: "/login" },
+      { label: "Hubungi sales", href: "__contact__", external: true },
+    ],
   },
   login: {
     title: "Log Masuk",
@@ -404,10 +481,62 @@ const COPY_EN: MarketingCopy = {
       },
     ],
   },
+  audience: {
+    title: "Built for every role on your team",
+    subtitle: "One workspace — admins see the whole picture, reps focus on follow-ups.",
+    cards: [
+      {
+        title: "Travel agency owners",
+        description:
+          "See team performance at a glance, which campaigns convert, and who needs support.",
+      },
+      {
+        title: "Admins & team leads",
+        description:
+          "Upload leads, distribute campaigns, track daily KPIs and audit every action in one place.",
+      },
+      {
+        title: "Sales agents",
+        description:
+          "A clear follow-up queue, branded WhatsApp messages, and a daily target that's easy to chase.",
+      },
+      {
+        title: "Inbound teams",
+        description:
+          "Every new lead lands straight in a rep's book — no more messages buried in personal WhatsApp.",
+      },
+    ],
+  },
+  stats: {
+    title: "Why teams choose Zaqone CRM",
+    items: [
+      { value: "1", label: "Workspace for admins & sales" },
+      { value: "Excel / CSV", label: "Import leads straight from campaigns" },
+      { value: "WhatsApp", label: "Branded follow-ups with click tracking" },
+      { value: "24/7", label: "Dashboard access anytime, anywhere" },
+    ],
+  },
   trust: {
-    title: "Built for real sales operations",
+    title: "Security & reliability",
     subtitle:
-      "Ideal for travel agencies, inbound sales, and teams that run on WhatsApp.",
+      "Your team's data is protected with role-based access and a full audit trail.",
+    points: [
+      {
+        title: "Role-based access",
+        description:
+          "Admins and reps each see their own data, enforced by Supabase Row Level Security.",
+      },
+      {
+        title: "Full audit trail",
+        description:
+          "Every admin action is recorded — easy to review whenever you need to.",
+      },
+      {
+        title: "Your data stays yours",
+        description:
+          "Export leads anytime. No lock-in, no hidden fees.",
+      },
+    ],
   },
   finalCta: {
     title: "Ready to upgrade your sales ops?",
@@ -470,6 +599,17 @@ const COPY_EN: MarketingCopy = {
   footer: {
     tagline: "Premium sales team CRM by Zack",
     rights: "All rights reserved.",
+    productTitle: "Product",
+    productLinks: [
+      { label: "Features", href: "/#features" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "FAQ", href: "/#faq" },
+    ],
+    companyTitle: "Company",
+    companyLinks: [
+      { label: "Sign in", href: "/login" },
+      { label: "Contact sales", href: "__contact__", external: true },
+    ],
   },
   login: {
     title: "Sign In",

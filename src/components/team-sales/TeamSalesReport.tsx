@@ -245,8 +245,8 @@ export function TeamSalesReport({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="surface-card card-padded flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-[#3b66ff]/10">
-            <TrendingUp className="w-5 h-5 text-[#3b66ff]" />
+          <div className="p-2.5 rounded-lg bg-[#9fe870]/10">
+            <TrendingUp className="w-5 h-5 text-[#9fe870]" />
           </div>
           <div>
             <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{labels.totalTeamSales}</p>
@@ -295,7 +295,7 @@ export function TeamSalesReport({
                       className="h-full rounded-full transition-all"
                       style={{
                         width: `${Math.max(pct, 2)}%`,
-                        background: "var(--accent-primary, #3b66ff)",
+                        background: "var(--accent-primary, #9fe870)",
                       }}
                     />
                   </div>

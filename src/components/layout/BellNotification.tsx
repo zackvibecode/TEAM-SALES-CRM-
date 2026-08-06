@@ -143,7 +143,7 @@ export function BellNotification() {
                 type="button"
                 onClick={markAllAsRead}
                 className="text-[10px] font-medium hover:underline"
-                style={{ color: "#3b66ff" }}
+                style={{ color: "#9fe870" }}
               >
                 <CheckCheck className="w-3 h-3 inline mr-0.5" />
                 Mark all read
@@ -171,7 +171,7 @@ export function BellNotification() {
                   <div className="flex items-start gap-2.5">
                     <span
                       className="mt-0.5 w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ background: "#3b66ff" }}
+                      style={{ background: "#9fe870" }}
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold truncate" style={{ color: "var(--text-primary)" }}>

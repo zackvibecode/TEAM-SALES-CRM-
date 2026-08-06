@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lock, Mail } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { getSalesContactUrl } from "@/lib/marketing/contact";
 import { useMarketingLocale } from "./MarketingLocaleProvider";
 import { LangToggle } from "./LangToggle";
@@ -15,6 +15,7 @@ export function LoginForm() {
   const login = copy.login;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [configHint, setConfigHint] = useState("");
@@ -101,39 +102,44 @@ export function LoginForm() {
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center app-shell">
-        <div className="w-10 h-10 rounded-full border-2 border-[#3b66ff] border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-full border-[3px] border-[#9fe870] border-t-transparent animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col app-shell">
-      <div className="max-w-md w-full mx-auto px-4 pt-6 flex items-center justify-between">
-        <Link href="/" className="text-sm font-semibold hover:text-[#3b66ff] transition" style={{ color: "var(--text-muted)" }}>
-          {login.backHome}
+      <div className="m-container max-w-lg w-full mx-auto pt-6 flex items-center justify-between">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold transition hover:text-[#2e6b1c] dark:hover:text-[#9fe870]"
+          style={{ color: "var(--text-muted)" }}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {login.backHome.replace(/^←\s*/, "")}
         </Link>
         <LangToggle />
       </div>
-      <div className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="relative w-full max-w-md">
+
+      <div className="flex-1 flex items-center justify-center px-5 py-12">
+        <div className="relative w-full max-w-[440px]">
           <div className="text-center mb-8">
             <div className="inline-flex justify-center mb-2">
               <BrandLogo size="lg" priority />
             </div>
           </div>
 
-          <form onSubmit={handleLogin} className="card-padded-sm space-y-5">
+          <form
+            onSubmit={handleLogin}
+            className="m-card p-7 sm:p-9 space-y-6 shadow-[0_24px_48px_-24px_rgba(22,51,0,0.18)]"
+          >
             <div>
-              <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
-                {login.title}
-              </h2>
-              <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-                {login.subtitle}
-              </p>
+              <h2 className="m-h3 !text-2xl">{login.title}</h2>
+              <p className="m-muted mt-1.5">{login.subtitle}</p>
             </div>
 
             {configHint && (
-              <div className="alert-error text-sm leading-relaxed">
+              <div className="alert-error leading-relaxed">
                 <strong>{login.configErrorPrefix}</strong> {configHint}
               </div>
             )}
@@ -141,11 +147,18 @@ export function LoginForm() {
             {error && <div className="alert-error">{error}</div>}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text-secondary)" }}>
+              <label
+                htmlFor="email"
+                className="block text-sm font-bold mb-2"
+                style={{ color: "var(--text-primary)" }}
+              >
                 {login.email}
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#3b66ff]" />
+                <Mail
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                  style={{ color: "var(--text-muted)" }}
+                />
                 <input
                   id="email"
                   type="email"
@@ -153,45 +166,69 @@ export function LoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="admin@nusatravel.com"
-                  className="input-field pl-10"
+                  className="input-field !pl-11"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text-secondary)" }}>
+              <label
+                htmlFor="password"
+                className="block text-sm font-bold mb-2"
+                style={{ color: "var(--text-primary)" }}
+              >
                 {login.password}
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#3b66ff]" />
+                <Lock
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                  style={{ color: "var(--text-muted)" }}
+                />
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="••••••••"
-                  className="input-field pl-10"
+                  className="input-field !pl-11 !pr-12"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((show) => !show)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-8 h-8 rounded-full transition hover:bg-[var(--surface-muted)]"
+                  style={{ color: "var(--text-muted)" }}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={loading || !serverOk}
-              className="btn-primary-solid w-full py-3.5 disabled:opacity-50"
+              className="btn-primary-solid w-full disabled:opacity-50"
             >
               {loading ? login.submitting : login.submit}
             </button>
 
             {serverOk && (
-              <p className="text-xs text-emerald-600 text-center">{login.serverOk}</p>
+              <p className="text-xs font-semibold text-center" style={{ color: "#4f9e2c" }}>
+                {login.serverOk}
+              </p>
             )}
           </form>
 
           <p className="text-center text-sm mt-8" style={{ color: "var(--text-muted)" }}>
             {login.noAccount}{" "}
-            <a href={contactUrl} className="font-semibold text-[#3b66ff] hover:underline" target="_blank" rel="noopener noreferrer">
+            <a
+              href={contactUrl}
+              className="font-bold transition hover:underline"
+              style={{ color: "#2e6b1c" }}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {login.contactSales}
             </a>
           </p>

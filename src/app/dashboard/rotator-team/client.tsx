@@ -126,7 +126,7 @@ export function RotatorOverviewClient() {
                 <button
                   type="button"
                   onClick={() => copyLink(row.public_url as string)}
-                  className="text-[#3b66ff] hover:underline text-xs"
+                  className="text-[#9fe870] hover:underline text-xs"
                 >
                   {row.public_url as string}
                 </button>

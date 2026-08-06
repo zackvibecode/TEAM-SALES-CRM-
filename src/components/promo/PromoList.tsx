@@ -68,7 +68,7 @@ export function PromoList({
         <div className="flex items-center gap-3 flex-1 min-w-[200px]">
           <div
             className="p-2 rounded-xl shrink-0"
-            style={{ background: "var(--surface-hover)", color: "#3b66ff" }}
+            style={{ background: "var(--surface-hover)", color: "#9fe870" }}
           >
             <Filter className="w-4 h-4" />
           </div>

@@ -45,7 +45,7 @@ export function RotatorPagesClient({ initialPages }: { initialPages: PageRow[] }
             key: "public_url",
             label: "Public URL",
             render: (row) => (
-              <span className="text-[#3b66ff] text-xs">{row.public_url as string}</span>
+              <span className="text-[#9fe870] text-xs">{row.public_url as string}</span>
             ),
           },
           { key: "total_clicks", label: "Total Clicks" },

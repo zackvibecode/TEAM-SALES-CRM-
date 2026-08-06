@@ -14,12 +14,12 @@ export function RotatorSceneBackground({ children, className = "" }: RotatorScen
         className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[140%] -translate-x-1/2 rounded-[100%] opacity-90"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(59,102,255,0.09) 0%, rgba(59,102,255,0.02) 55%, transparent 72%)",
+            "radial-gradient(ellipse at center, rgba(159,232,112,0.09) 0%, rgba(159,232,112,0.02) 55%, transparent 72%)",
         }}
       />
 
       {/* Soft side blobs */}
-      <div className="pointer-events-none absolute -left-16 top-1/4 h-56 w-56 rounded-full bg-[#3b66ff]/[0.05] blur-3xl" />
+      <div className="pointer-events-none absolute -left-16 top-1/4 h-56 w-56 rounded-full bg-[#9fe870]/[0.05] blur-3xl" />
       <div className="pointer-events-none absolute -right-12 bottom-1/4 h-48 w-48 rounded-full bg-emerald-400/[0.07] blur-3xl" />
 
       {/* Bottom wave curve */}

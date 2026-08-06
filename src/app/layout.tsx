@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#3B66FF",
+  themeColor: "#163300",
 };
 
 export default function RootLayout({
@@ -65,7 +65,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={jakarta.variable} suppressHydrationWarning>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{

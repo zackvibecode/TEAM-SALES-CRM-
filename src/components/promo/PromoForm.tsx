@@ -29,7 +29,7 @@ function FormSection({
       <div className="flex items-center gap-2.5 pb-1 border-b" style={{ borderColor: "var(--border-color)" }}>
         <div
           className="p-1.5 rounded-lg shrink-0"
-          style={{ background: "var(--surface-hover)", color: "#3b66ff" }}
+          style={{ background: "var(--surface-hover)", color: "#9fe870" }}
         >
           <Icon className="w-4 h-4" />
         </div>
@@ -166,14 +166,14 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
               </p>
             </div>
             <label
-              className="flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition hover:border-[#3b66ff]/40"
+              className="flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition hover:border-[#9fe870]/40"
               style={{ borderColor: "var(--border-color)", background: "var(--surface-hover)" }}
             >
               <input
                 type="checkbox"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="w-4 h-4 rounded accent-[#3b66ff]"
+                className="w-4 h-4 rounded accent-[#9fe870]"
               />
               <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                 {t.common.active}
@@ -207,7 +207,7 @@ export function PromoForm({ promo, basePath }: PromoFormProps) {
           <div className="flex items-center gap-2 pb-1 border-b" style={{ borderColor: "var(--border-color)" }}>
             <div
               className="p-1.5 rounded-lg"
-              style={{ background: "var(--surface-hover)", color: "#3b66ff" }}
+              style={{ background: "var(--surface-hover)", color: "#9fe870" }}
             >
               <CalendarDays className="w-4 h-4" />
             </div>

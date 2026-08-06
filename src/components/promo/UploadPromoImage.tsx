@@ -46,7 +46,7 @@ export function UploadPromoImage({ value, onChange, title = "Package poster" }: 
     <div className="space-y-3">
       <div
         className="relative rounded-xl overflow-hidden border-2 border-dashed"
-        style={{ borderColor: displayUrl ? "var(--border-color)" : "#3b66ff40" }}
+        style={{ borderColor: displayUrl ? "var(--border-color)" : "#9fe87040" }}
       >
         {displayUrl ? (
           <PromoPosterViewer
@@ -58,10 +58,10 @@ export function UploadPromoImage({ value, onChange, title = "Package poster" }: 
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="w-full aspect-square max-w-sm mx-auto flex flex-col items-center justify-center gap-2 transition hover:bg-[#3b66ff]/5"
+            className="w-full aspect-square max-w-sm mx-auto flex flex-col items-center justify-center gap-2 transition hover:bg-[#9fe870]/5"
             style={{ color: "var(--text-muted)" }}
           >
-            <ImagePlus className="w-10 h-10 text-[#3b66ff]/60" />
+            <ImagePlus className="w-10 h-10 text-[#9fe870]/60" />
             <span className="text-sm font-medium">{t.promo.uploadPoster}</span>
           </button>
         )}

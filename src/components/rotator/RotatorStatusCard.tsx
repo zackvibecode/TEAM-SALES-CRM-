@@ -69,7 +69,7 @@ export function RotatorStatusCard({
           <button
             type="button"
             onClick={onRetry}
-            className="mt-6 w-full rounded-full bg-[#3b66ff] px-5 py-3 text-sm font-semibold text-white shadow-[0_4px_14px_-4px_rgba(59,102,255,0.55)] transition hover:bg-[#2f55e0]"
+            className="mt-6 w-full rounded-full bg-[#9fe870] px-5 py-3 text-sm font-semibold text-white shadow-[0_4px_14px_-4px_rgba(159,232,112,0.55)] transition hover:bg-[#2f55e0]"
           >
             {retryLabel}
           </button>

@@ -12,7 +12,7 @@ export function AppLangToggle() {
       onClick={() => setLocale(value)}
       className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
         locale === value
-          ? "bg-[#3b66ff] text-white"
+          ? "bg-[#9fe870] text-white"
           : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
       }`}
       aria-pressed={locale === value}

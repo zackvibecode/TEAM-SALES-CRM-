@@ -168,7 +168,7 @@ export function PromoPosterViewer({
       <button
         type="button"
         onClick={openViewer}
-        className={`${thumbnailClassName} group cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3b66ff]`}
+        className={`${thumbnailClassName} group cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9fe870]`}
         aria-label={t.promo.viewFullPoster}
       >
         <Image src={src} alt={title} fill className="object-cover" unoptimized />

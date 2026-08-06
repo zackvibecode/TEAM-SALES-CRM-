@@ -1,33 +1,35 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { useMarketingLocale } from "./MarketingLocaleProvider";
+import { Reveal } from "./Reveal";
 
 export function FaqSection() {
   const { copy } = useMarketingLocale();
 
   return (
-    <section className="py-14 sm:py-16">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
-        <h2
-          className="text-2xl sm:text-3xl font-bold text-center mb-8"
-          style={{ color: "var(--text-primary)" }}
-        >
-          {copy.faq.title}
-        </h2>
-        <div className="space-y-4">
-          {copy.faq.items.map((item) => (
-            <details key={item.q} className="card-padded-sm group">
-              <summary
-                className="font-bold cursor-pointer list-none flex justify-between items-center gap-2"
-                style={{ color: "var(--text-primary)" }}
-              >
-                {item.q}
-                <span className="text-[#3b66ff] text-lg group-open:rotate-45 transition-transform">+</span>
-              </summary>
-              <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                {item.a}
-              </p>
-            </details>
+    <section id="faq" className="m-section scroll-mt-20">
+      <div className="m-container max-w-3xl">
+        <Reveal className="text-center">
+          <h2 className="m-h2">{copy.faq.title}</h2>
+        </Reveal>
+        <div className="mt-12 space-y-3.5">
+          {copy.faq.items.map((item, i) => (
+            <Reveal key={item.q} delay={(i % 4) as 0 | 1 | 2 | 3}>
+              <details className="faq-item group">
+                <summary>
+                  <span className="text-[15px] sm:text-base font-bold" style={{ color: "var(--text-primary)" }}>
+                    {item.q}
+                  </span>
+                  <span className="faq-icon" aria-hidden>
+                    <Plus className="w-4 h-4" />
+                  </span>
+                </summary>
+                <p className="px-6 pb-5 -mt-1 text-[15px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                  {item.a}
+                </p>
+              </details>
+            </Reveal>
           ))}
         </div>
       </div>

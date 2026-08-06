@@ -10,9 +10,9 @@ export function LangToggle() {
     <button
       type="button"
       onClick={() => setLocale(value)}
-      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
+      className={`px-3 py-1.5 text-xs font-bold rounded-full transition ${
         locale === value
-          ? "bg-[#3b66ff] text-white"
+          ? "bg-[#9fe870] text-[#163300]"
           : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
       }`}
       aria-pressed={locale === value}
@@ -23,7 +23,7 @@ export function LangToggle() {
 
   return (
     <div
-      className="inline-flex items-center gap-0.5 p-0.5 rounded-xl border"
+      className="inline-flex items-center gap-0.5 p-1 rounded-full border"
       style={{ borderColor: "var(--border-color)", background: "var(--surface-muted)" }}
       role="group"
       aria-label="Language"

@@ -255,7 +255,7 @@ export function LeadSourceManager({ labels }: LeadSourceManagerProps) {
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 rounded accent-[#3b66ff]"
+                  className="w-4 h-4 rounded accent-[#9fe870]"
                 />
                 <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
                   {labels.active}

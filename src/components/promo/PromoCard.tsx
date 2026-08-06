@@ -46,7 +46,7 @@ export function PromoCard({
   return (
     <>
       <article
-        className="group surface-card overflow-hidden flex flex-col h-full transition-all duration-200 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 hover:border-[#3b66ff]/30"
+        className="group surface-card overflow-hidden flex flex-col h-full transition-all duration-200 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 hover:border-[#9fe870]/30"
         onClick={openDetail}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -119,7 +119,7 @@ export function PromoCard({
               <span className="flex-1" />
             )}
 
-            <span className="text-[10px] font-semibold text-[#3b66ff] inline-flex items-center gap-0.5 shrink-0">
+            <span className="text-[10px] font-semibold text-[#9fe870] inline-flex items-center gap-0.5 shrink-0">
               {t.promo.viewDetails}
               <ChevronRight className="w-3 h-3" />
             </span>
@@ -157,7 +157,7 @@ export function PromoCard({
                 openDetail();
               }}
               className="btn-secondary text-xs w-full mt-0.5 inline-flex items-center justify-center gap-1.5 py-1.5 font-medium"
-              style={{ color: "#3b66ff", borderColor: "rgba(59,102,255,0.3)" }}
+              style={{ color: "#9fe870", borderColor: "rgba(159,232,112,0.3)" }}
             >
               <Eye className="w-3.5 h-3.5" />
               {t.promo.viewDetails}

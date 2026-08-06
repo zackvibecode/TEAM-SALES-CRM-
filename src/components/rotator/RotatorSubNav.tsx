@@ -35,7 +35,7 @@ export function RotatorSubNav() {
             className={cn(
               "px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap",
               active
-                ? "bg-[#3b66ff] text-white shadow-[0_2px_8px_-2px_rgba(59,102,255,0.5)]"
+                ? "bg-[#9fe870] text-white shadow-[0_2px_8px_-2px_rgba(159,232,112,0.5)]"
                 : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
             )}
           >

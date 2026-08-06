@@ -11,7 +11,7 @@ export function RotatorPhoneFrame({ children }: RotatorPhoneFrameProps) {
   return (
     <div className="relative mx-auto w-full max-w-[290px]">
       {/* Outer glow ring */}
-      <div className="absolute -inset-3 rounded-[2.75rem] bg-gradient-to-br from-[#3b66ff]/20 via-transparent to-emerald-300/20 blur-md" />
+      <div className="absolute -inset-3 rounded-[2.75rem] bg-gradient-to-br from-[#9fe870]/20 via-transparent to-emerald-300/20 blur-md" />
 
       {/* Device shell — deep curve */}
       <div className="relative rounded-[2.5rem] border-[7px] border-slate-900 bg-slate-900 shadow-[0_25px_50px_-12px_rgba(15,23,42,0.45)] overflow-hidden">

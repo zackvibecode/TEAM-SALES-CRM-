@@ -225,7 +225,7 @@ export function AdminPerformanceGraph() {
                       <div
                         className={cn(
                           "w-full max-w-[44px] rounded-t-xl rounded-b-sm transition-all duration-300 relative mt-12",
-                          isTop && (isDark ? "ring-1 ring-[var(--border-color)]" : "ring-2 ring-[#465fff]/40 ring-offset-2")
+                          isTop && (isDark ? "ring-1 ring-[var(--border-color)]" : "ring-2 ring-[#9fe870]/40 ring-offset-2")
                         )}
                         style={{
                           height: `${heightPct}%`,
@@ -235,8 +235,8 @@ export function AdminPerformanceGraph() {
                               ? "linear-gradient(180deg, #ededed 0%, #a1a1a1 100%)"
                               : "linear-gradient(180deg, #525252 0%, #333333 100%)"
                             : isTop
-                              ? "linear-gradient(180deg, #7592ff 0%, #465fff 55%, #3641f5 100%)"
-                              : "linear-gradient(180deg, #9cb9ff 0%, #465fff 70%, #3641f5 100%)",
+                              ? "linear-gradient(180deg, #c2e894 0%, #9fe870 55%, #8fd95f 100%)"
+                              : "linear-gradient(180deg, #c2e894 0%, #9fe870 70%, #8fd95f 100%)",
                           boxShadow: isDark
                             ? "none"
                             : isHovered
@@ -255,7 +255,7 @@ export function AdminPerformanceGraph() {
                     <p
                       className={cn(
                         "mt-3 text-xs font-semibold text-center truncate w-full px-1",
-                        isTop && !isDark ? "text-[#465fff]" : ""
+                        isTop && !isDark ? "text-[#9fe870]" : ""
                       )}
                       style={{ color: "var(--text-primary)" }}
                       title={row.sales_user_name}

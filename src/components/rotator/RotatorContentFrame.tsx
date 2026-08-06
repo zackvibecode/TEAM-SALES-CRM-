@@ -12,12 +12,12 @@ export function RotatorContentFrame({ children, className }: RotatorContentFrame
   return (
     <div
       className={cn(
-        "relative rounded-[1.75rem] border border-white/80 bg-white/70 p-3 shadow-[0_8px_30px_rgba(59,102,255,0.08)] backdrop-blur-sm",
-        "ring-1 ring-[#3b66ff]/10",
+        "relative rounded-[1.75rem] border border-white/80 bg-white/70 p-3 shadow-[0_8px_30px_rgba(159,232,112,0.08)] backdrop-blur-sm",
+        "ring-1 ring-[#9fe870]/10",
         className
       )}
     >
-      <div className="pointer-events-none absolute -inset-px rounded-[1.75rem] bg-gradient-to-br from-[#3b66ff]/[0.07] via-transparent to-emerald-400/[0.05]" />
+      <div className="pointer-events-none absolute -inset-px rounded-[1.75rem] bg-gradient-to-br from-[#9fe870]/[0.07] via-transparent to-emerald-400/[0.05]" />
       <div className="relative">{children}</div>
     </div>
   );

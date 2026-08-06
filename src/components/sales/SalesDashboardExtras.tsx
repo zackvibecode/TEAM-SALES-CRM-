@@ -46,7 +46,7 @@ export function SalesDashboardExtras({
       {kpiClicks != null && kpiClicks > 0 && (
         <div className="card-padded-sm">
           <h2 className="font-semibold flex items-center gap-2 mb-3 text-sm" style={{ color: "var(--text-primary)" }}>
-            <Target className="w-4 h-4 text-[#3b66ff]" />
+            <Target className="w-4 h-4 text-[#9fe870]" />
             Monthly click target
           </h2>
           <div>
@@ -81,7 +81,7 @@ export function SalesDashboardExtras({
                 <div className="mt-3">
                   <BatchProgressBar progress={b.progress} pending={b.pending} total={b.total} compact />
                 </div>
-                <p className="text-xs text-[#3b66ff] mt-2 font-semibold">{b.pending} pending → work now</p>
+                <p className="text-xs text-[#9fe870] mt-2 font-semibold">{b.pending} pending → work now</p>
               </Link>
             ))}
           </div>

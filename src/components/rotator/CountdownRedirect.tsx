@@ -167,13 +167,13 @@ export function CountdownRedirect({
       </p>
 
       {assigning ? (
-        <div className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-[#3b66ff] border-t-transparent rounded-full animate-spin" />
+        <div className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-[#9fe870] border-t-transparent rounded-full animate-spin" />
       ) : countdown > 0 && whatsappUrl ? (
         <div className="w-full flex justify-center">
           <RotatorCountdownRing value={countdown} total={COUNTDOWN_SECONDS} size="md" />
         </div>
       ) : !previewMode && countdown <= 0 && whatsappUrl ? (
-        <div className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-[#3b66ff] border-t-transparent rounded-full animate-spin" />
+        <div className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-[#9fe870] border-t-transparent rounded-full animate-spin" />
       ) : null}
 
       {showWhatsappButton && (
@@ -193,7 +193,7 @@ export function CountdownRedirect({
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 text-xs sm:text-sm font-medium text-[#3b66ff] underline underline-offset-2"
+          className="mt-3 text-xs sm:text-sm font-medium text-[#9fe870] underline underline-offset-2"
         >
           Langkau countdown → buka WhatsApp
         </a>

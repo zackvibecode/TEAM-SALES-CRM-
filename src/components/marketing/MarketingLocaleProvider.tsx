@@ -61,7 +61,7 @@ export function MarketingLocaleProvider({ children }: { children: ReactNode }) {
   if (!ready) {
     return (
       <div className="min-h-screen flex items-center justify-center app-shell">
-        <div className="w-10 h-10 rounded-full border-2 border-[#3b66ff] border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-full border-[3px] border-[#9fe870] border-t-transparent animate-spin" />
       </div>
     );
   }
