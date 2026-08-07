@@ -21,6 +21,7 @@ import { LeadTable } from "./LeadTable";
 import { LeadFormModal } from "./LeadFormModal";
 import { FollowUpFormModal } from "./FollowUpFormModal";
 import { PicPerformanceTable } from "./PicPerformanceTable";
+import { FollowUpIntroTip } from "./FollowUpIntroTip";
 import { ToastContainer, useToast } from "./Toast";
 import { SALES_FOLLOW_UP_SETUP_SQL } from "@/lib/sales-follow-up/setup-sql";
 import type {
@@ -352,12 +353,12 @@ export function SalesFollowUpDashboard({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="page-title">
-            {isSales ? "My Sales Follow-Up" : "Sales Follow-Up Dashboard"}
+            {isSales ? "Follow-Up Lead Saya" : "Follow-Up Lead"}
           </h1>
           <p className="page-subtitle mt-1">
             {isSales
-              ? "Pantau follow-up lead yang assigned kepada anda"
-              : "Pantau aktiviti follow-up dan prestasi pasukan jualan"}
+              ? "Tengok berapa kali dah follow customer anda — target minimum 3 kali"
+              : "Tengok berapa kali team dah follow customer — target minimum 3 kali"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -380,6 +381,8 @@ export function SalesFollowUpDashboard({
           </button>
         </div>
       </div>
+
+      {!setupError && <FollowUpIntroTip />}
 
       {/* Filters */}
       <FilterBar

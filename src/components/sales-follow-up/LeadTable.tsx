@@ -176,9 +176,18 @@ export function LeadTable({
                   <SalesLeadStatusBadge status={lead.lead_status} />
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center justify-center gap-1">
+                  <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => onAddFollowUp(lead)}
+                      className="btn-primary-solid inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5"
+                      title="Rekod follow-up baru"
+                    >
+                      <Plus className="size-3.5" />
+                      Follow-Up
+                    </button>
                     <ActionBtn
-                      title="Lihat detail"
+                      title="Lihat sejarah follow-up"
                       onClick={() => onView(lead)}
                       icon={<Eye className="size-3.5" />}
                     />
@@ -187,12 +196,6 @@ export function LeadTable({
                       onClick={() => openWhatsApp(lead.normalized_phone_number)}
                       icon={<MessageCircle className="size-3.5" />}
                       colorClass="text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-500/10"
-                    />
-                    <ActionBtn
-                      title="Tambah Follow-Up"
-                      onClick={() => onAddFollowUp(lead)}
-                      icon={<Plus className="size-3.5" />}
-                      colorClass="text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10"
                     />
                     <ActionBtn
                       title="Edit lead"
