@@ -15,6 +15,7 @@ import {
   Megaphone,
   Package,
   TrendingUp,
+  PhoneCall,
 } from "lucide-react";
 import type { AppCopy } from "@/lib/i18n/get-copy";
 
@@ -31,6 +32,7 @@ export function getAdminNavItems(t: AppCopy): NavItem[] {
     { label: t.nav.packages, href: "/admin/packages", icon: <Package className="w-4 h-4" /> },
     { label: t.nav.activityLog, href: "/admin/activity", icon: <Activity className="w-4 h-4" /> },
     { label: t.nav.sales, isSectionHeader: true },
+    { label: t.nav.salesFollowUp, href: "/admin/sales-follow-up", icon: <PhoneCall className="w-4 h-4" /> },
     { label: t.nav.teamSales, href: "/admin/team-sales", icon: <TrendingUp className="w-4 h-4" /> },
     { label: t.nav.leadSources, href: "/admin/settings", icon: <Settings className="w-4 h-4" /> },
     { label: t.nav.salesUsers, href: "/admin/sales-users", icon: <Users className="w-4 h-4" /> },

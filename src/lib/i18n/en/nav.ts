@@ -17,8 +17,10 @@ export const enNav = {
   teamSales: "Team Sales",
   leadSources: "Lead Sources",
   sales: "Sales",
+  salesFollowUp: "Sales Follow-Up",
   promotion: "Promotion",
   pageTitles: {
+    "/admin/sales-follow-up": "Sales Follow-Up Dashboard",
     "/admin/dashboard": "Dashboard",
     "/admin/packages": "Package Update",
     "/admin/sales-users": "Sales Users",
@@ -62,8 +64,10 @@ export const bmNav = {
   teamSales: "Jualan Pasukan",
   leadSources: "Sumber Lead",
   sales: "Sales",
+  salesFollowUp: "Sales Follow-Up",
   promotion: "Promosi",
   pageTitles: {
+    "/admin/sales-follow-up": "Sales Follow-Up Dashboard",
     "/admin/dashboard": "Dashboard",
     "/admin/packages": "Kemas Kini Pakej",
     "/admin/sales-users": "Pengguna Sales",
