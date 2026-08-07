@@ -47,11 +47,19 @@ export async function getAllPics(db: DbClient): Promise<SalesPic[]> {
 // LEAD SERVICE
 // ===================================================
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type LeadFilterQuery = {
+  gte: (column: string, value: string | number) => LeadFilterQuery;
+  lte: (column: string, value: string | number) => LeadFilterQuery;
+  eq: (column: string, value: string | number) => LeadFilterQuery;
+  or: (filters: string) => LeadFilterQuery;
+  lt: (column: string, value: string | number) => LeadFilterQuery;
+  not: (column: string, operator: string, value: unknown) => LeadFilterQuery;
+};
+
 function buildLeadFilters(
-  query: any,
+  query: LeadFilterQuery,
   filters: FollowUpFilterParams
-) {
+): LeadFilterQuery {
   let q = query;
 
   if (filters.startDate) {
@@ -94,14 +102,9 @@ export async function getLeads(
   db: DbClient,
   filters: FollowUpFilterParams
 ): Promise<SalesLeadWithLastFollowUp[]> {
-  let query = db.from("sales_leads").select(
-    `*,
-    assigned_pic:assigned_pic_id(*),
-    last_follow_up:lead_follow_ups(
-      follow_up_date
-    ).order(follow_up_date.desc()).limit(1)`
-  );
-
+  // Use untyped query builder to avoid PostgREST deep instantiation in CI.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = db.from("sales_leads").select("*, assigned_pic:assigned_pic_id(*)");
   query = buildLeadFilters(query, filters);
   query = query.order("created_at", { ascending: false }).limit(1000);
 
@@ -109,14 +112,28 @@ export async function getLeads(
 
   if (error) throw new Error(`Failed to fetch leads: ${error.message}`);
 
-  return ((data ?? []) as unknown as Record<string, unknown>[]).map((row) => {
-    const lastFUs = row.last_follow_up as Array<{ follow_up_date: string }> | null;
-    return {
-      ...row,
-      last_follow_up_date: lastFUs?.[0]?.follow_up_date ?? null,
-      last_follow_up: undefined,
-    } as unknown as SalesLeadWithLastFollowUp;
-  });
+  const leads = (data ?? []) as SalesLead[];
+  const leadIds = leads.map((l) => l.id);
+
+  const lastFollowUpByLead = new Map<string, string>();
+  if (leadIds.length > 0) {
+    const { data: followUps } = await db
+      .from("lead_follow_ups")
+      .select("lead_id, follow_up_date")
+      .in("lead_id", leadIds)
+      .order("follow_up_date", { ascending: false });
+
+    for (const row of (followUps ?? []) as Array<{ lead_id: string; follow_up_date: string }>) {
+      if (!lastFollowUpByLead.has(row.lead_id)) {
+        lastFollowUpByLead.set(row.lead_id, row.follow_up_date);
+      }
+    }
+  }
+
+  return leads.map((lead) => ({
+    ...lead,
+    last_follow_up_date: lastFollowUpByLead.get(lead.id) ?? null,
+  }));
 }
 
 export async function getLeadById(

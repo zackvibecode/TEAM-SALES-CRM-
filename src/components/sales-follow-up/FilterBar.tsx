@@ -7,7 +7,6 @@ import type { SalesPic } from "@/lib/sales-follow-up/types";
 import {
   LEAD_STATUS_OPTIONS,
   FOLLOW_UP_FILTER_OPTIONS,
-  type LeadStatus,
 } from "@/lib/sales-follow-up/types";
 
 interface FilterBarProps {

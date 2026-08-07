@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Users,
   MessageSquare,
@@ -31,6 +32,7 @@ import type {
 } from "@/lib/sales-follow-up/types";
 
 export function SalesFollowUpDashboard() {
+  const router = useRouter();
   const { toasts, toast, removeToast } = useToast();
 
   // Filters
@@ -61,7 +63,6 @@ export function SalesFollowUpDashboard() {
   const [showAddLead, setShowAddLead] = useState(false);
   const [editLead, setEditLead] = useState<SalesLead | null>(null);
   const [followUpTarget, setFollowUpTarget] = useState<SalesLeadWithLastFollowUp | null>(null);
-  const [viewLeadId, setViewLeadId] = useState<string | null>(null);
 
   const buildFilterParams = useCallback(() => {
     const params = new URLSearchParams();
@@ -338,7 +339,7 @@ export function SalesFollowUpDashboard() {
       <LeadTable
         leads={leads}
         loading={loadingLeads}
-        onView={(lead) => setViewLeadId(lead.id)}
+        onView={(lead) => router.push(`/admin/sales-follow-up/leads/${lead.id}`)}
         onAddFollowUp={(lead) => {
           setFollowUpTarget(lead);
         }}
@@ -375,7 +376,6 @@ export function SalesFollowUpDashboard() {
           leadId={followUpTarget.id}
           leadName={followUpTarget.customer_name}
           currentFollowUpCount={followUpTarget.total_follow_ups}
-          pics={pics}
         />
       )}
     </div>

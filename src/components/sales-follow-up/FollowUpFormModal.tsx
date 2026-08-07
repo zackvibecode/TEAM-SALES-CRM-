@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { X, Loader2, Calendar, MessageSquare, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { todayKL } from "@/lib/sales-follow-up/dates";
-import type { SalesPic, CreateFollowUpInput } from "@/lib/sales-follow-up/types";
+import type { CreateFollowUpInput } from "@/lib/sales-follow-up/types";
 import { FOLLOW_UP_STATUS_OPTIONS } from "@/lib/sales-follow-up/types";
 
 interface FollowUpFormModalProps {
@@ -14,7 +14,6 @@ interface FollowUpFormModalProps {
   leadId: string;
   leadName: string;
   currentFollowUpCount: number;
-  pics: SalesPic[];
 }
 
 export function FollowUpFormModal({
@@ -24,7 +23,6 @@ export function FollowUpFormModal({
   leadId,
   leadName,
   currentFollowUpCount,
-  pics,
 }: FollowUpFormModalProps) {
   const nextNumber = currentFollowUpCount + 1;
   const [followUpDate, setFollowUpDate] = useState(todayKL());

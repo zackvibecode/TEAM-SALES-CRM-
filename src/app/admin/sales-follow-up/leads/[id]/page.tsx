@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
-import { LeadDetailView } from "@/components/sales-follow-up/LeadDetailView";
+import { LeadDetailClient } from "./client";
 
 export const dynamic = "force-dynamic";
 
@@ -18,10 +18,7 @@ export default async function SalesFollowUpLeadDetailPage({ params }: Props) {
   return (
     <AppLayout role="admin">
       <div className="dashboard-shell">
-        <LeadDetailView
-          leadId={id}
-          onBack={() => {}}
-        />
+        <LeadDetailClient leadId={id} />
       </div>
     </AppLayout>
   );

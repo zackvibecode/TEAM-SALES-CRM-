@@ -11,12 +11,9 @@ import {
   MessageSquare,
   CheckCircle2,
   Loader2,
-  Trash2,
-  Check,
-  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatTimestamp, formatDateMY, todayKL } from "@/lib/sales-follow-up/dates";
+import { formatDateMY } from "@/lib/sales-follow-up/dates";
 import { FollowUpProgressBadge } from "./FollowUpProgressBadge";
 import { SalesLeadStatusBadge } from "./SalesLeadStatusBadge";
 import { FollowUpTimeline } from "./FollowUpTimeline";
@@ -25,7 +22,6 @@ import { ToastContainer, useToast } from "./Toast";
 import type {
   SalesLead,
   LeadFollowUp,
-  SalesPic,
   CreateFollowUpInput,
 } from "@/lib/sales-follow-up/types";
 
@@ -39,18 +35,15 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
 
   const [lead, setLead] = useState<SalesLead | null>(null);
   const [followUps, setFollowUps] = useState<LeadFollowUp[]>([]);
-  const [pics, setPics] = useState<SalesPic[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddFU, setShowAddFU] = useState(false);
-  const [deletingFuId, setDeletingFuId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [leadRes, fuRes, picsRes] = await Promise.all([
+      const [leadRes, fuRes] = await Promise.all([
         fetch(`/api/sales-follow-up/leads/${leadId}`),
         fetch(`/api/sales-follow-up/leads/${leadId}/follow-ups`),
-        fetch("/api/sales-follow-up/pics"),
       ]);
 
       if (leadRes.ok) {
@@ -60,10 +53,6 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
       if (fuRes.ok) {
         const fuData = await fuRes.json();
         setFollowUps(fuData.followUps || []);
-      }
-      if (picsRes.ok) {
-        const picsData = await picsRes.json();
-        setPics(picsData.pics || []);
       }
     } catch (err) {
       console.error(err);
@@ -87,25 +76,6 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
     toast("Follow-up berjaya disimpan.", "success");
     setShowAddFU(false);
     fetchData();
-  }
-
-  async function handleDeleteFollowUp(fuId: string) {
-    setDeletingFuId(fuId);
-    try {
-      const res = await fetch(`/api/sales-follow-up/follow-ups/${fuId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const result = await res.json();
-        throw new Error(result.error || "Gagal memadam follow-up.");
-      }
-      toast("Follow-up berjaya dipadam.", "success");
-      fetchData();
-    } catch (err) {
-      toast(err instanceof Error ? err.message : "Gagal memadam follow-up.", "error");
-    } finally {
-      setDeletingFuId(null);
-    }
   }
 
   function openWhatsApp() {
@@ -139,7 +109,6 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
     <div className="space-y-6">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
-      {/* Back button */}
       <button
         onClick={onBack}
         className="flex items-center gap-2 text-sm font-medium hover:underline"
@@ -149,7 +118,6 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
         Kembali ke Dashboard
       </button>
 
-      {/* Lead Info Card */}
       <div className="surface-card rounded-xl p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="space-y-3 min-w-0">
@@ -191,7 +159,6 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
         </div>
       </div>
 
-      {/* Timeline */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
@@ -201,7 +168,6 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
         <FollowUpTimeline followUps={followUps} emptyMessage="Tiada rekod follow-up untuk lead ini." />
       </div>
 
-      {/* Follow-Up Form Modal */}
       {showAddFU && (
         <FollowUpFormModal
           open={showAddFU}
@@ -210,7 +176,6 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
           leadId={lead.id}
           leadName={lead.customer_name}
           currentFollowUpCount={lead.total_follow_ups}
-          pics={pics}
         />
       )}
     </div>
