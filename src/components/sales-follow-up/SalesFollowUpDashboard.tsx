@@ -11,6 +11,8 @@ import {
   AlertCircle,
   Plus,
   RefreshCw,
+  Copy,
+  Check,
 } from "lucide-react";
 import { DashboardMetricTile, DashboardMetricSection } from "@/components/shared/DashboardMetricTile";
 import { FilterBar } from "./FilterBar";
@@ -20,6 +22,7 @@ import { LeadFormModal } from "./LeadFormModal";
 import { FollowUpFormModal } from "./FollowUpFormModal";
 import { PicPerformanceTable } from "./PicPerformanceTable";
 import { ToastContainer, useToast } from "./Toast";
+import { SALES_FOLLOW_UP_SETUP_SQL } from "@/lib/sales-follow-up/setup-sql";
 import type {
   SalesPic,
   SalesLead,
@@ -73,16 +76,14 @@ export function SalesFollowUpDashboard({
   const [followUpTarget, setFollowUpTarget] = useState<SalesLeadWithLastFollowUp | null>(null);
   const [setupError, setSetupError] = useState<string | null>(null);
   const [dbReady, setDbReady] = useState(false);
+  const [sqlCopied, setSqlCopied] = useState(false);
 
   const checkHealth = useCallback(async () => {
     try {
       const res = await fetch("/api/sales-follow-up/health");
       const data = await res.json();
       if (!res.ok || data.ok === false) {
-        setSetupError(
-          data.message ||
-            "Database Sales Follow-Up belum siap. Jalankan SQL fix-live.sql dalam Supabase project live."
-        );
+        setSetupError("setup_required");
         setDbReady(false);
         return false;
       }
@@ -90,11 +91,22 @@ export function SalesFollowUpDashboard({
       setDbReady(true);
       return true;
     } catch {
-      setSetupError("Gagal semak status database Sales Follow-Up.");
+      setSetupError("setup_required");
       setDbReady(false);
       return false;
     }
   }, []);
+
+  async function copySetupSql() {
+    try {
+      await navigator.clipboard.writeText(SALES_FOLLOW_UP_SETUP_SQL);
+      setSqlCopied(true);
+      toast("SQL sudah dicopy. Paste dalam Supabase SQL Editor.", "success");
+      setTimeout(() => setSqlCopied(false), 2500);
+    } catch {
+      toast("Gagal copy. Select & copy manual dari kotak SQL.", "error");
+    }
+  }
 
   const buildFilterParams = useCallback(() => {
     const params = new URLSearchParams();
@@ -283,27 +295,56 @@ export function SalesFollowUpDashboard({
 
       {setupError && (
         <div
-          className="rounded-xl border px-4 py-4 space-y-2"
+          className="rounded-xl border px-5 py-5 space-y-4"
           style={{
-            borderColor: "var(--color-error-200, #fecaca)",
-            backgroundColor: "var(--color-error-50, #fef2f2)",
-            color: "var(--color-error-700, #b91c1c)",
+            borderColor: "var(--border-color)",
+            backgroundColor: "var(--surface-card)",
           }}
         >
-          <div className="flex items-start gap-2">
-            <AlertCircle className="size-5 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-sm font-bold">Database Sales Follow-Up belum ready</p>
-              <p className="text-sm leading-relaxed">{setupError}</p>
-              <p className="text-xs leading-relaxed opacity-90">
-                1) Buka Supabase project yang sama dengan live Vercel → Settings → API → Project URL
-                <br />
-                2) SQL Editor → jalankan fail <code>src/lib/sales-follow-up/fix-live.sql</code>
-                <br />
-                3) Pastikan result keluar 3 table, kemudian refresh page ni
+          <div className="flex items-start gap-3">
+            <AlertCircle className="size-5 shrink-0 mt-0.5" style={{ color: "var(--color-warning-600, #d97706)" }} />
+            <div className="space-y-2 min-w-0">
+              <p className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
+                Aktifkan Sales Follow-Up (sekali je)
               </p>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                Sistem ni untuk rekod follow-up customer: berapa kali dah follow,
+                status, nota, dan PIC. Database belum diaktifkan lagi — buat 3 step ni:
+              </p>
+              <ol className="text-sm space-y-1 list-decimal pl-5" style={{ color: "var(--text-secondary)" }}>
+                <li>Buka <strong>Supabase</strong> → <strong>SQL Editor</strong></li>
+                <li>Klik <strong>Copy SQL</strong> bawah, paste, tekan <strong>Run</strong></li>
+                <li>Balik sini, tekan <strong>Refresh</strong></li>
+              </ol>
             </div>
           </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={copySetupSql}
+              className="btn-primary-solid inline-flex items-center gap-2 text-sm"
+            >
+              {sqlCopied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              {sqlCopied ? "Sudah dicopy" : "Copy SQL"}
+            </button>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              className="btn-secondary inline-flex items-center gap-2 text-sm"
+            >
+              <RefreshCw className="size-4" />
+              Refresh
+            </button>
+          </div>
+
+          <textarea
+            readOnly
+            value={SALES_FOLLOW_UP_SETUP_SQL}
+            className="input-field w-full text-xs font-mono resize-y"
+            style={{ minHeight: "140px" }}
+            onFocus={(e) => e.currentTarget.select()}
+          />
         </div>
       )}
 
