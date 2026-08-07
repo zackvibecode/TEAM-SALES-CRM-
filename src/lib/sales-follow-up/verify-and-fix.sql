@@ -1,6 +1,5 @@
 -- ===================================================
 -- STEP 1: CHECK jika table sudah wujud
--- Jalankan ini dulu di Supabase SQL Editor
 -- ===================================================
 SELECT table_name
 FROM information_schema.tables
@@ -8,11 +7,8 @@ WHERE table_schema = 'public'
   AND table_name IN ('sales_pics', 'sales_leads', 'lead_follow_ups')
 ORDER BY table_name;
 
--- Jika result kosong / kurang dari 3 row → table belum wujud.
--- Teruskan STEP 2.
-
 -- ===================================================
--- STEP 2: CREATE TABLES (jalankan semua sekali)
+-- STEP 2: CREATE TABLES (tanpa FK ke profiles)
 -- ===================================================
 
 CREATE TABLE IF NOT EXISTS public.sales_pics (
@@ -21,9 +17,12 @@ CREATE TABLE IF NOT EXISTS public.sales_pics (
   email TEXT,
   phone TEXT,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  user_id UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.sales_pics ADD COLUMN IF NOT EXISTS user_id UUID;
 
 CREATE TABLE IF NOT EXISTS public.sales_leads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -41,9 +40,18 @@ CREATE TABLE IF NOT EXISTS public.sales_leads (
   next_follow_up_date DATE,
   total_follow_ups INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT unique_normalized_phone UNIQUE (normalized_phone_number)
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'unique_normalized_phone'
+  ) THEN
+    ALTER TABLE public.sales_leads
+      ADD CONSTRAINT unique_normalized_phone UNIQUE (normalized_phone_number);
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS public.lead_follow_ups (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -65,25 +73,19 @@ CREATE TABLE IF NOT EXISTS public.lead_follow_ups (
 CREATE INDEX IF NOT EXISTS idx_sales_pics_status ON public.sales_pics(status);
 CREATE INDEX IF NOT EXISTS idx_sales_leads_normalized_phone ON public.sales_leads(normalized_phone_number);
 CREATE INDEX IF NOT EXISTS idx_sales_leads_assigned_pic ON public.sales_leads(assigned_pic_id);
-CREATE INDEX IF NOT EXISTS idx_sales_leads_status ON public.sales_leads(lead_status);
-CREATE INDEX IF NOT EXISTS idx_sales_leads_next_follow_up ON public.sales_leads(next_follow_up_date);
-CREATE INDEX IF NOT EXISTS idx_sales_leads_total_follow_ups ON public.sales_leads(total_follow_ups);
 CREATE INDEX IF NOT EXISTS idx_lead_follow_ups_lead_id ON public.lead_follow_ups(lead_id);
-CREATE INDEX IF NOT EXISTS idx_lead_follow_ups_pic_id ON public.lead_follow_ups(pic_id);
-CREATE INDEX IF NOT EXISTS idx_lead_follow_ups_date ON public.lead_follow_ups(follow_up_date);
 
--- Seed PIC (skip jika sudah ada)
+GRANT ALL ON TABLE public.sales_pics TO postgres, anon, authenticated, service_role;
+GRANT ALL ON TABLE public.sales_leads TO postgres, anon, authenticated, service_role;
+GRANT ALL ON TABLE public.lead_follow_ups TO postgres, anon, authenticated, service_role;
+
 INSERT INTO public.sales_pics (name, status)
 SELECT v.name, 'active'
 FROM (VALUES ('Fatin'), ('Alip'), ('Fadhlin'), ('Sheima'), ('Ain')) AS v(name)
 WHERE NOT EXISTS (SELECT 1 FROM public.sales_pics LIMIT 1);
 
--- Refresh schema cache supaya API nampak table baru
 NOTIFY pgrst, 'reload schema';
 
--- ===================================================
--- STEP 3: VERIFY semula (mesti keluar 3 rows)
--- ===================================================
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'

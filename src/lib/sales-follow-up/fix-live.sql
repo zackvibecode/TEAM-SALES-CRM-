@@ -1,7 +1,6 @@
 -- ===================================================
--- FIX: Sales Follow-Up tables + grant + schema reload
+-- FIX: Sales Follow-Up (tanpa depend pada profiles FK)
 -- Jalankan SEMUA sekali dalam Supabase SQL Editor
--- (pastikan project URL sama dengan Vercel Production)
 -- ===================================================
 
 CREATE TABLE IF NOT EXISTS public.sales_pics (
@@ -10,9 +9,14 @@ CREATE TABLE IF NOT EXISTS public.sales_pics (
   email TEXT,
   phone TEXT,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  user_id UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Kalau table lama sudah wujud tanpa user_id
+ALTER TABLE public.sales_pics
+  ADD COLUMN IF NOT EXISTS user_id UUID;
 
 CREATE TABLE IF NOT EXISTS public.sales_leads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -30,9 +34,20 @@ CREATE TABLE IF NOT EXISTS public.sales_leads (
   next_follow_up_date DATE,
   total_follow_ups INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT unique_normalized_phone UNIQUE (normalized_phone_number)
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Unique phone (skip kalau sudah ada)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'unique_normalized_phone'
+  ) THEN
+    ALTER TABLE public.sales_leads
+      ADD CONSTRAINT unique_normalized_phone UNIQUE (normalized_phone_number);
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS public.lead_follow_ups (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -52,6 +67,7 @@ CREATE TABLE IF NOT EXISTS public.lead_follow_ups (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sales_pics_status ON public.sales_pics(status);
+CREATE INDEX IF NOT EXISTS idx_sales_pics_user_id ON public.sales_pics(user_id);
 CREATE INDEX IF NOT EXISTS idx_sales_leads_normalized_phone ON public.sales_leads(normalized_phone_number);
 CREATE INDEX IF NOT EXISTS idx_sales_leads_assigned_pic ON public.sales_leads(assigned_pic_id);
 CREATE INDEX IF NOT EXISTS idx_sales_leads_status ON public.sales_leads(lead_status);
@@ -61,24 +77,9 @@ CREATE INDEX IF NOT EXISTS idx_lead_follow_ups_lead_id ON public.lead_follow_ups
 CREATE INDEX IF NOT EXISTS idx_lead_follow_ups_pic_id ON public.lead_follow_ups(pic_id);
 CREATE INDEX IF NOT EXISTS idx_lead_follow_ups_date ON public.lead_follow_ups(follow_up_date);
 
--- Pastikan API (PostgREST) boleh akses table
 GRANT ALL ON TABLE public.sales_pics TO postgres, anon, authenticated, service_role;
 GRANT ALL ON TABLE public.sales_leads TO postgres, anon, authenticated, service_role;
 GRANT ALL ON TABLE public.lead_follow_ups TO postgres, anon, authenticated, service_role;
-
--- Link PIC ke akaun login (untuk sales user nampak data sendiri)
-ALTER TABLE public.sales_pics
-  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL;
-
-CREATE INDEX IF NOT EXISTS idx_sales_pics_user_id ON public.sales_pics(user_id);
-
--- Auto-link PIC name dengan profiles.full_name (jika belum linked)
-UPDATE public.sales_pics sp
-SET user_id = p.id
-FROM public.profiles p
-WHERE sp.user_id IS NULL
-  AND p.full_name IS NOT NULL
-  AND lower(trim(sp.name)) = lower(trim(p.full_name));
 
 -- Seed PIC jika kosong
 INSERT INTO public.sales_pics (name, status)
@@ -86,10 +87,29 @@ SELECT v.name, 'active'
 FROM (VALUES ('Fatin'), ('Alip'), ('Fadhlin'), ('Sheima'), ('Ain')) AS v(name)
 WHERE NOT EXISTS (SELECT 1 FROM public.sales_pics LIMIT 1);
 
--- WAJIB: refresh schema cache
+-- Link PIC ke profiles (hanya jika table profiles wujud)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'profiles'
+  ) THEN
+    EXECUTE '
+      UPDATE public.sales_pics sp
+      SET user_id = p.id
+      FROM public.profiles p
+      WHERE sp.user_id IS NULL
+        AND p.full_name IS NOT NULL
+        AND lower(trim(sp.name)) = lower(trim(p.full_name))
+    ';
+  END IF;
+END $$;
+
+-- Refresh schema cache
 NOTIFY pgrst, 'reload schema';
 
--- Verify
+-- Verify (mesti 3 rows)
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
