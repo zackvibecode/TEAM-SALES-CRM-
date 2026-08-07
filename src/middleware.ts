@@ -17,13 +17,50 @@ function isPublicPath(pathname: string): boolean {
 function loginRedirect(request: NextRequest) {
   const redirectUrl = request.nextUrl.clone();
   redirectUrl.pathname = "/login";
+  redirectUrl.search = "";
   return NextResponse.redirect(redirectUrl);
+}
+
+function homeForRole(role: string) {
+  return role === "admin" ? "/admin/dashboard" : "/dashboard/sales";
 }
 
 function dashboardRedirect(request: NextRequest, role: string) {
   const redirectUrl = request.nextUrl.clone();
-  redirectUrl.pathname = role === "admin" ? "/admin/dashboard" : "/dashboard/sales";
+  redirectUrl.pathname = homeForRole(role);
+  redirectUrl.search = "";
   return NextResponse.redirect(redirectUrl);
+}
+
+async function resolveRole(
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string
+): Promise<"admin" | "sales" | null> {
+  try {
+    const { data: roleFromRpc } = await supabase.rpc("get_user_role", {
+      user_id: userId,
+    });
+    if (roleFromRpc === "admin" || roleFromRpc === "sales") {
+      return roleFromRpc;
+    }
+  } catch {
+    // Fall through to profiles table.
+  }
+
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.role === "admin" || profile?.role === "sales") {
+      return profile.role;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
 }
 
 export async function middleware(request: NextRequest) {
@@ -56,30 +93,24 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Fast cookie-only session check — no network round-trip
+  // Cookie-only session check for page routing (fast).
   const { data: sessionData } = await supabase.auth.getSession();
   const sessionUser = sessionData.session?.user ?? null;
 
-  // Admin API: always verify token with Supabase
+  // Admin API: always verify token with Supabase Auth.
   if (pathname.startsWith("/api/admin/")) {
     if (!sessionUser) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (profile?.role !== "admin") {
-        return NextResponse.json({ error: "Admin only" }, { status: 403 });
-      }
-    } catch {
-      return NextResponse.json({ error: "Authorization failed" }, { status: 403 });
+    const role = await resolveRole(supabase, user.id);
+    if (role !== "admin") {
+      return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }
     return supabaseResponse;
   }
@@ -93,13 +124,23 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Public pages: pass through (logged-in users get redirected later)
+  // Public pages
   if (isPublicPath(pathname)) {
-    if (sessionUser) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/dashboard/sales";
-      return NextResponse.redirect(redirectUrl);
+    // Keep marketing pages public even if logged in.
+    if (pathname === "/" || pathname === "/pricing" || pathname.startsWith("/r/")) {
+      return supabaseResponse;
     }
+
+    // /login: if already authenticated, send to the right home.
+    if (pathname === "/login" && sessionUser) {
+      const role = await resolveRole(supabase, sessionUser.id);
+      if (role) {
+        return dashboardRedirect(request, role);
+      }
+      // Session exists but role missing — allow login page so user can recover.
+      return supabaseResponse;
+    }
+
     return supabaseResponse;
   }
 
@@ -108,42 +149,18 @@ export async function middleware(request: NextRequest) {
     return loginRedirect(request);
   }
 
-  // Protect /admin & /dashboard routes by role
-  let role: string | null = null;
-  try {
-    const { data: roleFromRpc } = await supabase
-      .rpc("get_user_role", { user_id: sessionUser.id });
-    role = (roleFromRpc as string) || null;
-
-    if (!role) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", sessionUser.id)
-        .maybeSingle();
-      role = profile?.role ?? null;
-    }
-  } catch {
-    return loginRedirect(request);
-  }
-
+  const role = await resolveRole(supabase, sessionUser.id);
   if (!role) {
     return loginRedirect(request);
   }
 
+  // Non-admins cannot open admin pages.
   if (pathname.startsWith("/admin") && role !== "admin") {
-    return dashboardRedirect(request, "sales");
-  }
-  if (
-    (pathname.startsWith("/dashboard/sales") || pathname.startsWith("/dashboard/rotator-team")) &&
-    role !== "admin"
-  ) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/dashboard/sales";
-    return NextResponse.redirect(redirectUrl);
+    return dashboardRedirect(request, role);
   }
 
-  if (pathname === "/login") {
+  // Non-admins cannot open rotator-team pages.
+  if (pathname.startsWith("/dashboard/rotator-team") && role !== "admin") {
     return dashboardRedirect(request, role);
   }
 
