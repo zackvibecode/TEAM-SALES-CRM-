@@ -35,7 +35,7 @@ export function PicPerformanceTable({ data, onExportCsv }: PicPerformanceTablePr
             className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
           >
             <Download className="size-3.5" />
-            CSV
+            Export Lead (CSV)
           </button>
           <button
             onClick={() => window.print()}
