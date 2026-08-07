@@ -63,6 +63,30 @@ export function SalesFollowUpDashboard() {
   const [showAddLead, setShowAddLead] = useState(false);
   const [editLead, setEditLead] = useState<SalesLead | null>(null);
   const [followUpTarget, setFollowUpTarget] = useState<SalesLeadWithLastFollowUp | null>(null);
+  const [setupError, setSetupError] = useState<string | null>(null);
+  const [dbReady, setDbReady] = useState(false);
+
+  const checkHealth = useCallback(async () => {
+    try {
+      const res = await fetch("/api/sales-follow-up/health");
+      const data = await res.json();
+      if (!res.ok || data.ok === false) {
+        setSetupError(
+          data.message ||
+            "Database Sales Follow-Up belum siap. Jalankan SQL fix-live.sql dalam Supabase project live."
+        );
+        setDbReady(false);
+        return false;
+      }
+      setSetupError(null);
+      setDbReady(true);
+      return true;
+    } catch {
+      setSetupError("Gagal semak status database Sales Follow-Up.");
+      setDbReady(false);
+      return false;
+    }
+  }, []);
 
   const buildFilterParams = useCallback(() => {
     const params = new URLSearchParams();
@@ -145,15 +169,20 @@ export function SalesFollowUpDashboard() {
   }, [buildFilterParams]);
 
   useEffect(() => {
-    fetchPics();
-  }, [fetchPics]);
+    void (async () => {
+      const ok = await checkHealth();
+      if (!ok) return;
+      fetchPics();
+    })();
+  }, [checkHealth, fetchPics]);
 
   useEffect(() => {
+    if (!dbReady) return;
     fetchStats();
     fetchLeads();
     fetchChart();
     fetchPerformance();
-  }, [fetchStats, fetchLeads, fetchChart, fetchPerformance]);
+  }, [dbReady, fetchStats, fetchLeads, fetchChart, fetchPerformance]);
 
   // CRUD handlers
   async function handleCreateLead(data: CreateLeadInput) {
@@ -229,15 +258,46 @@ export function SalesFollowUpDashboard() {
   }
 
   function handleRefresh() {
-    fetchStats();
-    fetchLeads();
-    fetchChart();
-    fetchPerformance();
+    void (async () => {
+      const ok = await checkHealth();
+      if (!ok) return;
+      fetchPics();
+      fetchStats();
+      fetchLeads();
+      fetchChart();
+      fetchPerformance();
+    })();
   }
 
   return (
     <div className="space-y-6">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+      {setupError && (
+        <div
+          className="rounded-xl border px-4 py-4 space-y-2"
+          style={{
+            borderColor: "var(--color-error-200, #fecaca)",
+            backgroundColor: "var(--color-error-50, #fef2f2)",
+            color: "var(--color-error-700, #b91c1c)",
+          }}
+        >
+          <div className="flex items-start gap-2">
+            <AlertCircle className="size-5 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-bold">Database Sales Follow-Up belum ready</p>
+              <p className="text-sm leading-relaxed">{setupError}</p>
+              <p className="text-xs leading-relaxed opacity-90">
+                1) Buka Supabase project yang sama dengan live Vercel → Settings → API → Project URL
+                <br />
+                2) SQL Editor → jalankan fail <code>src/lib/sales-follow-up/fix-live.sql</code>
+                <br />
+                3) Pastikan result keluar 3 table, kemudian refresh page ni
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

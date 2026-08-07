@@ -169,7 +169,17 @@ export async function checkDuplicatePhone(
   }
 
   const { data, error } = await query;
-  if (error) throw new Error(`Failed to check duplicate: ${error.message}`);
+  if (error) {
+    if (
+      error.message.includes("schema cache") ||
+      error.message.includes("Could not find the table")
+    ) {
+      throw new Error(
+        "Database belum siap. Jalankan SQL fix-live.sql dalam Supabase project yang sama dengan live web, kemudian NOTIFY pgrst, 'reload schema'."
+      );
+    }
+    throw new Error(`Failed to check duplicate: ${error.message}`);
+  }
   return (data?.length ?? 0) > 0;
 }
 
