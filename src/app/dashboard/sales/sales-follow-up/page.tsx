@@ -4,15 +4,17 @@ import { SalesFollowUpDashboard } from "@/components/sales-follow-up/SalesFollow
 
 export const dynamic = "force-dynamic";
 
-export default async function SalesFollowUpPage() {
+export default async function SalesUserFollowUpPage() {
   const auth = await createServerSupabaseClient();
-  const { data: { user } } = await auth.auth.getUser();
+  const {
+    data: { user },
+  } = await auth.auth.getUser();
   if (!user) return null;
 
   return (
-    <AppLayout role="admin">
+    <AppLayout role="sales">
       <div className="dashboard-shell">
-        <SalesFollowUpDashboard mode="admin" />
+        <SalesFollowUpDashboard mode="sales" />
       </div>
     </AppLayout>
   );

@@ -4,6 +4,7 @@ import {
   getLeadFollowUps,
   createFollowUp,
 } from "@/lib/sales-follow-up/service";
+import { assertLeadAccess, resolveScopedPicId } from "@/lib/sales-follow-up/access";
 import type { CreateFollowUpInput } from "@/lib/sales-follow-up/types";
 
 export async function GET(
@@ -11,11 +12,15 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const ctx = await getAuthenticatedContext();
-  if (!ctx || ctx.role !== "admin") {
+  if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id: leadId } = await params;
+  const access = await assertLeadAccess(ctx.db, ctx.role, ctx.user.id, leadId);
+  if (!access.ok) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
+  }
 
   try {
     const followUps = await getLeadFollowUps(ctx.db, leadId);
@@ -31,11 +36,15 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const ctx = await getAuthenticatedContext();
-  if (!ctx || ctx.role !== "admin") {
+  if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id: leadId } = await params;
+  const access = await assertLeadAccess(ctx.db, ctx.role, ctx.user.id, leadId);
+  if (!access.ok) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
+  }
 
   try {
     const body: CreateFollowUpInput = await request.json();
@@ -43,6 +52,11 @@ export async function POST(
 
     if (!body.follow_up_date) {
       return NextResponse.json({ error: "Tarikh follow-up diperlukan." }, { status: 400 });
+    }
+
+    if (ctx.role === "sales") {
+      const scoped = await resolveScopedPicId(ctx.db, ctx.role, ctx.user.id);
+      body.pic_id = scoped.picId;
     }
 
     const followUp = await createFollowUp(ctx.db, body);

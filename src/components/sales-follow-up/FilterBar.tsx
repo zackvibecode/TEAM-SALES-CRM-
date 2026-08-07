@@ -17,6 +17,7 @@ interface FilterBarProps {
   search: string;
   followUpFilter: string;
   pics: SalesPic[];
+  hidePicFilter?: boolean;
   onStartDateChange: (v: string) => void;
   onEndDateChange: (v: string) => void;
   onPicChange: (v: string) => void;
@@ -33,6 +34,7 @@ export function FilterBar({
   search,
   followUpFilter,
   pics,
+  hidePicFilter = false,
   onStartDateChange,
   onEndDateChange,
   onPicChange,
@@ -42,7 +44,7 @@ export function FilterBar({
 }: FilterBarProps) {
   const [showFilters, setShowFilters] = useState(false);
   const hasActiveFilters =
-    startDate || endDate || picId || status || followUpFilter !== "all";
+    startDate || endDate || (!hidePicFilter && picId) || status || followUpFilter !== "all";
 
   return (
     <div className="space-y-3">
@@ -114,24 +116,26 @@ export function FilterBar({
               style={{ minHeight: "40px" }}
             />
           </div>
-          <div>
-            <label className="text-xs font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-              PIC
-            </label>
-            <select
-              value={picId}
-              onChange={(e) => onPicChange(e.target.value)}
-              className="input-field w-full text-sm"
-              style={{ minHeight: "40px" }}
-            >
-              <option value="">Semua PIC</option>
-              {pics.map((pic) => (
-                <option key={pic.id} value={pic.id}>
-                  {pic.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!hidePicFilter && (
+            <div>
+              <label className="text-xs font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
+                PIC
+              </label>
+              <select
+                value={picId}
+                onChange={(e) => onPicChange(e.target.value)}
+                className="input-field w-full text-sm"
+                style={{ minHeight: "40px" }}
+              >
+                <option value="">Semua PIC</option>
+                {pics.map((pic) => (
+                  <option key={pic.id} value={pic.id}>
+                    {pic.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <label className="text-xs font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
               Status Lead

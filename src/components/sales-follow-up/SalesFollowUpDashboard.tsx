@@ -31,8 +31,16 @@ import type {
   CreateFollowUpInput,
 } from "@/lib/sales-follow-up/types";
 
-export function SalesFollowUpDashboard() {
+export function SalesFollowUpDashboard({
+  mode = "admin",
+}: {
+  mode?: "admin" | "sales";
+}) {
   const router = useRouter();
+  const isSales = mode === "sales";
+  const detailBase = isSales
+    ? "/dashboard/sales/sales-follow-up/leads"
+    : "/admin/sales-follow-up/leads";
   const { toasts, toast, removeToast } = useToast();
 
   // Filters
@@ -302,9 +310,13 @@ export function SalesFollowUpDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="page-title">Sales Follow-Up Dashboard</h1>
+          <h1 className="page-title">
+            {isSales ? "My Sales Follow-Up" : "Sales Follow-Up Dashboard"}
+          </h1>
           <p className="page-subtitle mt-1">
-            Pantau aktiviti follow-up dan prestasi pasukan jualan
+            {isSales
+              ? "Pantau follow-up lead yang assigned kepada anda"
+              : "Pantau aktiviti follow-up dan prestasi pasukan jualan"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -337,6 +349,7 @@ export function SalesFollowUpDashboard() {
         search={search}
         followUpFilter={followUpFilter}
         pics={pics}
+        hidePicFilter={isSales}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
         onPicChange={setPicId}
@@ -399,7 +412,8 @@ export function SalesFollowUpDashboard() {
       <LeadTable
         leads={leads}
         loading={loadingLeads}
-        onView={(lead) => router.push(`/admin/sales-follow-up/leads/${lead.id}`)}
+        canDelete={!isSales}
+        onView={(lead) => router.push(`${detailBase}/${lead.id}`)}
         onAddFollowUp={(lead) => {
           setFollowUpTarget(lead);
         }}
@@ -418,6 +432,9 @@ export function SalesFollowUpDashboard() {
           setEditLead(null);
         }}
         onSave={async (data) => {
+          if (isSales && pics[0]?.id) {
+            data.assigned_pic_id = pics[0].id;
+          }
           if (editLead) {
             await handleUpdateLead(editLead.id, data);
           } else {
@@ -426,6 +443,7 @@ export function SalesFollowUpDashboard() {
         }}
         pics={pics}
         editLead={editLead}
+        lockPic={isSales}
       />
 
       {followUpTarget && (

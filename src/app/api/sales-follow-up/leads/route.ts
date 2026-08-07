@@ -5,20 +5,30 @@ import {
   createLead,
   checkDuplicatePhone,
 } from "@/lib/sales-follow-up/service";
+import { resolveScopedPicId } from "@/lib/sales-follow-up/access";
 import type { FollowUpFilterParams, CreateLeadInput } from "@/lib/sales-follow-up/types";
 
 export async function GET(request: Request) {
   const ctx = await getAuthenticatedContext();
-  if (!ctx || ctx.role !== "admin") {
+  if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
+  const scoped = await resolveScopedPicId(
+    ctx.db,
+    ctx.role,
+    ctx.user.id,
+    searchParams.get("picId")
+  );
+  if (scoped.error) {
+    return NextResponse.json({ error: scoped.error }, { status: 403 });
+  }
 
   const filters: FollowUpFilterParams = {
     startDate: searchParams.get("startDate") || undefined,
     endDate: searchParams.get("endDate") || undefined,
-    picId: searchParams.get("picId") || undefined,
+    picId: scoped.picId,
     status: searchParams.get("status") as FollowUpFilterParams["status"],
     search: searchParams.get("search") || undefined,
     followUpFilter: (searchParams.get("followUpFilter") as FollowUpFilterParams["followUpFilter"]) || "all",
@@ -35,7 +45,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const ctx = await getAuthenticatedContext();
-  if (!ctx || ctx.role !== "admin") {
+  if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -44,6 +54,21 @@ export async function POST(request: Request) {
 
     if (!body.phone_number || !body.phone_number.trim()) {
       return NextResponse.json({ error: "Nombor telefon diperlukan." }, { status: 400 });
+    }
+
+    const scoped = await resolveScopedPicId(
+      ctx.db,
+      ctx.role,
+      ctx.user.id,
+      body.assigned_pic_id
+    );
+    if (scoped.error) {
+      return NextResponse.json({ error: scoped.error }, { status: 403 });
+    }
+
+    // Sales can only assign to themselves.
+    if (ctx.role === "sales") {
+      body.assigned_pic_id = scoped.picId;
     }
 
     const isDuplicate = await checkDuplicatePhone(ctx.db, body.phone_number);

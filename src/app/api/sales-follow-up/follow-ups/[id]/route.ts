@@ -7,8 +7,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const ctx = await getAuthenticatedContext();
-  if (!ctx || ctx.role !== "admin") {
+  if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (ctx.role !== "admin") {
+    return NextResponse.json({ error: "Hanya admin boleh padam follow-up." }, { status: 403 });
   }
 
   const { id } = await params;

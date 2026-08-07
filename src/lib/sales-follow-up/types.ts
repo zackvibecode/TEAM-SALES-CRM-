@@ -26,6 +26,7 @@ export interface SalesPic {
   email: string | null;
   phone: string | null;
   status: PicStatus;
+  user_id?: string | null;
   created_at: string;
   updated_at: string;
 }

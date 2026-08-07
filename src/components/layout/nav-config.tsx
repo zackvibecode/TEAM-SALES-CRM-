@@ -55,6 +55,7 @@ export function getSalesNavItems(t: AppCopy): NavItem[] {
     { label: t.nav.myTasks, href: "/dashboard/sales/tasks", icon: <List className="w-4 h-4" /> },
     { label: t.nav.activityLog, href: "/dashboard/sales/activity", icon: <Activity className="w-4 h-4" /> },
     { label: t.nav.followUpQueue, href: "/dashboard/sales/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
+    { label: t.nav.salesFollowUp, href: "/dashboard/sales/sales-follow-up", icon: <PhoneCall className="w-4 h-4" /> },
     { label: t.nav.whatsappMessage, href: "/dashboard/sales/message", icon: <MessageCircle className="w-4 h-4" /> },
     { label: t.nav.teamSales, href: "/dashboard/sales/team-sales", icon: <TrendingUp className="w-4 h-4" /> },
   ];

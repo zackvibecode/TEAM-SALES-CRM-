@@ -22,6 +22,7 @@ import type { SalesLeadWithLastFollowUp } from "@/lib/sales-follow-up/types";
 interface LeadTableProps {
   leads: SalesLeadWithLastFollowUp[];
   loading: boolean;
+  canDelete?: boolean;
   onView: (lead: SalesLeadWithLastFollowUp) => void;
   onAddFollowUp: (lead: SalesLeadWithLastFollowUp) => void;
   onEdit: (lead: SalesLeadWithLastFollowUp) => void;
@@ -31,6 +32,7 @@ interface LeadTableProps {
 export function LeadTable({
   leads,
   loading,
+  canDelete = true,
   onView,
   onAddFollowUp,
   onEdit,
@@ -199,7 +201,8 @@ export function LeadTable({
                     />
 
                     <div className="relative">
-                      {showConfirm === lead.id ? (
+                      {canDelete &&
+                        (showConfirm === lead.id ? (
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleDelete(lead)}
@@ -228,7 +231,7 @@ export function LeadTable({
                           icon={<Trash2 className="size-3.5" />}
                           colorClass="text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
                         />
-                      )}
+                      ))}
                     </div>
                   </div>
                 </td>

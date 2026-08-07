@@ -66,6 +66,20 @@ GRANT ALL ON TABLE public.sales_pics TO postgres, anon, authenticated, service_r
 GRANT ALL ON TABLE public.sales_leads TO postgres, anon, authenticated, service_role;
 GRANT ALL ON TABLE public.lead_follow_ups TO postgres, anon, authenticated, service_role;
 
+-- Link PIC ke akaun login (untuk sales user nampak data sendiri)
+ALTER TABLE public.sales_pics
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_sales_pics_user_id ON public.sales_pics(user_id);
+
+-- Auto-link PIC name dengan profiles.full_name (jika belum linked)
+UPDATE public.sales_pics sp
+SET user_id = p.id
+FROM public.profiles p
+WHERE sp.user_id IS NULL
+  AND p.full_name IS NOT NULL
+  AND lower(trim(sp.name)) = lower(trim(p.full_name));
+
 -- Seed PIC jika kosong
 INSERT INTO public.sales_pics (name, status)
 SELECT v.name, 'active'

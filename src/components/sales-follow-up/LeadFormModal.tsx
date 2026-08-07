@@ -13,9 +13,10 @@ interface LeadFormModalProps {
   onSave: (data: CreateLeadInput) => Promise<void>;
   pics: SalesPic[];
   editLead?: SalesLead | null;
+  lockPic?: boolean;
 }
 
-export function LeadFormModal({ open, onClose, onSave, pics, editLead }: LeadFormModalProps) {
+export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic = false }: LeadFormModalProps) {
   const [customerName, setCustomerName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [destination, setDestination] = useState("");
@@ -43,13 +44,13 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead }: LeadFor
       setPhoneNumber("");
       setDestination("");
       setSource("");
-      setAssignedPicId("");
+      setAssignedPicId(lockPic && pics[0]?.id ? pics[0].id : "");
       setLeadStatus("New");
       setNextFollowUpDate("");
       setNotes("");
     }
     setError("");
-  }, [open, editLead]);
+  }, [open, editLead, lockPic, pics]);
 
   if (!open) return null;
 
@@ -205,6 +206,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead }: LeadFor
                 value={assignedPicId}
                 onChange={(e) => setAssignedPicId(e.target.value)}
                 className="input-field w-full text-sm"
+                disabled={lockPic}
               >
                 <option value="">Pilih PIC</option>
                 {pics.map((pic) => (

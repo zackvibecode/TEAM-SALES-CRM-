@@ -5,7 +5,7 @@ const REQUIRED_TABLES = ["sales_pics", "sales_leads", "lead_follow_ups"] as cons
 
 export async function GET() {
   const ctx = await getAuthenticatedContext();
-  if (!ctx || ctx.role !== "admin") {
+  if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -43,5 +43,5 @@ export async function GET() {
     );
   }
 
-  return NextResponse.json({ ok: true, details });
+  return NextResponse.json({ ok: true, details, role: ctx.role });
 }
