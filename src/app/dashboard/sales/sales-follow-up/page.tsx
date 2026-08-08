@@ -2,7 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import AppLayout from "@/components/layout/AppLayout";
 import { SalesFollowUpDashboard } from "@/components/sales-follow-up/SalesFollowUpDashboard";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function SalesUserFollowUpPage() {
   const auth = await createServerSupabaseClient();

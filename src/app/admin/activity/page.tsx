@@ -3,7 +3,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { AdminActivityView } from "@/components/activity/AdminActivityView";
 import { fetchWhatsAppActivityLogs, fetchWhatsAppRateLimitWarnings } from "@/lib/activity-log";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function AdminActivityPage() {
   const auth = await createServerSupabaseClient();

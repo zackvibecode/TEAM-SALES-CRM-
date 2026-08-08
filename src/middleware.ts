@@ -34,8 +34,15 @@ function dashboardRedirect(request: NextRequest, role: string) {
 
 async function resolveRole(
   supabase: ReturnType<typeof createServerClient>,
-  userId: string
+  userId: string,
+  request: NextRequest
 ): Promise<"admin" | "sales" | null> {
+  // Check cached role from cookie (5 min TTL) to skip DB call on repeat requests
+  const cachedRole = request.cookies.get("x-user-role")?.value;
+  if (cachedRole === "admin" || cachedRole === "sales") {
+    return cachedRole;
+  }
+
   try {
     const { data: roleFromRpc } = await supabase.rpc("get_user_role", {
       user_id: userId,
@@ -108,10 +115,17 @@ export async function middleware(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    const role = await resolveRole(supabase, user.id);
+    const role = await resolveRole(supabase, user.id, request);
     if (role !== "admin") {
       return NextResponse.json({ error: "Admin only" }, { status: 403 });
     }
+    supabaseResponse.cookies.set("x-user-role", role, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 300,
+      path: "/",
+    });
     return supabaseResponse;
   }
 
@@ -133,9 +147,17 @@ export async function middleware(request: NextRequest) {
 
     // /login: if already authenticated, send to the right home.
     if (pathname === "/login" && sessionUser) {
-      const role = await resolveRole(supabase, sessionUser.id);
+      const role = await resolveRole(supabase, sessionUser.id, request);
       if (role) {
-        return dashboardRedirect(request, role);
+        const redirect = dashboardRedirect(request, role);
+        redirect.cookies.set("x-user-role", role, {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 300,
+          path: "/",
+        });
+        return redirect;
       }
       // Session exists but role missing — allow login page so user can recover.
       return supabaseResponse;
@@ -149,10 +171,18 @@ export async function middleware(request: NextRequest) {
     return loginRedirect(request);
   }
 
-  const role = await resolveRole(supabase, sessionUser.id);
+  const role = await resolveRole(supabase, sessionUser.id, request);
   if (!role) {
     return loginRedirect(request);
   }
+
+  supabaseResponse.cookies.set("x-user-role", role, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 300,
+    path: "/",
+  });
 
   // Non-admins cannot open admin pages.
   if (pathname.startsWith("/admin") && role !== "admin") {

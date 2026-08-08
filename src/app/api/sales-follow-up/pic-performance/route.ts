@@ -31,6 +31,22 @@ export async function GET(request: Request) {
   };
 
   try {
+    if (type === "all") {
+      const [perfData, chartRes] = await Promise.all([
+        getPicPerformance(ctx.db, filters),
+        getChartData(ctx.db, filters),
+      ]);
+      const chartData =
+        ctx.role === "sales" && scoped.pic
+          ? chartRes.filter((row) => row.pic_name === scoped.pic!.name)
+          : chartRes;
+      const performance =
+        ctx.role === "sales" && scoped.picId
+          ? perfData.filter((row) => row.pic_id === scoped.picId)
+          : perfData;
+      return NextResponse.json({ chartData, performance });
+    }
+
     if (type === "chart") {
       const data = await getChartData(ctx.db, filters);
       const chartData =

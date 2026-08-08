@@ -144,32 +144,18 @@ export function SalesFollowUpDashboard({
     }
   }, [buildFilterParams]);
 
-  const fetchChart = useCallback(async () => {
+  const fetchChartAndPerformance = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (startDate) params.set("startDate", startDate);
       if (endDate) params.set("endDate", endDate);
       if (picId) params.set("picId", picId);
       if (status) params.set("status", status);
-      params.set("type", "chart");
+      params.set("type", "all");
       const res = await fetch(`/api/sales-follow-up/pic-performance?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setChartData(data.chartData || []);
-      }
-    } catch {}
-  }, [startDate, endDate, picId, status]);
-
-  const fetchPerformance = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (startDate) params.set("startDate", startDate);
-      if (endDate) params.set("endDate", endDate);
-      if (picId) params.set("picId", picId);
-      if (status) params.set("status", status);
-      const res = await fetch(`/api/sales-follow-up/pic-performance?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
         setPerformance(data.performance || []);
       }
     } catch {}
@@ -201,9 +187,8 @@ export function SalesFollowUpDashboard({
     if (!dbReady) return;
     fetchStats();
     fetchLeads();
-    fetchChart();
-    fetchPerformance();
-  }, [dbReady, fetchStats, fetchLeads, fetchChart, fetchPerformance]);
+    fetchChartAndPerformance();
+  }, [dbReady, fetchStats, fetchLeads, fetchChartAndPerformance]);
 
   // CRUD handlers
   async function handleCreateLead(data: CreateLeadInput) {
@@ -217,8 +202,7 @@ export function SalesFollowUpDashboard({
     toast("Lead berjaya ditambah.", "success");
     fetchStats();
     fetchLeads();
-    fetchChart();
-    fetchPerformance();
+    fetchChartAndPerformance();
   }
 
   async function handleUpdateLead(leadId: string, data: Partial<CreateLeadInput>) {
@@ -233,8 +217,7 @@ export function SalesFollowUpDashboard({
     setEditLead(null);
     fetchStats();
     fetchLeads();
-    fetchChart();
-    fetchPerformance();
+    fetchChartAndPerformance();
   }
 
   async function handleDeleteLead(lead: SalesLeadWithLastFollowUp) {
@@ -248,8 +231,7 @@ export function SalesFollowUpDashboard({
     toast("Lead berjaya dipadam.", "success");
     fetchStats();
     fetchLeads();
-    fetchChart();
-    fetchPerformance();
+    fetchChartAndPerformance();
   }
 
   async function handleCreateFollowUp(data: CreateFollowUpInput) {
@@ -264,8 +246,7 @@ export function SalesFollowUpDashboard({
     setFollowUpTarget(null);
     fetchStats();
     fetchLeads();
-    fetchChart();
-    fetchPerformance();
+    fetchChartAndPerformance();
   }
 
   function handleExportCsv() {
@@ -285,8 +266,7 @@ export function SalesFollowUpDashboard({
       fetchPics();
       fetchStats();
       fetchLeads();
-      fetchChart();
-      fetchPerformance();
+      fetchChartAndPerformance();
     })();
   }
 

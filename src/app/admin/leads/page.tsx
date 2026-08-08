@@ -4,7 +4,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { AdminPageShell } from "@/components/i18n/PageShells";
 import { AllLeadsClient } from "./client";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function AdminAllLeadsPage() {
   const auth = await createServerSupabaseClient();

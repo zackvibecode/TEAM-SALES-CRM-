@@ -3,7 +3,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { AdminPageShell } from "@/components/i18n/PageShells";
 import { FollowUpQueue } from "@/components/follow-up/FollowUpQueue";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function AdminFollowUpsPage() {
   const auth = await createServerSupabaseClient();

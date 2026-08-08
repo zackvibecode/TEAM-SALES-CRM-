@@ -3,7 +3,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { SalesPremiumDashboard } from "@/components/sales/SalesPremiumDashboard";
 import { getCachedSalesDashboard } from "@/lib/cache/sales-dashboard";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function SalesDashboardPage() {
   const auth = await createServerSupabaseClient();

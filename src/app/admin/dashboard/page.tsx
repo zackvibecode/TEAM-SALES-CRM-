@@ -3,7 +3,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { AdminDashboardClient } from "./client";
 import { getCachedAdminDashboard } from "@/lib/cache/admin-dashboard";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function AdminDashboardPage() {
   const auth = await createServerSupabaseClient();

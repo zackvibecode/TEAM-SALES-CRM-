@@ -6,7 +6,7 @@ import { getAppCopy } from "@/lib/i18n/get-copy";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { headers } from "next/headers";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function AdminTeamSalesPage() {
   const auth = await createServerSupabaseClient();

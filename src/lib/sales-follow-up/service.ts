@@ -471,55 +471,70 @@ export async function getPicPerformance(
   filters: FollowUpFilterParams
 ): Promise<PicPerformanceRow[]> {
   const pics = await getPics(db);
-  const result: PicPerformanceRow[] = [];
+  if (pics.length === 0) return [];
+
+  const picIds = pics.map((p) => p.id);
+  const picNameMap = new Map(pics.map((p) => [p.id, p.name]));
   const today = todayKL();
 
-  for (const pic of pics) {
-    let leadQuery = db
-      .from("sales_leads")
-      .select("id, lead_status, total_follow_ups, next_follow_up_date, created_at", { count: "exact" })
-      .eq("assigned_pic_id", pic.id);
+  // Bulk fetch ALL leads and follow-ups in 2 queries instead of N+1 per-PIC loop
+  let leadQuery = db
+    .from("sales_leads")
+    .select("id, assigned_pic_id, lead_status, total_follow_ups, next_follow_up_date, created_at")
+    .in("assigned_pic_id", picIds);
 
-    let fuQuery = db
-      .from("lead_follow_ups")
-      .select("id", { count: "exact" })
-      .eq("pic_id", pic.id);
+  let fuQuery = db
+    .from("lead_follow_ups")
+    .select("id, lead_id, pic_id, follow_up_date")
+    .in("pic_id", picIds);
 
-    if (filters.startDate) {
-      leadQuery = leadQuery.gte("created_at", `${filters.startDate}T00:00:00`);
-      fuQuery = fuQuery.gte("follow_up_date", filters.startDate);
-    }
-    if (filters.endDate) {
-      leadQuery = leadQuery.lte("created_at", `${filters.endDate}T23:59:59.999Z`);
-      fuQuery = fuQuery.lte("follow_up_date", filters.endDate);
-    }
-    if (filters.status) {
-      leadQuery = leadQuery.eq("lead_status", filters.status);
-    }
+  if (filters.startDate) {
+    leadQuery = leadQuery.gte("created_at", `${filters.startDate}T00:00:00`);
+    fuQuery = fuQuery.gte("follow_up_date", filters.startDate);
+  }
+  if (filters.endDate) {
+    leadQuery = leadQuery.lte("created_at", `${filters.endDate}T23:59:59.999Z`);
+    fuQuery = fuQuery.lte("follow_up_date", filters.endDate);
+  }
+  if (filters.status) {
+    leadQuery = leadQuery.eq("lead_status", filters.status);
+  }
 
-    const { data: picLeads, error: leadErr } = await leadQuery;
-    if (leadErr) continue;
+  const [{ data: allLeads }, { data: allFollowUps }] = await Promise.all([leadQuery, fuQuery]);
 
-    const leads = (picLeads ?? []) as Array<{
-      id: string;
-      lead_status: string;
-      total_follow_ups: number;
-      next_follow_up_date: string | null;
-    }>;
+  const leads = (allLeads ?? []) as Array<{
+    id: string;
+    assigned_pic_id: string;
+    lead_status: string;
+    total_follow_ups: number;
+    next_follow_up_date: string | null;
+  }>;
+  const followUps = (allFollowUps ?? []) as Array<{
+    lead_id: string;
+    pic_id: string;
+    follow_up_date: string;
+  }>;
 
-    let fuCount = 0;
-    if (leads.length > 0) {
-      const leadIds = leads.map((l) => l.id);
-      fuQuery = fuQuery.in("lead_id", leadIds);
-      const { count: fuTotal } = await fuQuery;
-      fuCount = fuTotal ?? 0;
-    }
+  // Group by PIC
+  const leadsByPic = new Map<string, typeof leads>();
+  const fuByPic = new Map<string, number>();
+  for (const l of leads) {
+    if (!leadsByPic.has(l.assigned_pic_id)) leadsByPic.set(l.assigned_pic_id, []);
+    leadsByPic.get(l.assigned_pic_id)!.push(l);
+  }
+  for (const fu of followUps) {
+    fuByPic.set(fu.pic_id, (fuByPic.get(fu.pic_id) ?? 0) + 1);
+  }
 
-    const leadsAssigned = leads.length;
-    const leadsFollowedUp = leads.filter((l) => l.total_follow_ups >= 1).length;
-    const leadsWith3Plus = leads.filter((l) => l.total_follow_ups >= 3).length;
-    const noFollowUp = leads.filter((l) => l.total_follow_ups === 0).length;
-    const overdue = leads.filter(
+  const result: PicPerformanceRow[] = [];
+  for (const picId of picIds) {
+    const picLeads = leadsByPic.get(picId) ?? [];
+    const fuCount = fuByPic.get(picId) ?? 0;
+    const leadsAssigned = picLeads.length;
+    const leadsFollowedUp = picLeads.filter((l) => l.total_follow_ups >= 1).length;
+    const leadsWith3Plus = picLeads.filter((l) => l.total_follow_ups >= 3).length;
+    const noFollowUp = picLeads.filter((l) => l.total_follow_ups === 0).length;
+    const overdue = picLeads.filter(
       (l) =>
         l.next_follow_up_date &&
         l.next_follow_up_date < today &&
@@ -528,8 +543,8 @@ export async function getPicPerformance(
     ).length;
 
     result.push({
-      pic_id: pic.id,
-      pic_name: pic.name,
+      pic_id: picId,
+      pic_name: picNameMap.get(picId) ?? "Unknown",
       leads_assigned: leadsAssigned,
       total_follow_up_activities: fuCount,
       leads_followed_up: leadsFollowedUp,
@@ -549,49 +564,67 @@ export async function getChartData(
   filters: FollowUpFilterParams
 ): Promise<ChartDataPoint[]> {
   const pics = await getPics(db);
+  if (pics.length === 0) return [];
+
+  const picIds = pics.map((p) => p.id);
+  const picNameMap = new Map(pics.map((p) => [p.id, p.name]));
+
+  // Bulk fetch ALL leads and follow-ups in 2 queries instead of N+1 per-PIC loop
+  let leadQuery = db
+    .from("sales_leads")
+    .select("id, assigned_pic_id, total_follow_ups, created_at")
+    .in("assigned_pic_id", picIds);
+
+  let fuQuery = db
+    .from("lead_follow_ups")
+    .select("id, lead_id, pic_id, follow_up_date")
+    .in("pic_id", picIds);
+
+  if (filters.startDate) {
+    leadQuery = leadQuery.gte("created_at", `${filters.startDate}T00:00:00`);
+    fuQuery = fuQuery.gte("follow_up_date", filters.startDate);
+  }
+  if (filters.endDate) {
+    leadQuery = leadQuery.lte("created_at", `${filters.endDate}T23:59:59.999Z`);
+    fuQuery = fuQuery.lte("follow_up_date", filters.endDate);
+  }
+  if (filters.status) {
+    leadQuery = leadQuery.eq("lead_status", filters.status);
+  }
+
+  const [{ data: allLeads }, { data: allFollowUps }] = await Promise.all([leadQuery, fuQuery]);
+
+  const leads = (allLeads ?? []) as Array<{
+    id: string;
+    assigned_pic_id: string;
+    total_follow_ups: number;
+  }>;
+  const followUps = (allFollowUps ?? []) as Array<{
+    lead_id: string;
+    pic_id: string;
+  }>;
+
+  const leadsByPic = new Map<string, typeof leads>();
+  const fuByPic = new Map<string, number>();
+  for (const l of leads) {
+    if (!leadsByPic.has(l.assigned_pic_id)) leadsByPic.set(l.assigned_pic_id, []);
+    leadsByPic.get(l.assigned_pic_id)!.push(l);
+  }
+  for (const fu of followUps) {
+    fuByPic.set(fu.pic_id, (fuByPic.get(fu.pic_id) ?? 0) + 1);
+  }
+
   const result: ChartDataPoint[] = [];
-
-  for (const pic of pics) {
-    let leadQuery = db
-      .from("sales_leads")
-      .select("id, total_follow_ups", { count: "exact" })
-      .eq("assigned_pic_id", pic.id);
-
-    let fuQuery = db
-      .from("lead_follow_ups")
-      .select("id", { count: "exact" })
-      .eq("pic_id", pic.id);
-
-    if (filters.startDate) {
-      leadQuery = leadQuery.gte("created_at", `${filters.startDate}T00:00:00`);
-      fuQuery = fuQuery.gte("follow_up_date", filters.startDate);
-    }
-    if (filters.endDate) {
-      leadQuery = leadQuery.lte("created_at", `${filters.endDate}T23:59:59.999Z`);
-      fuQuery = fuQuery.lte("follow_up_date", filters.endDate);
-    }
-    if (filters.status) {
-      leadQuery = leadQuery.eq("lead_status", filters.status);
-    }
-
-    const { data: picLeads, error: leadErr } = await leadQuery;
-    if (leadErr) continue;
-
-    const leads = (picLeads ?? []) as Array<{ id: string; total_follow_ups: number }>;
-
-    let fuCount = 0;
-    if (leads.length > 0) {
-      fuQuery = fuQuery.in("lead_id", leads.map((l) => l.id));
-      const { count: fuTotal } = await fuQuery;
-      fuCount = fuTotal ?? 0;
-    }
+  for (const picId of picIds) {
+    const picLeads = leadsByPic.get(picId) ?? [];
+    const fuCount = fuByPic.get(picId) ?? 0;
 
     result.push({
-      pic_name: pic.name,
+      pic_name: picNameMap.get(picId) ?? "Unknown",
       total_activities: fuCount,
-      leads_assigned: leads.length,
-      leads_followed_up: leads.filter((l) => l.total_follow_ups >= 1).length,
-      leads_three_plus: leads.filter((l) => l.total_follow_ups >= 3).length,
+      leads_assigned: picLeads.length,
+      leads_followed_up: picLeads.filter((l) => l.total_follow_ups >= 1).length,
+      leads_three_plus: picLeads.filter((l) => l.total_follow_ups >= 3).length,
     });
   }
 
