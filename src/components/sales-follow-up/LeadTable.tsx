@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Eye,
   MessageCircle,
-  Plus,
   Pencil,
   Trash2,
   Loader2,
@@ -179,11 +178,19 @@ export function LeadTable({
                   <div className="flex items-center justify-center gap-1.5 flex-wrap">
                     <button
                       type="button"
-                      onClick={() => onAddFollowUp(lead)}
+                      onClick={() => {
+                        openWhatsApp(lead.normalized_phone_number);
+                        fetch("/api/sales-follow-up/log-click", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ lead_id: lead.id, phone: lead.phone_number }),
+                        }).catch(() => {});
+                        onAddFollowUp(lead);
+                      }}
                       className="btn-primary-solid inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5"
-                      title="Rekod follow-up baru"
+                      title="WhatsApp & rekod follow-up baru"
                     >
-                      <Plus className="size-3.5" />
+                      <Phone className="size-3.5" />
                       Follow-Up
                     </button>
                     <ActionBtn
