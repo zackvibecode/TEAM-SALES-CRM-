@@ -1,38 +1,37 @@
 import { NextResponse } from "next/server";
 import { CRM_PUBLIC_BASE_URL } from "@/lib/agent-api-key";
 
-/** Public instructions — no auth. Hermes can read this before connecting. */
+/** Public instructions — no auth. */
 export async function GET() {
   return NextResponse.json({
-    service: "Zaqone CRM Agent API",
-    auth: "API key only (zaqone_...). No email. No password. No browser login.",
+    service: "Zaqone CRM Agent + MCP",
+    auth: "MCP Plugin = OAuth + paste zaqone_ key on authorize page. Custom GPT Actions = X-API-Key. Never email/password.",
     base_url: CRM_PUBLIC_BASE_URL,
-    test_connection: `${CRM_PUBLIC_BASE_URL}/api/agent/test?api_key=YOUR_KEY`,
-    chatgpt_openapi: `${CRM_PUBLIC_BASE_URL}/api/agent/openapi`,
-    chatgpt_setup: [
-      "1. Admin CRM → AI API Key (/admin/api-key) → Generate & copy zaqone_...",
-      "2. Same page → section ChatGPT Custom GPT — follow docs + copy OpenAPI URL",
-      "3. ChatGPT → Create a GPT → Configure → Actions → Import from URL",
-      `4. Paste: ${CRM_PUBLIC_BASE_URL}/agent-openapi.json (or /api/agent/openapi)`,
-      "5. Authentication → API Key → Header name X-API-Key → paste zaqone_ key",
-      "6. Save GPT, then ask: List sales users / Summary for alip last 30 days",
-    ],
+    mcp_url: `${CRM_PUBLIC_BASE_URL}/api/mcp`,
+    chatgpt_openapi: `${CRM_PUBLIC_BASE_URL}/agent-openapi.json`,
     admin_docs_url: `${CRM_PUBLIC_BASE_URL}/admin/api-key#chatgpt`,
-    how_to_send_key: [
-      "Header: X-API-Key: zaqone_...",
-      "Query: ?api_key=zaqone_...",
-      "Header: Authorization: Bearer zaqone_...",
+    chatgpt_mcp_setup: [
+      "1. Admin → AI API Key / ChatGPT → Generate zaqone_...",
+      `2. ChatGPT New Plugin → Server URL = ${CRM_PUBLIC_BASE_URL}/api/mcp`,
+      "3. Authentication = OAuth (not API key field in that screen)",
+      "4. Create → authorize page → paste zaqone_ key → Authorize",
+      "5. Ask: List sales users / Summary for alip last 30 days",
+    ],
+    chatgpt_actions_setup: [
+      "1. Create a GPT → Actions → Import OpenAPI URL",
+      `2. ${CRM_PUBLIC_BASE_URL}/agent-openapi.json`,
+      "3. Auth = API Key header X-API-Key",
+    ],
+    do_not: [
+      "Do NOT paste agent-openapi.json into MCP Plugin Server URL",
+      "Do NOT open CRM website login",
+      "Do NOT use email/password",
     ],
     endpoints: [
-      { path: "/api/agent/test", desc: "Test connection (start here)" },
-      { path: "/api/agent/sales-users", desc: "List all sales reps" },
+      { path: "/api/mcp", desc: "ChatGPT MCP Plugin (OAuth)" },
+      { path: "/api/agent/test", desc: "REST test connection" },
+      { path: "/api/agent/sales-users", desc: "List sales reps" },
       { path: "/api/agent/sales-user/{slug}/summary?days=30", desc: "Performance summary" },
-      { path: "/api/agent/sales-user/{slug}/activity?limit=50", desc: "Recent activity" },
     ],
-    example_slugs: { SHIEMA: "shiema", ALIP: "alip" },
-    hermes_env: {
-      ZAQONE_CRM_URL: CRM_PUBLIC_BASE_URL,
-      ZAQONE_API_KEY: "paste zaqone_ key from Admin dashboard",
-    },
   });
 }

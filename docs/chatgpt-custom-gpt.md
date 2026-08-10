@@ -1,51 +1,43 @@
-# ChatGPT Custom GPT → Zaqone SaleCRM (Cara 1)
+# ChatGPT → Zaqone SaleCRM
 
-Connect ChatGPT to SaleCRM using the existing **Agent API**.  
-No MCP server needed. Auth = API key only (`zaqone_...`).
+## Which method?
 
-**Never** ask ChatGPT (or the GPT) to open the CRM login page or use email/password.
+| Screen in ChatGPT | Use this URL | Auth |
+|-------------------|--------------|------|
+| **New Plugin / Custom MCP** | `https://salescrm.zaqone.com/api/mcp` | **OAuth** |
+| Create a GPT → Actions | `https://salescrm.zaqone.com/agent-openapi.json` | API Key (`X-API-Key`) |
 
----
-
-## Prerequisites
-
-- ChatGPT **Plus / Pro** (Custom GPTs)
-- Admin access to SaleCRM
-- Production URL: `https://salescrm.zaqone.com`
+**Wrong:** pasting `/agent-openapi.json` into the MCP Plugin “Server URL” field — that is OpenAPI, not MCP. Connection will fail.
 
 ---
 
-## 1. Generate API key
+## A) MCP Plugin (recommended for your screenshot)
 
-1. Login as **admin** → **AI API Key** (`/admin/api-key`)
-2. Click **Generate**
-3. Copy the key (`zaqone_...`) and store it safely  
-   - You may not see the full key again after leaving the page
-4. On the same page, open section **ChatGPT Custom GPT (Cara 1)** for live web docs (admin only)
-
-Test in browser or terminal:
-
-```text
-https://salescrm.zaqone.com/api/agent/test?api_key=zaqone_YOUR_KEY
-```
-
-Expected: `"ok": true`, `"connected": true`.
-
----
-
-## 2. Create a Custom GPT
-
-1. Open [ChatGPT](https://chatgpt.com) → **Explore GPTs** → **Create a GPT**
-2. Open tab **Configure**
+1. Admin CRM → **AI API Key / ChatGPT** → Generate & copy `zaqone_...`
+2. ChatGPT → **New Plugin**
 3. Fill:
+   - **Name:** `SALESCRM`
+   - **Connection:** Server URL
+   - **URL:** `https://salescrm.zaqone.com/api/mcp`
+   - **Authentication:** OAuth
+4. Tick the safety checkbox → **Create**
+5. ChatGPT opens SaleCRM authorize page → paste `zaqone_...` → **Authorize ChatGPT**
+6. Test prompts:
+   - `List sales users`
+   - `Summary for alip last 30 days`
+   - `Recent activity for shiema`
 
-| Field | Suggested value |
-|--------|------------------|
-| Name | Zaqone CRM |
-| Description | Ask about sales performance from SaleCRM |
-| Instructions | See block below |
+Admin live docs: `https://salescrm.zaqone.com/admin/api-key#chatgpt`
 
-### Instructions (paste into GPT)
+---
+
+## B) Custom GPT Actions (alternative)
+
+1. Create a GPT → Configure → Actions → Import from URL  
+   `https://salescrm.zaqone.com/agent-openapi.json`
+2. Auth: API Key → header `X-API-Key` → paste `zaqone_...`
+
+### GPT Instructions
 
 ```text
 You are the Zaqone SaleCRM assistant.
@@ -68,61 +60,23 @@ Typical tasks:
 
 ---
 
-## 3. Add Actions (OpenAPI)
+## Endpoints
 
-1. In the GPT editor → **Actions** → **Create new action**
-2. **Import from URL** (after this deploy is live):
+### MCP tools (`/api/mcp`)
+- `test_connection`
+- `list_sales_users`
+- `get_sales_summary`
+- `get_sales_activity`
+- `get_sales_daily_breakdown`
 
-```text
-https://salescrm.zaqone.com/agent-openapi.json
-```
-
-or:
-
-```text
-https://salescrm.zaqone.com/api/agent/openapi
-```
-
-3. **Authentication**
-   - Auth Type: **API Key**
-   - API Key → **Custom** / Header
-   - Header name: `X-API-Key`
-   - API Key value: paste `zaqone_...`
-
-4. Click **Save** / update action schema if prompted
-
----
-
-## 4. Test prompts
-
-After publishing/saving the GPT:
-
-- `Test CRM connection`
-- `List all sales users`
-- `Summary for alip last 30 days`
-- `Recent activity for shiema`
-- `Daily breakdown for fatin last 14 days`
-
----
-
-## Available endpoints
-
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/agent/help` | Public setup help (no auth) |
-| GET | `/api/agent/test` | Test key + connection |
-| GET | `/api/agent/sales-users` | List sales reps |
-| GET | `/api/agent/sales-user/{slug}/summary?days=30` | Performance summary |
-| GET | `/api/agent/sales-user/{slug}/activity?limit=50` | Recent activity |
-| GET | `/api/agent/sales-user/{slug}/daily-breakdown?days=30` | Daily breakdown |
-| GET | `/api/agent/openapi` | OpenAPI JSON for ChatGPT |
-| GET | `/agent-openapi.json` | Same schema (static file) |
-
-Auth (any one):
-
-- Header: `X-API-Key: zaqone_...`
-- Header: `Authorization: Bearer zaqone_...`
-- Query: `?api_key=zaqone_...`
+### REST Agent API (Custom GPT)
+| Method | Path |
+|--------|------|
+| GET | `/api/agent/test` |
+| GET | `/api/agent/sales-users` |
+| GET | `/api/agent/sales-user/{slug}/summary?days=30` |
+| GET | `/api/agent/sales-user/{slug}/activity?limit=50` |
+| GET | `/api/agent/sales-user/{slug}/daily-breakdown?days=30` |
 
 ---
 
@@ -130,25 +84,15 @@ Auth (any one):
 
 | Problem | Fix |
 |---------|-----|
-| 401 Invalid API key | Regenerate key in Admin; update GPT Actions auth |
-| 503 CRM API key not configured | Generate key in Admin settings first |
-| Import OpenAPI failed | Confirm URL opens in browser; wait for Vercel deploy |
-| GPT invents data | Remind it to use Actions; check Actions are enabled for the chat |
-| Wrong sales person | Ask GPT to list users first, use exact `slug` |
+| MCP Create fails / OAuth blank | URL must be `/api/mcp`, not openapi.json. Wait for deploy. |
+| Authorize page says API key wrong | Regenerate key in Admin → AI API Key |
+| 401 on tools | Re-connect plugin (OAuth again) |
+| Custom GPT invents data | Remind it to use Actions |
 
 ---
 
-## Security notes
+## Security
 
-- Treat `zaqone_...` like a password — do not commit it to git or share in chat logs
-- Rotate the key from Admin if leaked
-- This API is **read-oriented** sales monitor access; do not expose write admin tools without a separate review
-
----
-
-## Files in this repo
-
-- [`public/agent-openapi.json`](../public/agent-openapi.json) — schema for ChatGPT Actions
-- [`src/app/api/agent/openapi/route.ts`](../src/app/api/agent/openapi/route.ts) — serves OpenAPI
-- [`src/app/api/agent/help/route.ts`](../src/app/api/agent/help/route.ts) — live help JSON
-- [`src/lib/agent-auth.ts`](../src/lib/agent-auth.ts) — API key validation
+- Treat `zaqone_...` like a password
+- Admin only — do not share with sales
+- Read-oriented sales monitor access
