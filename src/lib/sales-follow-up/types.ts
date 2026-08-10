@@ -83,6 +83,10 @@ export interface DashboardStats {
   followed_up_three: number;
   no_follow_up: number;
   overdue: number;
+  /** Exact count: total_follow_ups === 1 */
+  follow_up_1: number;
+  /** Exact count: total_follow_ups === 2 */
+  follow_up_2: number;
 }
 
 export interface PicPerformanceRow {

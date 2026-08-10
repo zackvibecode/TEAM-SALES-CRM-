@@ -621,6 +621,8 @@ export async function getDashboardStats(
   const followedUpOnce = leadData.filter((l) => l.total_follow_ups >= 1).length;
   const followedUpThree = leadData.filter((l) => l.total_follow_ups >= 3).length;
   const noFollowUp = leadData.filter((l) => l.total_follow_ups === 0).length;
+  const followUp1 = leadData.filter((l) => l.total_follow_ups === 1).length;
+  const followUp2 = leadData.filter((l) => l.total_follow_ups === 2).length;
   const overdue = leadData.filter(
     (l) =>
       l.next_follow_up_date &&
@@ -636,6 +638,8 @@ export async function getDashboardStats(
     followed_up_three: followedUpThree,
     no_follow_up: noFollowUp,
     overdue,
+    follow_up_1: followUp1,
+    follow_up_2: followUp2,
   };
 }
 
