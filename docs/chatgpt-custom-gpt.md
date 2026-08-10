@@ -17,10 +17,11 @@ No MCP server needed. Auth = API key only (`zaqone_...`).
 
 ## 1. Generate API key
 
-1. Login as **admin** → Settings / panel **AI API Key**
+1. Login as **admin** → **AI API Key** (`/admin/api-key`)
 2. Click **Generate**
 3. Copy the key (`zaqone_...`) and store it safely  
    - You may not see the full key again after leaving the page
+4. On the same page, open section **ChatGPT Custom GPT (Cara 1)** for live web docs (admin only)
 
 Test in browser or terminal:
 
