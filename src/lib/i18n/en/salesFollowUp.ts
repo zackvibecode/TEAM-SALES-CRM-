@@ -8,7 +8,29 @@ export const enSalesFollowUp = {
   subtitleSales: "See how many times you have followed up — target minimum 3 times",
   addLead: "Add New Lead",
   uploadExcel: "Upload Excel",
+  editWaPretext: "Edit WhatsApp Pretext",
   refresh: "Refresh data",
+
+  // Stage tabs (always visible)
+  stageTabsLabel: "Separate by follow-up stage",
+  stageAll: "All",
+  stageNone: "Not followed up",
+  stageFu1: "Follow-Up 1",
+  stageFu2: "Follow-Up 2",
+  stageDone: "Done (3+)",
+
+  // WA SFU templates
+  waEditTitle: "Your WhatsApp messages",
+  waEditHint: "Custom text for Follow-Up 1 / 2 / 3. Use {name} for the customer name.",
+  waFu1: "Follow-Up 1 message",
+  waFu2: "Follow-Up 2 message",
+  waFu3: "Follow-Up 3 message",
+  waSave: "Save messages",
+  waResetDefaults: "Reset defaults",
+  waLoadFail: "Failed to load WhatsApp messages.",
+  waSaveFail: "Failed to save WhatsApp messages.",
+  waSetupHint: "Run sfu-wa-templates.sql in Supabase once so templates can be saved.",
+  toastWaSaved: "WhatsApp messages saved.",
 
   // Setup banner
   setupTitle: "Activate Sales Follow-Up (one-time)",
@@ -259,7 +281,27 @@ export const bmSalesFollowUp = {
   subtitleSales: "Tengok berapa kali dah follow customer anda — target minimum 3 kali",
   addLead: "Tambah Lead Baru",
   uploadExcel: "Muat Naik Excel",
+  editWaPretext: "Edit Pretext WhatsApp",
   refresh: "Segar semula data",
+
+  stageTabsLabel: "Asingkan ikut stage follow-up",
+  stageAll: "Semua",
+  stageNone: "Belum Follow-Up",
+  stageFu1: "Follow-Up 1",
+  stageFu2: "Follow-Up 2",
+  stageDone: "Dah Follow-Up (3+)",
+
+  waEditTitle: "Mesej WhatsApp anda",
+  waEditHint: "Tulis mesej sendiri untuk Follow-Up 1 / 2 / 3. Guna {name} untuk nama pelanggan.",
+  waFu1: "Mesej Follow-Up 1",
+  waFu2: "Mesej Follow-Up 2",
+  waFu3: "Mesej Follow-Up 3",
+  waSave: "Simpan mesej",
+  waResetDefaults: "Reset ke default",
+  waLoadFail: "Gagal muat mesej WhatsApp.",
+  waSaveFail: "Gagal simpan mesej WhatsApp.",
+  waSetupHint: "Jalankan sfu-wa-templates.sql dalam Supabase sekali supaya template boleh disimpan.",
+  toastWaSaved: "Mesej WhatsApp disimpan.",
 
   setupTitle: "Aktifkan Sales Follow-Up (sekali je)",
   setupBody:

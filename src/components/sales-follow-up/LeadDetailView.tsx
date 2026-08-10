@@ -17,7 +17,10 @@ import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { formatDate } from "@/lib/i18n/format";
 import { sfReplace } from "@/lib/i18n/en/salesFollowUp";
 import { mapSalesFollowUpApiError } from "@/lib/sales-follow-up/api-error";
-import { salesFollowUpWhatsAppLink } from "@/lib/sales-follow-up/whatsapp-messages";
+import {
+  salesFollowUpWhatsAppLink,
+  type SfuWaTemplates,
+} from "@/lib/sales-follow-up/whatsapp-messages";
 import { followUpStatusLabel } from "@/lib/sales-follow-up/labels";
 import { FollowUpProgressBadge } from "./FollowUpProgressBadge";
 import { SalesLeadStatusBadge } from "./SalesLeadStatusBadge";
@@ -57,13 +60,15 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
   const [justDone, setJustDone] = useState(false);
   const [lastFollowUpId, setLastFollowUpId] = useState<string | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
+  const [waTemplates, setWaTemplates] = useState<SfuWaTemplates>({});
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [leadRes, fuRes] = await Promise.all([
+      const [leadRes, fuRes, waRes] = await Promise.all([
         fetch(`/api/sales-follow-up/leads/${leadId}`),
         fetch(`/api/sales-follow-up/leads/${leadId}/follow-ups`),
+        fetch("/api/profile/sfu-wa-templates", { cache: "no-store" }),
       ]);
 
       if (leadRes.ok) {
@@ -73,6 +78,10 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
       if (fuRes.ok) {
         const fuData = await fuRes.json();
         setFollowUps(fuData.followUps || []);
+      }
+      if (waRes.ok) {
+        const waData = await waRes.json();
+        setWaTemplates(waData.templates || {});
       }
     } catch (err) {
       console.error(err);
@@ -95,7 +104,8 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
           salesFollowUpWhatsAppLink(
             lead.normalized_phone_number || lead.phone_number,
             nextNum,
-            lead.customer_name || ""
+            lead.customer_name || "",
+            waTemplates
           ),
           "_blank"
         );
@@ -170,7 +180,8 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
       salesFollowUpWhatsAppLink(
         lead.normalized_phone_number || lead.phone_number,
         nextNum,
-        lead.customer_name || ""
+        lead.customer_name || "",
+        waTemplates
       ),
       "_blank"
     );

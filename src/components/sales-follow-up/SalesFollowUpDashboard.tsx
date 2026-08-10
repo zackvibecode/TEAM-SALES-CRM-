@@ -14,6 +14,7 @@ import {
   Copy,
   Check,
   Upload,
+  MessageCircle,
 } from "lucide-react";
 import { DashboardMetricTile, DashboardMetricSection } from "@/components/shared/DashboardMetricTile";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
@@ -25,10 +26,15 @@ import { LeadFormModal } from "./LeadFormModal";
 import { PicPerformanceTable } from "./PicPerformanceTable";
 import { FollowUpIntroTip } from "./FollowUpIntroTip";
 import { UploadExcelModal } from "./UploadExcelModal";
+import { FollowUpStageTabs, type FollowUpStageValue } from "./FollowUpStageTabs";
+import { SfuWaTemplatesModal } from "./SfuWaTemplatesModal";
 import { ToastContainer, useToast } from "./Toast";
 import { SALES_FOLLOW_UP_SETUP_SQL } from "@/lib/sales-follow-up/setup-sql";
 import { mapSalesFollowUpApiError } from "@/lib/sales-follow-up/api-error";
-import { salesFollowUpWhatsAppLink } from "@/lib/sales-follow-up/whatsapp-messages";
+import {
+  salesFollowUpWhatsAppLink,
+  type SfuWaTemplates,
+} from "@/lib/sales-follow-up/whatsapp-messages";
 import type {
   SalesPic,
   SalesLead,
@@ -73,9 +79,13 @@ export function SalesFollowUpDashboard({
     followed_up_three: 0,
     no_follow_up: 0,
     overdue: 0,
+    follow_up_1: 0,
+    follow_up_2: 0,
   });
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [performance, setPerformance] = useState<PicPerformanceRow[]>([]);
+  const [waTemplates, setWaTemplates] = useState<SfuWaTemplates>({});
+  const [showWaTemplates, setShowWaTemplates] = useState(false);
 
   // UI state
   const [loadingLeads, setLoadingLeads] = useState(true);
@@ -199,6 +209,19 @@ export function SalesFollowUpDashboard({
   }, [checkHealth, fetchPics]);
 
   useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch("/api/profile/sfu-wa-templates", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        setWaTemplates(data.templates || {});
+      } catch {
+        // keep defaults
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (!dbReady) return;
     fetchStats();
     fetchLeads();
@@ -259,7 +282,8 @@ export function SalesFollowUpDashboard({
         salesFollowUpWhatsAppLink(
           lead.normalized_phone_number || lead.phone_number,
           nextNum,
-          lead.customer_name || ""
+          lead.customer_name || "",
+          waTemplates
         ),
         "_blank"
       );
@@ -496,6 +520,14 @@ export function SalesFollowUpDashboard({
             <RefreshCw className="size-4" />
           </button>
           <button
+            onClick={() => setShowWaTemplates(true)}
+            className="btn-secondary flex items-center gap-2 text-sm"
+            title={sf.editWaPretext}
+          >
+            <MessageCircle className="size-4" />
+            {sf.editWaPretext}
+          </button>
+          <button
             onClick={() => setShowUploadExcel(true)}
             className="btn-secondary flex items-center gap-2 text-sm"
             title={sf.uploadExcel}
@@ -534,6 +566,12 @@ export function SalesFollowUpDashboard({
         onStatusChange={setStatus}
         onSearchChange={setSearch}
         onFollowUpFilterChange={setFollowUpFilter}
+      />
+
+      <FollowUpStageTabs
+        value={followUpFilter}
+        onChange={(v: FollowUpStageValue) => setFollowUpFilter(v)}
+        stats={stats}
       />
 
       {/* KPI Cards */}
@@ -735,6 +773,15 @@ export function SalesFollowUpDashboard({
           fetchLeads();
           fetchStats();
           fetchChartAndPerformance();
+        }}
+      />
+
+      <SfuWaTemplatesModal
+        open={showWaTemplates}
+        onClose={() => setShowWaTemplates(false)}
+        onSaved={(templates) => {
+          setWaTemplates(templates);
+          toast(sf.toastWaSaved, "success");
         }}
       />
     </div>
