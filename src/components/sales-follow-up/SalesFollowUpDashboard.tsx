@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users,
@@ -238,6 +238,39 @@ export function SalesFollowUpDashboard({
     fetchChartAndPerformance();
   }, [dbReady, fetchStats, fetchLeads, fetchChartAndPerformance]);
 
+  /** Merge server package counts with packages visible in current lead list (post-upload safety). */
+  const displayPackages = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of packages) {
+      map.set(p.name, Math.max(map.get(p.name) ?? 0, p.count));
+    }
+    for (const lead of leads) {
+      const name = (lead.destination_or_product || "").trim();
+      if (!map.has(name)) map.set(name, 0);
+      // If server empty but leads have names, count from leads
+      if (packages.length === 0) {
+        map.set(name, (map.get(name) ?? 0) + 1);
+      }
+    }
+    // If server has data but a package appears in leads and not in server yet
+    if (packages.length > 0) {
+      for (const lead of leads) {
+        const name = (lead.destination_or_product || "").trim();
+        if (name && !packages.some((p) => p.name === name)) {
+          map.set(name, (map.get(name) ?? 0) + 1);
+        }
+      }
+    }
+    return Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .filter((p) => p.count > 0 || p.name === "")
+      .sort(
+        (a, b) =>
+          b.count - a.count ||
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+      );
+  }, [packages, leads]);
+
   // CRUD handlers
   async function handleCreateLead(data: CreateLeadInput) {
     const res = await fetch("/api/sales-follow-up/leads", {
@@ -269,27 +302,39 @@ export function SalesFollowUpDashboard({
   }
 
   async function handleDeleteLead(lead: SalesLeadWithLastFollowUp) {
-    // Remove from UI immediately — don't wait for API / refetch
+    // Instant remove — network runs in background
     const snapshot = leads;
+    const pkgName = (lead.destination_or_product || "").trim();
     setLeads((prev) => prev.filter((l) => l.id !== lead.id));
     setSelectedIds((prev) => prev.filter((id) => id !== lead.id));
     setStats((prev) => ({
       ...prev,
       total_leads: Math.max(0, (prev.total_leads ?? 0) - 1),
     }));
+    setPackages((prev) =>
+      prev
+        .map((p) =>
+          p.name === pkgName ? { ...p, count: Math.max(0, p.count - 1) } : p
+        )
+        .filter((p) => p.count > 0 || p.name === "")
+    );
     toast(sf.toastLeadDeleted, "success");
 
-    const res = await fetch(`/api/sales-follow-up/leads/${lead.id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      const result = await res.json().catch(() => ({}));
-      setLeads(snapshot);
-      toast(mapSalesFollowUpApiError(sf, result, "errGeneric"), "error");
-      throw new Error(mapSalesFollowUpApiError(sf, result, "errGeneric"));
-    }
-    // Soft background refresh — do not block UX with full table reload
-    void fetchStats();
+    void fetch(`/api/sales-follow-up/leads/${lead.id}`, { method: "DELETE" })
+      .then(async (res) => {
+        if (!res.ok) {
+          const result = await res.json().catch(() => ({}));
+          setLeads(snapshot);
+          toast(mapSalesFollowUpApiError(sf, result, "errGeneric"), "error");
+          void fetchStats();
+          void fetchLeads();
+        }
+      })
+      .catch(() => {
+        setLeads(snapshot);
+        toast(sf.errGeneric, "error");
+        void fetchLeads();
+      });
   }
 
   async function handleQuickFollowUp(lead: SalesLeadWithLastFollowUp) {
@@ -605,7 +650,7 @@ export function SalesFollowUpDashboard({
       <PackageFilterTabs
         value={packageFilter}
         onChange={(v: PackageFilterValue) => setPackageFilter(v)}
-        packages={packages}
+        packages={displayPackages}
       />
 
       {/* KPI Cards */}
@@ -804,6 +849,22 @@ export function SalesFollowUpDashboard({
             }),
             "success"
           );
+          if (summary.packageColumnDetected === false) {
+            toast(sf.toastUploadNoPackageCol, "error");
+          }
+          // Instant package tabs from this upload (all users)
+          if (summary.packagesInserted && summary.packagesInserted.length > 0) {
+            setPackages((prev) => {
+              const map = new Map(prev.map((p) => [p.name, p.count]));
+              for (const row of summary.packagesInserted!) {
+                map.set(row.name, (map.get(row.name) ?? 0) + row.count);
+              }
+              return Array.from(map.entries())
+                .map(([name, count]) => ({ name, count }))
+                .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+            });
+            setPackageFilter("all");
+          }
           fetchLeads();
           fetchStats();
           fetchChartAndPerformance();

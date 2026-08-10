@@ -130,25 +130,38 @@ export function detectPackageColumn(headers: string[]): string | null {
     "package interest",
     "package name",
     "package",
+    "pkg",
     "pakej",
     "pakej minat",
     "minat pakej",
     "pakej customer",
     "pakej pelanggan",
+    "nama pakej",
+    "jenis pakej",
     "interest",
     "product",
     "produk",
     "destinasi",
     "destination",
     "destination_or_product",
+    "tour",
+    "trip",
+    "umrah",
+    "hotel",
+    "offer",
+    "tawaran",
   ]);
   if (exact) return exact;
 
   const lower = headers.map((h) => h.toLowerCase().trim());
   const idx = lower.findIndex(
     (h) =>
-      /pakej|package|produk|product|destinasi|destination/.test(h) &&
-      !/phone|whatsapp|telefon|tel|mobile|name|nama|email|date|tarikh|notes|catatan|no\.?$/.test(h)
+      /pakej|package|pkg|produk|product|destinasi|destination|tour|trip|umrah|offer|tawaran/.test(
+        h
+      ) &&
+      !/phone|whatsapp|telefon|tel|mobile|name|nama|email|date|tarikh|notes|catatan|no\.?$|status|pic/.test(
+        h
+      )
   );
   return idx >= 0 ? headers[idx] : null;
 }

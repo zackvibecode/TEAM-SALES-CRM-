@@ -72,7 +72,7 @@ export function PackageFilterTabs({
             {sf.packageTabsLabel}
           </p>
           <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-            {sf.packageTabsHint}
+            {namedPackages.length === 0 ? sf.packageEmptyHint : sf.packageTabsHint}
           </p>
         </div>
       </div>
