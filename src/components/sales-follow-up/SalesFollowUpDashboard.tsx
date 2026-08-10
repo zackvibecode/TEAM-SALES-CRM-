@@ -240,8 +240,9 @@ export function SalesFollowUpDashboard({
       method: "DELETE",
     });
     if (!res.ok) {
-      const result = await res.json();
-      throw new Error(mapSalesFollowUpApiError(sf, result, "saveFail"));
+      const result = await res.json().catch(() => ({}));
+      toast(mapSalesFollowUpApiError(sf, result, "errGeneric"), "error");
+      throw new Error(mapSalesFollowUpApiError(sf, result, "errGeneric"));
     }
     toast(sf.toastLeadDeleted, "success");
     fetchStats();
