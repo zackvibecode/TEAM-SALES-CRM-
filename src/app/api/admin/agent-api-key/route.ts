@@ -23,21 +23,47 @@ export async function GET(request: NextRequest) {
       endpoints: [
         { method: "GET", path: "/api/agent/test", description: "Test connection (mula di sini)" },
         { method: "GET", path: "/api/agent/help", description: "Arahan API (tanpa key)" },
-        { method: "GET", path: "/api/agent/sales-users", description: "Senarai sales" },
+        { method: "GET", path: "/api/agent/sales-users", description: "Senarai sales (legacy CRM)" },
         {
           method: "GET",
           path: "/api/agent/sales-user/{slug}/summary?days=30",
-          description: "Ringkasan prestasi",
+          description: "Ringkasan prestasi (legacy)",
         },
         {
           method: "GET",
           path: "/api/agent/sales-user/{slug}/activity?limit=50",
-          description: "Aktiviti terkini",
+          description: "Aktiviti terkini (legacy)",
         },
         {
           method: "GET",
           path: "/api/agent/sales-user/{slug}/daily-breakdown?days=30",
-          description: "Pecahan mengikut hari",
+          description: "Pecahan mengikut hari (legacy)",
+        },
+        { method: "GET", path: "/api/agent/pics", description: "Senarai PIC (Sales Follow-Up)" },
+        {
+          method: "GET",
+          path: "/api/agent/leads?pic=fatin&limit=50",
+          description: "Senarai SFU leads",
+        },
+        {
+          method: "GET",
+          path: "/api/agent/follow-ups?queue=due_today&pic=fatin",
+          description: "Queue follow-up (due today / overdue)",
+        },
+        {
+          method: "GET",
+          path: "/api/agent/leads/{id}/follow-ups",
+          description: "Sejarah follow-up satu lead",
+        },
+        {
+          method: "GET",
+          path: "/api/agent/dashboard?pic=fatin",
+          description: "Dashboard / report SFU",
+        },
+        {
+          method: "GET",
+          path: "/api/agent/pic-performance",
+          description: "Laporan prestasi PIC",
         },
       ],
       headerHint: "X-API-Key: <key>  atau  ?api_key=<key> pada URL",
@@ -45,12 +71,13 @@ export async function GET(request: NextRequest) {
         "Token zaqone_* = CRM API key (bukan login admin, bukan Vercel bypass).",
         "Guna domain https://salescrm.zaqone.com — jangan guna *.vercel.app preview.",
         "Jangan fetch halaman web (/admin) — guna /api/agent/... sahaja.",
+        "Hermes: /api/agent/leads + /api/agent/follow-ups + /api/agent/dashboard sudah ada.",
         "Vercel bypass hanya perlu jika guna URL preview *.vercel.app (header x-vercel-protection-bypass).",
       ],
       exampleCurl:
-        'curl -H "X-API-Key: YOUR_KEY" https://salescrm.zaqone.com/api/agent/sales-users',
+        'curl -H "X-API-Key: YOUR_KEY" "https://salescrm.zaqone.com/api/agent/follow-ups?queue=due_today"',
       exampleUrlWithQuery:
-        "https://salescrm.zaqone.com/api/agent/sales-users?api_key=YOUR_KEY",
+        "https://salescrm.zaqone.com/api/agent/leads?pic=fatin&api_key=YOUR_KEY",
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to load API key info";

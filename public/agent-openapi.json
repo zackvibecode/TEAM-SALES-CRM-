@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Zaqone SaleCRM Agent API",
-    "version": "1.0.0",
-    "description": "Read sales performance from Zaqone CRM. Auth with API key only — never ask for email/password or open the website login."
+    "version": "1.1.0",
+    "description": "Read sales performance + Sales Follow-Up data from Zaqone CRM. Auth with API key only — never ask for email/password or open the website login."
   },
   "servers": [
     {
@@ -25,7 +25,6 @@
       "get": {
         "operationId": "testConnection",
         "summary": "Test CRM API connection",
-        "description": "Verify the API key works and return basic sales user list.",
         "responses": {
           "200": {
             "description": "Connected",
@@ -42,8 +41,7 @@
     "/api/agent/sales-users": {
       "get": {
         "operationId": "listSalesUsers",
-        "summary": "List all sales reps",
-        "description": "Returns sales users with name and slug for other endpoints.",
+        "summary": "List legacy CRM sales reps",
         "responses": {
           "200": {
             "description": "Sales users",
@@ -59,21 +57,19 @@
     "/api/agent/sales-user/{slug}/summary": {
       "get": {
         "operationId": "getSalesUserSummary",
-        "summary": "Performance summary for one sales user",
+        "summary": "Legacy CRM performance summary",
         "parameters": [
           {
             "name": "slug",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
-            "description": "Sales slug, e.g. shiema, alip, fatin"
+            "schema": { "type": "string" }
           },
           {
             "name": "days",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer", "default": 30 },
-            "description": "Lookback days (default 30)"
+            "schema": { "type": "integer", "default": 30 }
           }
         ],
         "responses": {
@@ -91,7 +87,7 @@
     "/api/agent/sales-user/{slug}/activity": {
       "get": {
         "operationId": "getSalesUserActivity",
-        "summary": "Recent activity for one sales user",
+        "summary": "Legacy CRM recent activity",
         "parameters": [
           {
             "name": "slug",
@@ -121,7 +117,7 @@
     "/api/agent/sales-user/{slug}/daily-breakdown": {
       "get": {
         "operationId": "getSalesUserDailyBreakdown",
-        "summary": "Daily breakdown for one sales user",
+        "summary": "Legacy CRM daily breakdown",
         "parameters": [
           {
             "name": "slug",
@@ -139,6 +135,226 @@
         "responses": {
           "200": {
             "description": "Daily breakdown",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/pics": {
+      "get": {
+        "operationId": "listPics",
+        "summary": "List Sales Follow-Up PICs",
+        "responses": {
+          "200": {
+            "description": "PICs",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/leads": {
+      "get": {
+        "operationId": "listLeads",
+        "summary": "List Sales Follow-Up leads",
+        "parameters": [
+          {
+            "name": "pic",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "PIC name or slug e.g. fatin"
+          },
+          {
+            "name": "picId",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "followUpFilter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "0", "1", "2", "3+", "overdue", "due_today", "not_today"]
+            }
+          },
+          {
+            "name": "packageFilter",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 50 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Leads",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/follow-ups": {
+      "get": {
+        "operationId": "listFollowUpQueue",
+        "summary": "Sales Follow-Up queue (leads due for action)",
+        "description": "Defaults to due_today. Use queue=overdue|due_today|not_today|no_follow_up|all",
+        "parameters": [
+          {
+            "name": "queue",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["due_today", "overdue", "not_today", "no_follow_up", "all", "0", "1", "2", "3+"]
+            }
+          },
+          {
+            "name": "pic",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "picId",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 50 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Follow-up queue",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/leads/{id}/follow-ups": {
+      "get": {
+        "operationId": "getLeadFollowUpHistory",
+        "summary": "Follow-up history for one lead",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "History",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/dashboard": {
+      "get": {
+        "operationId": "getSfuDashboard",
+        "summary": "Sales Follow-Up dashboard stats + packages",
+        "parameters": [
+          {
+            "name": "pic",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/pic-performance": {
+      "get": {
+        "operationId": "getPicPerformanceReport",
+        "summary": "Sales Follow-Up PIC performance report",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["all", "performance", "chart"] }
+          },
+          {
+            "name": "pic",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Performance",
             "content": {
               "application/json": {
                 "schema": { "type": "object", "additionalProperties": true }
