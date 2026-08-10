@@ -33,6 +33,9 @@ export async function GET(request: Request) {
     endDate: searchParams.get("endDate") || undefined,
     picId: scoped.picId,
     status: searchParams.get("status") as FollowUpFilterParams["status"],
+    packageFilter: searchParams.get("packageFilter") || undefined,
+    followUpFilter:
+      (searchParams.get("followUpFilter") as FollowUpFilterParams["followUpFilter"]) || undefined,
   };
 
   try {

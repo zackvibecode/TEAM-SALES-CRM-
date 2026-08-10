@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedContext } from "@/lib/auth-context";
-import { getDashboardStats } from "@/lib/sales-follow-up/service";
+import { getDashboardStats, listPackagesWithCounts } from "@/lib/sales-follow-up/service";
 import { resolveScopedPicId } from "@/lib/sales-follow-up/access";
 import type { FollowUpFilterParams } from "@/lib/sales-follow-up/types";
 
@@ -28,11 +28,15 @@ export async function GET(request: Request) {
     status: searchParams.get("status") as FollowUpFilterParams["status"],
     search: searchParams.get("search") || undefined,
     followUpFilter: (searchParams.get("followUpFilter") as FollowUpFilterParams["followUpFilter"]) || "all",
+    packageFilter: searchParams.get("packageFilter") || undefined,
   };
 
   try {
-    const stats = await getDashboardStats(ctx.db, filters);
-    return NextResponse.json(stats);
+    const [stats, packages] = await Promise.all([
+      getDashboardStats(ctx.db, filters),
+      listPackagesWithCounts(ctx.db, filters),
+    ]);
+    return NextResponse.json({ ...stats, packages });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to load dashboard stats";
     return NextResponse.json({ error: message }, { status: 500 });

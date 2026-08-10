@@ -114,20 +114,22 @@ export async function DELETE(
       ctx.user.email ||
       "Unknown";
 
+    // Delete first — auditing with lead_id before delete can block via FK.
+    await deleteLead(ctx.db, id);
+
     const { logSalesFollowUpEvent } = await import("@/lib/sales-follow-up/audit");
     await logSalesFollowUpEvent(ctx.db, {
-      leadId: id,
+      leadId: null,
       picId: lead?.assigned_pic_id ?? null,
       userId: ctx.user.id,
       userName,
       action: "lead_deleted",
       details: {
+        lead_id: id,
         customer_name: lead?.customer_name,
         phone: lead?.phone_number,
       },
     });
-
-    await deleteLead(ctx.db, id);
 
     return NextResponse.json({ success: true });
   } catch (err) {
