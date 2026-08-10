@@ -1,0 +1,152 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Zaqone SaleCRM Agent API",
+    "version": "1.0.0",
+    "description": "Read sales performance from Zaqone CRM. Auth with API key only — never ask for email/password or open the website login."
+  },
+  "servers": [
+    {
+      "url": "https://salescrm.zaqone.com"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  },
+  "security": [{ "ApiKeyAuth": [] }],
+  "paths": {
+    "/api/agent/test": {
+      "get": {
+        "operationId": "testConnection",
+        "summary": "Test CRM API connection",
+        "description": "Verify the API key works and return basic sales user list.",
+        "responses": {
+          "200": {
+            "description": "Connected",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          },
+          "401": { "description": "Invalid API key" }
+        }
+      }
+    },
+    "/api/agent/sales-users": {
+      "get": {
+        "operationId": "listSalesUsers",
+        "summary": "List all sales reps",
+        "description": "Returns sales users with name and slug for other endpoints.",
+        "responses": {
+          "200": {
+            "description": "Sales users",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/sales-user/{slug}/summary": {
+      "get": {
+        "operationId": "getSalesUserSummary",
+        "summary": "Performance summary for one sales user",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Sales slug, e.g. shiema, alip, fatin"
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 30 },
+            "description": "Lookback days (default 30)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Summary",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/sales-user/{slug}/activity": {
+      "get": {
+        "operationId": "getSalesUserActivity",
+        "summary": "Recent activity for one sales user",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 50 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activity",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/sales-user/{slug}/daily-breakdown": {
+      "get": {
+        "operationId": "getSalesUserDailyBreakdown",
+        "summary": "Daily breakdown for one sales user",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 30 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daily breakdown",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
