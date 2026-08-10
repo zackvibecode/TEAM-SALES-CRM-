@@ -14,7 +14,6 @@ import {
   ChevronDown,
   ChevronUp,
   BookOpen,
-  ExternalLink,
   MessageSquare,
 } from "lucide-react";
 
@@ -31,7 +30,7 @@ type ApiKeyInfo = {
   exampleUrlWithQuery?: string;
 };
 
-type CopyTarget = "key" | "curl" | "url" | "openapi" | "instructions" | null;
+type CopyTarget = "key" | "curl" | "url" | "openapi" | "instructions" | "mcp" | null;
 
 const GPT_INSTRUCTIONS = `You are the Zaqone SaleCRM assistant.
 
@@ -345,7 +344,7 @@ export function AdminAgentApiKeyPanel() {
           </div>
         )}
 
-        {/* ChatGPT Custom GPT docs — admin only (this page) */}
+        {/* ChatGPT MCP + Custom GPT docs — admin only */}
         <div
           id="chatgpt"
           className="card-padded border-2"
@@ -363,15 +362,15 @@ export function AdminAgentApiKeyPanel() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold text-base" style={{ color: "var(--text-primary)" }}>
-                    ChatGPT Custom GPT (Cara 1)
+                    ChatGPT MCP Plugin
                   </p>
                   <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700">
                     Admin sahaja
                   </span>
                 </div>
                 <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-                  Sambung ChatGPT ke SaleCRM guna Agent API — tiada MCP server. Auth = API key{" "}
-                  <code className="text-xs">zaqone_...</code> sahaja.
+                  Untuk skrin <strong>New Plugin</strong> — guna MCP URL di bawah + OAuth.{" "}
+                  <strong>Jangan</strong> paste <code className="text-xs">agent-openapi.json</code> di situ.
                 </p>
               </div>
             </div>
@@ -384,153 +383,115 @@ export function AdminAgentApiKeyPanel() {
 
           {showChatGptDocs && (
             <div className="mt-5 space-y-5">
-              <div className="flex flex-wrap gap-2">
-                <a
-                  href="https://chatgpt.com/gpts"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary min-h-[40px] text-sm"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Buka ChatGPT GPTs
-                </a>
-                <button
-                  type="button"
-                  onClick={() =>
-                    copyText(
-                      `${info?.baseUrl ?? "https://salescrm.zaqone.com"}/agent-openapi.json`,
-                      "openapi"
-                    )
-                  }
-                  className="btn-secondary min-h-[40px] text-sm"
-                >
-                  {copied === "openapi" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  {copied === "openapi" ? "Disalin" : "Salin OpenAPI URL"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => copyText(GPT_INSTRUCTIONS, "instructions")}
-                  className="btn-secondary min-h-[40px] text-sm"
-                >
-                  {copied === "instructions" ? <Check className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
-                  {copied === "instructions" ? "Disalin" : "Salin GPT Instructions"}
-                </button>
-              </div>
-
               <div
-                className="rounded-xl p-4 space-y-2 text-sm"
+                className="rounded-xl p-4 space-y-3"
                 style={{ background: "var(--surface-muted)" }}
               >
                 <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
-                  OpenAPI (Import dari URL)
+                  MCP Server URL (salin ni)
                 </p>
-                <p className="font-mono text-xs break-all" style={{ color: "var(--text-primary)" }}>
-                  {(info?.baseUrl ?? "https://salescrm.zaqone.com") + "/agent-openapi.json"}
+                <p className="font-mono text-sm break-all font-semibold" style={{ color: "var(--text-primary)" }}>
+                  {(info?.baseUrl ?? "https://salescrm.zaqone.com") + "/api/mcp"}
                 </p>
-                <p className="font-mono text-xs break-all" style={{ color: "var(--text-secondary)" }}>
-                  {(info?.baseUrl ?? "https://salescrm.zaqone.com") + "/api/agent/openapi"}
-                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    copyText(`${info?.baseUrl ?? "https://salescrm.zaqone.com"}/api/mcp`, "mcp")
+                  }
+                  className="btn-primary-solid min-h-[40px] text-sm"
+                >
+                  {copied === "mcp" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copied === "mcp" ? "Disalin" : "Salin MCP URL"}
+                </button>
               </div>
 
               <div>
                 <p className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>
-                  Setup langkah demi langkah
+                  Setup MCP Plugin (betul)
                 </p>
-                <ol className="space-y-3 text-sm list-decimal list-inside" style={{ color: "var(--text-muted)" }}>
+                <ol className="space-y-2.5 text-sm list-decimal list-inside" style={{ color: "var(--text-muted)" }}>
                   <li>
-                    Jana & salin API key <code className="text-xs">zaqone_...</code> di atas (admin).
+                    Jana API key <code className="text-xs">zaqone_...</code> di atas — salin simpan.
                   </li>
                   <li>
-                    Uji:{" "}
-                    <code className="text-xs break-all">
-                      {(info?.baseUrl ?? "https://salescrm.zaqone.com") +
-                        "/api/agent/test?api_key=zaqone_YOUR_KEY"}
-                    </code>
+                    ChatGPT → <strong>New Plugin</strong> / Custom MCP.
                   </li>
                   <li>
-                    ChatGPT → Explore GPTs → <strong>Create a GPT</strong> → tab Configure.
+                    Name: <code className="text-xs">SALESCRM</code>
                   </li>
                   <li>
-                    Name: <code className="text-xs">Zaqone CRM</code> — paste Instructions (butang salin
-                    di atas).
+                    Connection: <strong>Server URL</strong> ={" "}
+                    <code className="text-xs">…/api/mcp</code> (bukan openapi.json).
                   </li>
                   <li>
-                    Actions → Create → <strong>Import from URL</strong> (OpenAPI di atas).
+                    Authentication: <strong>OAuth</strong> (biar discover automatic).
                   </li>
                   <li>
-                    Auth Type: <strong>API Key</strong> → Custom header{" "}
-                    <code className="text-xs">X-API-Key</code> → paste key.
+                    Create → ChatGPT buka authorize page → paste API key → Authorize.
                   </li>
-                  <li>Save / Publish GPT, kemudian test dengan prompt di bawah.</li>
+                  <li>
+                    Test: <code className="text-xs">List sales users</code> /{" "}
+                    <code className="text-xs">Summary for alip last 30 days</code>
+                  </li>
                 </ol>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
-                  Prompt ujian
-                </p>
-                <ul className="space-y-1.5 text-sm" style={{ color: "var(--text-muted)" }}>
-                  {[
-                    "Test CRM connection",
-                    "List all sales users",
-                    "Summary for alip last 30 days",
-                    "Recent activity for shiema",
-                    "Daily breakdown for fatin last 14 days",
-                  ].map((p) => (
-                    <li key={p} className="flex gap-2">
-                      <span className="text-emerald-600 shrink-0">•</span>
-                      <code className="text-xs">{p}</code>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
-                  Troubleshooting
-                </p>
-                <ul className="space-y-2 text-sm" style={{ color: "var(--text-muted)" }}>
-                  <li>
-                    <strong className="text-[var(--text-secondary)]">401</strong> — jana semula key,
-                    kemas kini Auth dalam GPT Actions.
-                  </li>
-                  <li>
-                    <strong className="text-[var(--text-secondary)]">503</strong> — key belum dijana di
-                    Admin.
-                  </li>
-                  <li>
-                    <strong className="text-[var(--text-secondary)]">Import OpenAPI gagal</strong> —
-                    pastikan URL buka dalam browser; tunggu deploy Vercel.
-                  </li>
-                  <li>
-                    <strong className="text-[var(--text-secondary)]">GPT cipta data</strong> — pastikan
-                    Actions enabled; arahkan guna Actions sahaja.
-                  </li>
-                </ul>
               </div>
 
               <div
                 className="rounded-xl border p-4 text-sm space-y-2"
-                style={{ borderColor: "var(--border-color)", color: "var(--text-muted)" }}
+                style={{ borderColor: "rgba(245, 158, 11, 0.35)", background: "rgba(245, 158, 11, 0.06)" }}
               >
                 <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                  Keselamatan
+                  Kenapa fail tadi?
                 </p>
-                <ul className="space-y-1.5 list-disc list-inside">
+                <ul className="space-y-1.5 list-disc list-inside" style={{ color: "var(--text-muted)" }}>
                   <li>
-                    Jangan minta ChatGPT buka login CRM atau guna email/password.
+                    <code className="text-xs">/agent-openapi.json</code> = OpenAPI untuk Custom GPT Actions —
+                    <strong> bukan</strong> MCP server.
                   </li>
-                  <li>
-                    Treat <code className="text-xs">zaqone_...</code> macam password — jangan share ke
-                    sales.
-                  </li>
-                  <li>API ni read-oriented (monitor sales), bukan tulis admin tools.</li>
+                  <li>MCP Plugin wajib OAuth + URL <code className="text-xs">/api/mcp</code>.</li>
                 </ul>
               </div>
 
+              <details className="rounded-xl border p-4" style={{ borderColor: "var(--border-color)" }}>
+                <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                  Alternatif: Custom GPT Actions (OpenAPI)
+                </summary>
+                <div className="mt-3 space-y-3 text-sm" style={{ color: "var(--text-muted)" }}>
+                  <p>Kalau nak Create a GPT → Actions (bukan MCP Plugin):</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        copyText(
+                          `${info?.baseUrl ?? "https://salescrm.zaqone.com"}/agent-openapi.json`,
+                          "openapi"
+                        )
+                      }
+                      className="btn-secondary min-h-[36px] text-sm"
+                    >
+                      {copied === "openapi" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      Salin OpenAPI URL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => copyText(GPT_INSTRUCTIONS, "instructions")}
+                      className="btn-secondary min-h-[36px] text-sm"
+                    >
+                      {copied === "instructions" ? <Check className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
+                      Salin Instructions
+                    </button>
+                  </div>
+                  <ol className="list-decimal list-inside space-y-1.5">
+                    <li>Actions → Import from URL (OpenAPI).</li>
+                    <li>
+                      Auth: API Key → header <code className="text-xs">X-API-Key</code>.
+                    </li>
+                  </ol>
+                </div>
+              </details>
+
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Docs penuh dalam repo:{" "}
-                <code className="text-xs">docs/chatgpt-custom-gpt.md</code>
+                Docs: <code className="text-xs">docs/chatgpt-custom-gpt.md</code>
               </p>
             </div>
           )}

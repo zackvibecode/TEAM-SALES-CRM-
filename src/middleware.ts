@@ -129,11 +129,12 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Statics, auth callbacks, non-admin APIs: pass through
+  // Statics, OAuth discovery, auth callbacks, non-admin APIs: pass through
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/auth/") ||
-    pathname.startsWith("/api/")
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/.well-known/")
   ) {
     return supabaseResponse;
   }
