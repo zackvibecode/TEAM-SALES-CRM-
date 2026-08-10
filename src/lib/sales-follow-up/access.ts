@@ -163,6 +163,48 @@ export async function resolveScopedPicId(
   return { picId: pic.id, pic };
 }
 
+/**
+ * Fast access check for delete — prefer user_id link only (1 query),
+ * fall back to full PIC resolve only if needed.
+ */
+export async function assertLeadAccessFast(
+  db: DbClient,
+  role: UserRole,
+  userId: string,
+  leadId: string
+): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+  if (role === "admin") return { ok: true };
+
+  const [{ data: picsByUser }, { data: lead }] = await Promise.all([
+    db
+      .from("sales_pics")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .limit(10),
+    db
+      .from("sales_leads")
+      .select("id, assigned_pic_id")
+      .eq("id", leadId)
+      .maybeSingle(),
+  ]);
+
+  if (!lead) {
+    return { ok: false, error: "LEAD_NOT_FOUND", status: 404 };
+  }
+
+  const picIds = (picsByUser ?? []).map((p) => p.id as string);
+  if (picIds.length > 0) {
+    if (!lead.assigned_pic_id || !picIds.includes(lead.assigned_pic_id)) {
+      return { ok: false, error: "LEAD_FORBIDDEN", status: 403 };
+    }
+    return { ok: true };
+  }
+
+  // Rare path: PIC linked by email/name only
+  return assertLeadAccess(db, role, userId, leadId);
+}
+
 export async function assertLeadAccess(
   db: DbClient,
   role: UserRole,

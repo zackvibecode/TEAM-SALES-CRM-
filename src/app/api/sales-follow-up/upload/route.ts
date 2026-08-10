@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedContext } from "@/lib/auth-context";
 import { resolveScopedPicId } from "@/lib/sales-follow-up/access";
 import { importSalesLeadsForPic, getPics } from "@/lib/sales-follow-up/service";
-import { parseLeadRows } from "@/lib/parse-leads";
+import { parseLeadRows, detectPackageColumn } from "@/lib/parse-leads";
 import { readSpreadsheetRows } from "@/lib/read-spreadsheet";
 import { SF_ERROR, sfError } from "@/lib/sales-follow-up/errors";
 
@@ -61,11 +61,12 @@ export async function POST(request: NextRequest) {
 
     const buffer = await file.arrayBuffer();
     const sheetRows = readSpreadsheetRows(buffer);
+    const sampleKeys =
+      sheetRows.length > 0 ? Object.keys(sheetRows[0] as Record<string, unknown>) : [];
+    const packageColumnDetected = Boolean(detectPackageColumn(sampleKeys));
     const parsed = parseLeadRows(sheetRows);
 
     if (parsed.length === 0) {
-      const sampleKeys =
-        sheetRows.length > 0 ? Object.keys(sheetRows[0] as Record<string, unknown>) : [];
       const e = sfError(SF_ERROR.UPLOAD_NO_PHONES, 400);
       return NextResponse.json({ ...e.body, detectedColumns: sampleKeys }, { status: e.status });
     }
@@ -81,6 +82,8 @@ export async function POST(request: NextRequest) {
       ok: true,
       fileName: file.name,
       assignedPicId,
+      packageColumnDetected,
+      detectedColumns: sampleKeys,
       ...result,
     });
   } catch (err) {

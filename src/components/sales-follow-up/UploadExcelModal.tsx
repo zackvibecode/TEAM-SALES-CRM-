@@ -18,6 +18,8 @@ interface UploadExcelModalProps {
     skippedInvalid: number;
     totalParsed: number;
     fileName: string;
+    packageColumnDetected?: boolean;
+    packagesInserted?: Array<{ name: string; count: number }>;
   }) => void;
   pics: SalesPic[];
   lockPic?: boolean;
@@ -83,6 +85,10 @@ export function UploadExcelModal({
         skippedInvalid: data.skippedInvalid ?? 0,
         totalParsed: data.totalParsed ?? 0,
         fileName: data.fileName || file.name,
+        packageColumnDetected: data.packageColumnDetected !== false,
+        packagesInserted: Array.isArray(data.packagesInserted)
+          ? data.packagesInserted
+          : [],
       });
       setFile(null);
       if (inputRef.current) inputRef.current.value = "";

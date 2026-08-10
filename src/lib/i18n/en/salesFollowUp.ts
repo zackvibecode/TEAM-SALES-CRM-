@@ -235,6 +235,9 @@ export const enSalesFollowUp = {
   uploadFail: "Excel upload failed.",
   toastUploadOk:
     "Upload successful: {inserted} added, {dup} duplicates, {owned} owned by others, {invalid} skipped.",
+  toastUploadNoPackageCol:
+    "Uploaded, but no Pakej/Package column detected — package filter will only show “No package”. Add a Pakej column and re-upload.",
+  packageEmptyHint: "No package names yet. Upload Excel with a Pakej / Package column.",
 
   // Intro tip
   tipTitle: "Tip: How to use Follow-Up Leads?",
@@ -500,6 +503,9 @@ export const bmSalesFollowUp = {
   uploadFail: "Gagal muat naik Excel.",
   toastUploadOk:
     "Muat naik berjaya: {inserted} masuk, {dup} pendua, {owned} milik PIC lain, {invalid} dilangkau.",
+  toastUploadNoPackageCol:
+    "Dah upload, tapi tiada lajur Pakej/Package — filter pakej hanya tunjuk “Tiada pakej”. Tambah lajur Pakej dan upload semula.",
+  packageEmptyHint: "Belum ada nama pakej. Upload Excel dengan lajur Pakej / Package.",
 
   tipTitle: "Tip: Macam mana guna Follow-Up Lead?",
   tipClose: "Tutup tip",

@@ -56,7 +56,7 @@ interface LeadTableProps {
   onView: (lead: SalesLeadWithLastFollowUp) => void;
   onAddFollowUp: (lead: SalesLeadWithLastFollowUp) => void;
   onEdit: (lead: SalesLeadWithLastFollowUp) => void;
-  onDelete: (lead: SalesLeadWithLastFollowUp) => void;
+  onDelete: (lead: SalesLeadWithLastFollowUp) => void | Promise<void>;
   onQuickStatus?: (lead: SalesLeadWithLastFollowUp, status: FollowUpStatusType) => void;
   onCompleteStatus?: (lead: SalesLeadWithLastFollowUp, status: LeadStatus) => void;
   onDismissQuick?: (leadId: string) => void;
@@ -118,17 +118,11 @@ export function LeadTable({
     );
   }
 
-  async function handleDelete(lead: SalesLeadWithLastFollowUp) {
-    // Close confirm immediately so UI feels instant
+  function handleDelete(lead: SalesLeadWithLastFollowUp) {
+    // Instant UI — do not wait for network
     setShowConfirm(null);
-    setDeletingId(lead.id);
-    try {
-      await onDelete(lead);
-    } catch {
-      // Parent restores list / shows toast on failure
-    } finally {
-      setDeletingId(null);
-    }
+    setDeletingId(null);
+    void Promise.resolve(onDelete(lead));
   }
 
   function openWhatsApp(normalizedPhone: string) {

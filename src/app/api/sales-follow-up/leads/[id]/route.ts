@@ -6,7 +6,7 @@ import {
   deleteLead,
   checkDuplicatePhone,
 } from "@/lib/sales-follow-up/service";
-import { assertLeadAccess, resolveScopedPicId } from "@/lib/sales-follow-up/access";
+import { assertLeadAccess, assertLeadAccessFast, resolveScopedPicId } from "@/lib/sales-follow-up/access";
 import { SF_ERROR, sfError } from "@/lib/sales-follow-up/errors";
 import type { UpdateLeadInput } from "@/lib/sales-follow-up/types";
 
@@ -104,7 +104,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const access = await assertLeadAccess(ctx.db, ctx.role, ctx.user.id, id);
+  const access = await assertLeadAccessFast(ctx.db, ctx.role, ctx.user.id, id);
   if (!access.ok) return accessErrorResponse(access);
 
   try {

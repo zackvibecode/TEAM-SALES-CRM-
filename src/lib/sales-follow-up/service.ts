@@ -345,7 +345,33 @@ export async function deleteLead(
   phone_number: string | null;
   assigned_pic_id: string | null;
 } | null> {
-  // Child rows first when CASCADE missing on live DB
+  // Fast path: one round-trip (CASCADE on live DB). Fallback if FK blocks.
+  const first = await db
+    .from("sales_leads")
+    .delete()
+    .eq("id", leadId)
+    .select("id, customer_name, phone_number, assigned_pic_id")
+    .maybeSingle();
+
+  if (!first.error && first.data) {
+    return first.data as {
+      id: string;
+      customer_name: string | null;
+      phone_number: string | null;
+      assigned_pic_id: string | null;
+    };
+  }
+
+  const msg = first.error?.message || "";
+  const isFk =
+    /foreign key|violates foreign key|23503/i.test(msg) ||
+    first.error?.code === "23503";
+
+  if (!isFk && first.error) {
+    throw new Error(`Failed to delete lead: ${first.error.message}`);
+  }
+
+  // CASCADE missing — wipe children then lead
   const { error: fuError } = await db
     .from("lead_follow_ups")
     .delete()
@@ -720,10 +746,7 @@ export async function getDashboardStats(
   };
 }
 
-/** Distinct packages with counts.
- * Ignores packageFilter + stage + search so every user always sees package tabs
- * for their PIC/date/status scope.
- */
+/** Distinct packages with counts — pages through all leads for PIC scope. */
 export async function listPackagesWithCounts(
   db: DbClient,
   filters: FollowUpFilterParams
@@ -733,26 +756,40 @@ export async function listPackagesWithCounts(
     endDate: filters.endDate,
     picId: filters.picId,
     status: filters.status,
-    // Intentionally omit followUpFilter, search, packageFilter
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = db.from("sales_leads").select("destination_or_product");
-  query = buildLeadFilters(query, filtersForPackages);
-  query = query.limit(5000);
-
-  const { data, error } = await query;
-  if (error) throw new Error(`Failed to list packages: ${error.message}`);
-
   const counts = new Map<string, number>();
-  for (const row of (data ?? []) as Array<{ destination_or_product?: string | null }>) {
-    const name = (row.destination_or_product ?? "").trim();
-    counts.set(name, (counts.get(name) ?? 0) + 1);
+  const pageSize = 1000;
+  let offset = 0;
+
+  for (;;) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any = db.from("sales_leads").select("destination_or_product");
+    query = buildLeadFilters(query, filtersForPackages);
+    query = query.range(offset, offset + pageSize - 1);
+
+    const { data, error } = await query;
+    if (error) throw new Error(`Failed to list packages: ${error.message}`);
+
+    const rows = (data ?? []) as Array<{ destination_or_product?: string | null }>;
+    for (const row of rows) {
+      const name = (row.destination_or_product ?? "").trim();
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+
+    if (rows.length < pageSize) break;
+    offset += pageSize;
+    // Safety cap
+    if (offset > 50_000) break;
   }
 
   return Array.from(counts.entries())
     .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    .sort(
+      (a, b) =>
+        b.count - a.count ||
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+    );
 }
 
 export async function getPicPerformance(
@@ -955,6 +992,8 @@ export interface ImportSalesLeadsResult {
   skippedOwnedByOther: number;
   skippedInvalid: number;
   totalParsed: number;
+  /** Package breakdown from rows that were inserted */
+  packagesInserted: PackageCount[];
 }
 
 /** Bulk insert phone list into sales_leads for one PIC. Skips duplicate normalized phones. */
@@ -1017,6 +1056,7 @@ export async function importSalesLeadsForPic(
       skippedOwnedByOther: 0,
       skippedInvalid,
       totalParsed: rows.length,
+      packagesInserted: [],
     };
   }
 
@@ -1073,6 +1113,16 @@ export async function importSalesLeadsForPic(
     skippedOwnedByOther,
     skippedInvalid,
     totalParsed: rows.length,
+    packagesInserted: (() => {
+      const map = new Map<string, number>();
+      for (const row of toInsert) {
+        const name = (row.destination_or_product || "").trim();
+        map.set(name, (map.get(name) ?? 0) + 1);
+      }
+      return Array.from(map.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+    })(),
   };
 }
 
