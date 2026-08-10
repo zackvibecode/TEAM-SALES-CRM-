@@ -15,7 +15,7 @@ function SettingsContent() {
   return (
     <>
       <Link
-        href="/admin/api-key"
+        href="/admin/api-key#chatgpt"
         className="card-padded flex items-center justify-between gap-4 group hover:shadow-lg transition-shadow"
       >
         <div className="flex items-center gap-4">

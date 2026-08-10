@@ -82,8 +82,8 @@ export const enAdmin = {
     actionCol: "Action",
   },
   apiKey: {
-    title: "AI API Key",
-    subtitle: "Agent API key + ChatGPT Custom GPT setup (admin only)",
+    title: "AI API Key / ChatGPT",
+    subtitle: "Jana API key + panduan setup ChatGPT Custom GPT (admin sahaja)",
     badge: "API",
   },
   settings: {
@@ -192,8 +192,8 @@ export const bmAdmin = {
     actionCol: "Tindakan",
   },
   apiKey: {
-    title: "Kunci API AI",
-    subtitle: "Kunci Agent API + setup ChatGPT Custom GPT (admin sahaja)",
+    title: "Kunci API AI / ChatGPT",
+    subtitle: "Jana kunci API + panduan setup ChatGPT Custom GPT (admin sahaja)",
     badge: "API",
   },
   settings: {
