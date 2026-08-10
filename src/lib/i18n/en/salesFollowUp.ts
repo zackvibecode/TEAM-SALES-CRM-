@@ -21,7 +21,10 @@ export const enSalesFollowUp = {
 
   // WA SFU templates
   waEditTitle: "Your WhatsApp messages",
-  waEditHint: "Custom text for Follow-Up 1 / 2 / 3. Use {name} for the customer name.",
+  waEditHint: "Custom text for Follow-Up 1 / 2 / 3. Drag variables into the message, or tap to insert.",
+  waVarHint: "Drag into a message box, or tap after clicking the box:",
+  waVarName: "Customer name",
+  waVarPackage: "Package",
   waFu1: "Follow-Up 1 message",
   waFu2: "Follow-Up 2 message",
   waFu3: "Follow-Up 3 message",
@@ -292,7 +295,10 @@ export const bmSalesFollowUp = {
   stageDone: "Dah Follow-Up (3+)",
 
   waEditTitle: "Mesej WhatsApp anda",
-  waEditHint: "Tulis mesej sendiri untuk Follow-Up 1 / 2 / 3. Guna {name} untuk nama pelanggan.",
+  waEditHint: "Tulis mesej Follow-Up 1 / 2 / 3. Seret variable masuk kotak, atau ketik untuk masukkan.",
+  waVarHint: "Seret ke dalam kotak mesej, atau ketik selepas klik kotak:",
+  waVarName: "Nama pelanggan",
+  waVarPackage: "Pakej",
   waFu1: "Mesej Follow-Up 1",
   waFu2: "Mesej Follow-Up 2",
   waFu3: "Mesej Follow-Up 3",

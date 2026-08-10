@@ -105,7 +105,8 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
             lead.normalized_phone_number || lead.phone_number,
             nextNum,
             lead.customer_name || "",
-            waTemplates
+            waTemplates,
+            lead.destination_or_product
           ),
           "_blank"
         );
@@ -181,7 +182,8 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
         lead.normalized_phone_number || lead.phone_number,
         nextNum,
         lead.customer_name || "",
-        waTemplates
+        waTemplates,
+        lead.destination_or_product
       ),
       "_blank"
     );
