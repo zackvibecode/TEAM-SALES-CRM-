@@ -108,28 +108,28 @@ export async function DELETE(
   if (!access.ok) return accessErrorResponse(access);
 
   try {
-    const lead = await getLeadById(ctx.db, id);
+    // Single delete path — no pre-fetch getLeadById
+    const deleted = await deleteLead(ctx.db, id);
+
+    // Respond immediately; audit is best-effort and must not slow delete UX
     const userName =
       (ctx.user.user_metadata?.full_name as string | undefined) ||
       ctx.user.email ||
       "Unknown";
-
-    // Delete first — auditing with lead_id before delete can block via FK.
-    await deleteLead(ctx.db, id);
-
-    const { logSalesFollowUpEvent } = await import("@/lib/sales-follow-up/audit");
-    await logSalesFollowUpEvent(ctx.db, {
-      leadId: null,
-      picId: lead?.assigned_pic_id ?? null,
-      userId: ctx.user.id,
-      userName,
-      action: "lead_deleted",
-      details: {
-        lead_id: id,
-        customer_name: lead?.customer_name,
-        phone: lead?.phone_number,
-      },
-    });
+    void import("@/lib/sales-follow-up/audit").then(({ logSalesFollowUpEvent }) =>
+      logSalesFollowUpEvent(ctx.db, {
+        leadId: null,
+        picId: deleted?.assigned_pic_id ?? null,
+        userId: ctx.user.id,
+        userName,
+        action: "lead_deleted",
+        details: {
+          lead_id: id,
+          customer_name: deleted?.customer_name,
+          phone: deleted?.phone_number,
+        },
+      })
+    );
 
     return NextResponse.json({ success: true });
   } catch (err) {

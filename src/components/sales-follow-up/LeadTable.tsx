@@ -119,12 +119,15 @@ export function LeadTable({
   }
 
   async function handleDelete(lead: SalesLeadWithLastFollowUp) {
+    // Close confirm immediately so UI feels instant
+    setShowConfirm(null);
     setDeletingId(lead.id);
     try {
       await onDelete(lead);
+    } catch {
+      // Parent restores list / shows toast on failure
     } finally {
       setDeletingId(null);
-      setShowConfirm(null);
     }
   }
 

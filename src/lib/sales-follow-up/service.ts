@@ -336,8 +336,16 @@ export async function updateLead(
   return data as SalesLead;
 }
 
-export async function deleteLead(db: DbClient, leadId: string): Promise<void> {
-  // Delete child rows first in case live DB lacks ON DELETE CASCADE
+export async function deleteLead(
+  db: DbClient,
+  leadId: string
+): Promise<{
+  id: string;
+  customer_name: string | null;
+  phone_number: string | null;
+  assigned_pic_id: string | null;
+} | null> {
+  // Child rows first when CASCADE missing on live DB
   const { error: fuError } = await db
     .from("lead_follow_ups")
     .delete()
@@ -350,12 +358,19 @@ export async function deleteLead(db: DbClient, leadId: string): Promise<void> {
     .from("sales_leads")
     .delete()
     .eq("id", leadId)
-    .select("id");
+    .select("id, customer_name, phone_number, assigned_pic_id")
+    .maybeSingle();
 
   if (error) throw new Error(`Failed to delete lead: ${error.message}`);
-  if (!data || data.length === 0) {
+  if (!data) {
     throw new Error("Lead tidak dijumpai atau gagal dipadam.");
   }
+  return data as {
+    id: string;
+    customer_name: string | null;
+    phone_number: string | null;
+    assigned_pic_id: string | null;
+  };
 }
 
 export async function bulkDeleteLeads(
