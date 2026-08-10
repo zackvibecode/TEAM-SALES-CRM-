@@ -80,6 +80,19 @@ export function AdminAgentApiKeyPanel() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (loading) return;
+    if (typeof window === "undefined") return;
+    if (window.location.hash !== "#chatgpt") return;
+    setShowChatGptDocs(true);
+    const el = document.getElementById("chatgpt");
+    if (el) {
+      window.requestAnimationFrame(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, [loading]);
+
   const flashCopied = (target: CopyTarget) => {
     setCopied(target);
     setTimeout(() => setCopied(null), 2000);
