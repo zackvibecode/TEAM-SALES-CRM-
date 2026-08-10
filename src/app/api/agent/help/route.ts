@@ -8,6 +8,14 @@ export async function GET() {
     auth: "API key only (zaqone_...). No email. No password. No browser login.",
     base_url: CRM_PUBLIC_BASE_URL,
     test_connection: `${CRM_PUBLIC_BASE_URL}/api/agent/test?api_key=YOUR_KEY`,
+    chatgpt_openapi: `${CRM_PUBLIC_BASE_URL}/api/agent/openapi`,
+    chatgpt_setup: [
+      "1. Admin CRM → Settings → AI API Key → Generate & copy zaqone_...",
+      "2. ChatGPT → Create a GPT → Configure → Actions → Import from URL",
+      `3. Paste: ${CRM_PUBLIC_BASE_URL}/api/agent/openapi`,
+      "4. Authentication → API Key → Header name X-API-Key → paste zaqone_ key",
+      "5. Save GPT, then ask: List sales users / Summary for alip last 30 days",
+    ],
     how_to_send_key: [
       "Header: X-API-Key: zaqone_...",
       "Query: ?api_key=zaqone_...",
