@@ -13,6 +13,7 @@ export const enSalesFollowUp = {
 
   // Stage tabs (always visible)
   stageTabsLabel: "Separate by follow-up stage",
+  stageTabsHint: "Tap a button below to show only that list — not mixed.",
   stageAll: "All",
   stageNone: "Not followed up",
   stageFu1: "Follow-Up 1",
@@ -288,6 +289,7 @@ export const bmSalesFollowUp = {
   refresh: "Segar semula data",
 
   stageTabsLabel: "Asingkan ikut stage follow-up",
+  stageTabsHint: "Tekan butang bawah untuk tengok list tu je — tak campur.",
   stageAll: "Semua",
   stageNone: "Belum Follow-Up",
   stageFu1: "Follow-Up 1",

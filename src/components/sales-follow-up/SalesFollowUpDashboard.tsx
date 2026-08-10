@@ -512,7 +512,13 @@ export function SalesFollowUpDashboard({
             {isSales ? sf.subtitleSales : sf.subtitleAdmin}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div
+          className="flex items-center gap-2 flex-wrap rounded-2xl border px-3 py-2.5"
+          style={{
+            borderColor: "var(--border-color)",
+            backgroundColor: "var(--surface-muted)",
+          }}
+        >
           <button
             onClick={handleRefresh}
             className="btn-secondary flex items-center gap-2 text-sm"
@@ -522,7 +528,7 @@ export function SalesFollowUpDashboard({
           </button>
           <button
             onClick={() => setShowWaTemplates(true)}
-            className="btn-secondary flex items-center gap-2 text-sm"
+            className="btn-secondary flex items-center gap-2 text-sm font-semibold"
             title={sf.editWaPretext}
           >
             <MessageCircle className="size-4" />
@@ -530,7 +536,7 @@ export function SalesFollowUpDashboard({
           </button>
           <button
             onClick={() => setShowUploadExcel(true)}
-            className="btn-secondary flex items-center gap-2 text-sm"
+            className="btn-secondary flex items-center gap-2 text-sm font-semibold"
             title={sf.uploadExcel}
           >
             <Upload className="size-4" />
@@ -541,7 +547,7 @@ export function SalesFollowUpDashboard({
               setEditLead(null);
               setShowAddLead(true);
             }}
-            className="btn-primary-solid flex items-center gap-2 text-sm"
+            className="btn-primary-solid flex items-center gap-2 text-sm font-bold min-h-[40px]"
           >
             <Plus className="size-4" />
             {sf.addLead}
