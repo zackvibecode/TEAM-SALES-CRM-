@@ -125,9 +125,32 @@ export function detectWhatsAppColumn(headers: string[]): string | null {
 }
 
 export function detectPackageColumn(headers: string[]): string | null {
-  return detectColumnExact(headers, [
-    "package_interest", "package interest", "package", "pakej", "interest", "product",
+  const exact = detectColumnExact(headers, [
+    "package_interest",
+    "package interest",
+    "package name",
+    "package",
+    "pakej",
+    "pakej minat",
+    "minat pakej",
+    "pakej customer",
+    "pakej pelanggan",
+    "interest",
+    "product",
+    "produk",
+    "destinasi",
+    "destination",
+    "destination_or_product",
   ]);
+  if (exact) return exact;
+
+  const lower = headers.map((h) => h.toLowerCase().trim());
+  const idx = lower.findIndex(
+    (h) =>
+      /pakej|package|produk|product|destinasi|destination/.test(h) &&
+      !/phone|whatsapp|telefon|tel|mobile|name|nama|email|date|tarikh|notes|catatan|no\.?$/.test(h)
+  );
+  return idx >= 0 ? headers[idx] : null;
 }
 
 export function detectListOrderColumn(headers: string[]): string | null {
