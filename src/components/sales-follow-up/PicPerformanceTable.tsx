@@ -7,9 +7,14 @@ import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 interface PicPerformanceTableProps {
   data: PicPerformanceRow[];
   onExportCsv: () => void;
+  onExportPerfCsv?: () => void;
 }
 
-export function PicPerformanceTable({ data, onExportCsv }: PicPerformanceTableProps) {
+export function PicPerformanceTable({
+  data,
+  onExportCsv,
+  onExportPerfCsv,
+}: PicPerformanceTableProps) {
   const { t } = useAppLocale();
   const sf = t.salesFollowUp;
 
@@ -27,13 +32,13 @@ export function PicPerformanceTable({ data, onExportCsv }: PicPerformanceTablePr
   return (
     <div className="surface-card rounded-xl overflow-hidden">
       <div
-        className="flex items-center justify-between px-5 py-4 border-b"
+        className="flex items-center justify-between px-5 py-4 border-b gap-2 flex-wrap"
         style={{ borderColor: "var(--border-color)" }}
       >
         <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
           {sf.perfTitle}
         </h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={onExportCsv}
             className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
@@ -41,6 +46,15 @@ export function PicPerformanceTable({ data, onExportCsv }: PicPerformanceTablePr
             <Download className="size-3.5" />
             {sf.exportCsv}
           </button>
+          {onExportPerfCsv && (
+            <button
+              onClick={onExportPerfCsv}
+              className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
+            >
+              <Download className="size-3.5" />
+              {sf.exportPerfCsv}
+            </button>
+          )}
           <button
             onClick={() => window.print()}
             className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"

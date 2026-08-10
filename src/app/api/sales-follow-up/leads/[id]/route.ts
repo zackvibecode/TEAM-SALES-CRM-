@@ -103,15 +103,32 @@ export async function DELETE(
     return NextResponse.json(e.body, { status: e.status });
   }
 
-  if (ctx.role !== "admin") {
-    const e = sfError(SF_ERROR.ADMIN_DELETE_ONLY, 403);
-    return NextResponse.json(e.body, { status: e.status });
-  }
-
   const { id } = await params;
+  const access = await assertLeadAccess(ctx.db, ctx.role, ctx.user.id, id);
+  if (!access.ok) return accessErrorResponse(access);
 
   try {
+    const lead = await getLeadById(ctx.db, id);
+    const userName =
+      (ctx.user.user_metadata?.full_name as string | undefined) ||
+      ctx.user.email ||
+      "Unknown";
+
+    const { logSalesFollowUpEvent } = await import("@/lib/sales-follow-up/audit");
+    await logSalesFollowUpEvent(ctx.db, {
+      leadId: id,
+      picId: lead?.assigned_pic_id ?? null,
+      userId: ctx.user.id,
+      userName,
+      action: "lead_deleted",
+      details: {
+        customer_name: lead?.customer_name,
+        phone: lead?.phone_number,
+      },
+    });
+
     await deleteLead(ctx.db, id);
+
     return NextResponse.json({ success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to delete lead";

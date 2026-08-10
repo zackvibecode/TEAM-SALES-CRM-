@@ -20,15 +20,15 @@ import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { sfReplace } from "@/lib/i18n/en/salesFollowUp";
 import { FilterBar } from "./FilterBar";
 import { FollowUpChart } from "./FollowUpChart";
-import { LeadTable } from "./LeadTable";
+import { LeadTable, type PendingQuickState } from "./LeadTable";
 import { LeadFormModal } from "./LeadFormModal";
-import { FollowUpFormModal } from "./FollowUpFormModal";
 import { PicPerformanceTable } from "./PicPerformanceTable";
 import { FollowUpIntroTip } from "./FollowUpIntroTip";
 import { UploadExcelModal } from "./UploadExcelModal";
 import { ToastContainer, useToast } from "./Toast";
 import { SALES_FOLLOW_UP_SETUP_SQL } from "@/lib/sales-follow-up/setup-sql";
 import { mapSalesFollowUpApiError } from "@/lib/sales-follow-up/api-error";
+import { salesFollowUpWhatsAppLink } from "@/lib/sales-follow-up/whatsapp-messages";
 import type {
   SalesPic,
   SalesLead,
@@ -37,7 +37,8 @@ import type {
   ChartDataPoint,
   PicPerformanceRow,
   CreateLeadInput,
-  CreateFollowUpInput,
+  FollowUpStatusType,
+  LeadStatus,
 } from "@/lib/sales-follow-up/types";
 
 export function SalesFollowUpDashboard({
@@ -82,7 +83,13 @@ export function SalesFollowUpDashboard({
   const [showAddLead, setShowAddLead] = useState(false);
   const [showUploadExcel, setShowUploadExcel] = useState(false);
   const [editLead, setEditLead] = useState<SalesLead | null>(null);
-  const [followUpTarget, setFollowUpTarget] = useState<SalesLeadWithLastFollowUp | null>(null);
+  const [followingUpId, setFollowingUpId] = useState<string | null>(null);
+  const [justDoneId, setJustDoneId] = useState<string | null>(null);
+  const [pendingQuick, setPendingQuick] = useState<Record<string, PendingQuickState>>({});
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkAssignPicId, setBulkAssignPicId] = useState("");
   const [setupError, setSetupError] = useState<string | null>(null);
   const [dbReady, setDbReady] = useState(false);
   const [sqlCopied, setSqlCopied] = useState(false);
@@ -242,19 +249,142 @@ export function SalesFollowUpDashboard({
     fetchChartAndPerformance();
   }
 
-  async function handleCreateFollowUp(data: CreateFollowUpInput) {
-    const res = await fetch(`/api/sales-follow-up/leads/${data.lead_id}/follow-ups`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    if (!res.ok) throw new Error(mapSalesFollowUpApiError(sf, result, "saveFollowUpFail"));
-    toast(sf.toastFollowUpSaved, "success");
-    setFollowUpTarget(null);
-    fetchStats();
-    fetchLeads();
-    fetchChartAndPerformance();
+  async function handleQuickFollowUp(lead: SalesLeadWithLastFollowUp) {
+    if (followingUpId) return;
+    setFollowingUpId(lead.id);
+    try {
+      const nextNum = lead.total_follow_ups + 1;
+      window.open(
+        salesFollowUpWhatsAppLink(
+          lead.normalized_phone_number || lead.phone_number,
+          nextNum,
+          lead.customer_name || ""
+        ),
+        "_blank"
+      );
+      fetch("/api/sales-follow-up/log-click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lead_id: lead.id, phone: lead.phone_number }),
+      }).catch(() => {});
+
+      const res = await fetch(`/api/sales-follow-up/leads/${lead.id}/follow-ups`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lead_id: lead.id,
+          status: "No Response",
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(mapSalesFollowUpApiError(sf, result, "saveFollowUpFail"));
+
+      const followUp = result.followUp as { id: string; follow_up_number: number };
+      setPendingQuick((prev) => ({
+        ...prev,
+        [lead.id]: {
+          followUpId: followUp.id,
+          totalFollowUps: followUp.follow_up_number,
+        },
+      }));
+
+      toast(sf.toastFollowUpSaved, "success");
+      setJustDoneId(lead.id);
+      window.setTimeout(() => setJustDoneId((id) => (id === lead.id ? null : id)), 2500);
+      fetchStats();
+      fetchLeads();
+      fetchChartAndPerformance();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : sf.saveFollowUpFail, "error");
+    } finally {
+      setFollowingUpId(null);
+    }
+  }
+
+  async function handleQuickStatus(
+    lead: SalesLeadWithLastFollowUp,
+    status: FollowUpStatusType
+  ) {
+    const pending = pendingQuick[lead.id];
+    if (!pending) return;
+    setStatusUpdatingId(lead.id);
+    try {
+      const res = await fetch(`/api/sales-follow-up/follow-ups/${pending.followUpId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(mapSalesFollowUpApiError(sf, result, "saveFollowUpFail"));
+      toast(sf.toastStatusUpdated, "success");
+      if (pending.totalFollowUps < 3) {
+        setPendingQuick((prev) => {
+          const next = { ...prev };
+          delete next[lead.id];
+          return next;
+        });
+      }
+      fetchLeads();
+      fetchStats();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : sf.saveFollowUpFail, "error");
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  }
+
+  async function handleCompleteStatus(lead: SalesLeadWithLastFollowUp, status: LeadStatus) {
+    setStatusUpdatingId(lead.id);
+    try {
+      const res = await fetch(`/api/sales-follow-up/leads/${lead.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lead_status: status }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(mapSalesFollowUpApiError(sf, result, "saveFail"));
+      toast(sf.toastStatusUpdated, "success");
+      setPendingQuick((prev) => {
+        const next = { ...prev };
+        delete next[lead.id];
+        return next;
+      });
+      fetchLeads();
+      fetchStats();
+      fetchChartAndPerformance();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : sf.saveFail, "error");
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  }
+
+  async function handleBulk(action: "delete" | "assign" | "follow_up") {
+    if (selectedIds.length === 0 || bulkBusy) return;
+    if (action === "assign" && !bulkAssignPicId) return;
+    setBulkBusy(true);
+    try {
+      const res = await fetch("/api/sales-follow-up/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          leadIds: selectedIds,
+          picId: action === "assign" ? bulkAssignPicId : undefined,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(mapSalesFollowUpApiError(sf, result, "errGeneric"));
+      toast(sfReplace(sf.toastBulkOk, { n: result.count ?? selectedIds.length }), "success");
+      setSelectedIds([]);
+      fetchLeads();
+      fetchStats();
+      fetchChartAndPerformance();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : sf.errGeneric, "error");
+    } finally {
+      setBulkBusy(false);
+    }
   }
 
   function handleExportCsv() {
@@ -264,6 +394,16 @@ export function SalesFollowUpDashboard({
     if (picId) params.set("picId", picId);
     if (status) params.set("status", status);
     params.set("format", "csv");
+    window.open(`/api/sales-follow-up/export?${params.toString()}`, "_blank");
+  }
+
+  function handleExportPerfCsv() {
+    const params = new URLSearchParams();
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+    if (picId) params.set("picId", picId);
+    params.set("format", "csv");
+    params.set("report", "performance");
     window.open(`/api/sales-follow-up/export?${params.toString()}`, "_blank");
   }
 
@@ -442,23 +582,116 @@ export function SalesFollowUpDashboard({
       {/* Chart & Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <FollowUpChart data={chartData} />
-        <PicPerformanceTable data={performance} onExportCsv={handleExportCsv} />
+        <PicPerformanceTable
+          data={performance}
+          onExportCsv={handleExportCsv}
+          onExportPerfCsv={handleExportPerfCsv}
+        />
       </div>
+
+      {selectedIds.length > 0 && (
+        <div
+          className="surface-card rounded-xl px-4 py-3 flex flex-wrap items-center gap-2"
+          style={{ borderColor: "var(--border-color)" }}
+        >
+          <span className="text-sm font-semibold mr-2" style={{ color: "var(--text-primary)" }}>
+            {sfReplace(sf.bulkSelected, { n: selectedIds.length })}
+          </span>
+          <button
+            type="button"
+            disabled={bulkBusy}
+            onClick={() => void handleBulk("follow_up")}
+            className="btn-primary-solid text-xs py-1.5 px-3"
+          >
+            {sf.bulkFollowUp}
+          </button>
+          {!isSales && (
+            <>
+              <select
+                value={bulkAssignPicId}
+                onChange={(e) => setBulkAssignPicId(e.target.value)}
+                className="input-field text-xs py-1.5"
+                style={{ minHeight: "32px" }}
+              >
+                <option value="">{sf.selectPic}</option>
+                {pics.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={bulkBusy || !bulkAssignPicId}
+                onClick={() => void handleBulk("assign")}
+                className="btn-secondary text-xs py-1.5 px-3"
+              >
+                {sf.bulkAssign}
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            disabled={bulkBusy}
+            onClick={() => void handleBulk("delete")}
+            className="btn-secondary text-xs py-1.5 px-3 text-red-600"
+          >
+            {sf.bulkDelete}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedIds([])}
+            className="text-xs underline ml-auto"
+            style={{ color: "var(--text-muted)" }}
+          >
+            {sf.bulkClear}
+          </button>
+        </div>
+      )}
 
       {/* Leads Table */}
       <LeadTable
         leads={leads}
         loading={loadingLeads}
-        canDelete={!isSales}
+        canDelete
+        showPicSelect={!isSales}
+        followingUpId={followingUpId}
+        justDoneId={justDoneId}
+        pendingQuick={pendingQuick}
+        selectedIds={selectedIds}
+        statusUpdatingId={statusUpdatingId}
+        onToggleSelect={(id) =>
+          setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+          )
+        }
+        onToggleSelectAll={() =>
+          setSelectedIds((prev) =>
+            prev.length === leads.length ? [] : leads.map((l) => l.id)
+          )
+        }
         onView={(lead) => router.push(`${detailBase}/${lead.id}`)}
         onAddFollowUp={(lead) => {
-          setFollowUpTarget(lead);
+          void handleQuickFollowUp(lead);
         }}
         onEdit={(lead) => {
           setEditLead(lead as unknown as SalesLead);
           setShowAddLead(true);
         }}
         onDelete={handleDeleteLead}
+        onQuickStatus={(lead, status) => {
+          void handleQuickStatus(lead, status);
+        }}
+        onCompleteStatus={(lead, status) => {
+          void handleCompleteStatus(lead, status);
+        }}
+        onDismissQuick={(leadId) =>
+          setPendingQuick((prev) => {
+            const next = { ...prev };
+            delete next[leadId];
+            return next;
+          })
+        }
       />
 
       {/* Modals */}
@@ -482,17 +715,6 @@ export function SalesFollowUpDashboard({
         editLead={editLead}
         lockPic={isSales}
       />
-
-      {followUpTarget && (
-        <FollowUpFormModal
-          open={!!followUpTarget}
-          onClose={() => setFollowUpTarget(null)}
-          onSave={handleCreateFollowUp}
-          leadId={followUpTarget.id}
-          leadName={followUpTarget.customer_name}
-          currentFollowUpCount={followUpTarget.total_follow_ups}
-        />
-      )}
 
       <UploadExcelModal
         open={showUploadExcel}

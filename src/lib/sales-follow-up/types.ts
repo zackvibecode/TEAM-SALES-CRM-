@@ -67,6 +67,13 @@ export interface SalesLeadWithLastFollowUp extends SalesLead {
   last_follow_up_date?: string | null;
   /** Exact time of last follow-up from lead_follow_ups.created_at */
   last_follow_up_at?: string | null;
+  /** Compact history for table expand (up to 3+) */
+  recent_follow_ups?: Array<{
+    id: string;
+    follow_up_number: number;
+    status: FollowUpStatusType;
+    created_at: string;
+  }>;
 }
 
 export interface DashboardStats {
@@ -105,7 +112,15 @@ export interface FollowUpFilterParams {
   picId?: string;
   status?: LeadStatus;
   search?: string;
-  followUpFilter?: "all" | "0" | "1" | "2" | "3+" | "overdue";
+  followUpFilter?:
+    | "all"
+    | "0"
+    | "1"
+    | "2"
+    | "3+"
+    | "overdue"
+    | "due_today"
+    | "not_today";
 }
 
 export interface CreateLeadInput {
@@ -137,7 +152,7 @@ export interface CreateFollowUpInput {
   response?: string;
   status?: FollowUpStatusType;
   notes?: string;
-  next_follow_up_date?: string;
+  next_follow_up_date?: string | null;
 }
 
 export const LEAD_STATUS_OPTIONS: { value: LeadStatus; label: string; color: string }[] = [
@@ -168,5 +183,7 @@ export const FOLLOW_UP_FILTER_OPTIONS = [
   { value: "1", label: "1 Kali Follow-Up" },
   { value: "2", label: "2 Kali Follow-Up" },
   { value: "3+", label: "Minimum 3 Follow-Up" },
+  { value: "due_today", label: "Perlu Follow Hari Ini" },
+  { value: "not_today", label: "Belum FU Hari Ini" },
   { value: "overdue", label: "Overdue" },
 ] as const;
