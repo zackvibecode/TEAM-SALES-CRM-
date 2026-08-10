@@ -27,6 +27,7 @@ import { PicPerformanceTable } from "./PicPerformanceTable";
 import { FollowUpIntroTip } from "./FollowUpIntroTip";
 import { UploadExcelModal } from "./UploadExcelModal";
 import { FollowUpStageTabs, type FollowUpStageValue } from "./FollowUpStageTabs";
+import { PackageFilterTabs, type PackageFilterValue } from "./PackageFilterTabs";
 import { SfuWaTemplatesModal } from "./SfuWaTemplatesModal";
 import { ToastContainer, useToast } from "./Toast";
 import { SALES_FOLLOW_UP_SETUP_SQL } from "@/lib/sales-follow-up/setup-sql";
@@ -45,6 +46,7 @@ import type {
   CreateLeadInput,
   FollowUpStatusType,
   LeadStatus,
+  PackageCount,
 } from "@/lib/sales-follow-up/types";
 
 export function SalesFollowUpDashboard({
@@ -68,10 +70,12 @@ export function SalesFollowUpDashboard({
   const [status, setStatus] = useState("");
   const [search, setSearch] = useState("");
   const [followUpFilter, setFollowUpFilter] = useState("all");
+  const [packageFilter, setPackageFilter] = useState<string>("all");
 
   // Data
   const [pics, setPics] = useState<SalesPic[]>([]);
   const [leads, setLeads] = useState<SalesLeadWithLastFollowUp[]>([]);
+  const [packages, setPackages] = useState<PackageCount[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     total_leads: 0,
     total_follow_ups: 0,
@@ -142,8 +146,9 @@ export function SalesFollowUpDashboard({
     if (status) params.set("status", status);
     if (search) params.set("search", search);
     if (followUpFilter && followUpFilter !== "all") params.set("followUpFilter", followUpFilter);
+    if (packageFilter && packageFilter !== "all") params.set("packageFilter", packageFilter);
     return params.toString();
-  }, [startDate, endDate, picId, status, search, followUpFilter]);
+  }, [startDate, endDate, picId, status, search, followUpFilter, packageFilter]);
 
   const fetchPics = useCallback(async () => {
     try {
@@ -162,7 +167,11 @@ export function SalesFollowUpDashboard({
       const res = await fetch(`/api/sales-follow-up/dashboard?${filterParams}`);
       if (res.ok) {
         const data = await res.json();
-        setStats(data);
+        const { packages: packageRows, ...rest } = data as DashboardStats & {
+          packages?: PackageCount[];
+        };
+        setStats(rest);
+        setPackages(packageRows || []);
       }
     } catch {} finally {
       setLoadingStats(false);
@@ -267,6 +276,9 @@ export function SalesFollowUpDashboard({
       toast(mapSalesFollowUpApiError(sf, result, "errGeneric"), "error");
       throw new Error(mapSalesFollowUpApiError(sf, result, "errGeneric"));
     }
+    // Optimistic remove so list updates even if refetch is slow
+    setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+    setSelectedIds((prev) => prev.filter((id) => id !== lead.id));
     toast(sf.toastLeadDeleted, "success");
     fetchStats();
     fetchLeads();
@@ -419,6 +431,8 @@ export function SalesFollowUpDashboard({
     if (endDate) params.set("endDate", endDate);
     if (picId) params.set("picId", picId);
     if (status) params.set("status", status);
+    if (followUpFilter && followUpFilter !== "all") params.set("followUpFilter", followUpFilter);
+    if (packageFilter && packageFilter !== "all") params.set("packageFilter", packageFilter);
     params.set("format", "csv");
     window.open(`/api/sales-follow-up/export?${params.toString()}`, "_blank");
   }
@@ -579,6 +593,12 @@ export function SalesFollowUpDashboard({
         value={followUpFilter}
         onChange={(v: FollowUpStageValue) => setFollowUpFilter(v)}
         stats={stats}
+      />
+
+      <PackageFilterTabs
+        value={packageFilter}
+        onChange={(v: PackageFilterValue) => setPackageFilter(v)}
+        packages={packages}
       />
 
       {/* KPI Cards */}

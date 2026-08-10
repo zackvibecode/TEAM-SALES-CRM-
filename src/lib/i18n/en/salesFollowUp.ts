@@ -20,6 +20,12 @@ export const enSalesFollowUp = {
   stageFu2: "Follow-Up 2",
   stageDone: "Done (3+)",
 
+  // Package tabs
+  packageTabsLabel: "Filter by package",
+  packageTabsHint: "Tap a package to push that list only — focus your follow-ups.",
+  packageAll: "All packages",
+  packageNone: "No package",
+
   // WA SFU templates
   waEditTitle: "Your WhatsApp messages",
   waEditHint: "Custom text for Follow-Up 1 / 2 / 3. Drag variables into the message, or tap to insert.",
@@ -295,6 +301,11 @@ export const bmSalesFollowUp = {
   stageFu1: "Follow-Up 1",
   stageFu2: "Follow-Up 2",
   stageDone: "Dah Follow-Up (3+)",
+
+  packageTabsLabel: "Asingkan ikut pakej",
+  packageTabsHint: "Tekan pakej untuk push list tu je — fokus follow-up.",
+  packageAll: "Semua pakej",
+  packageNone: "Tiada pakej",
 
   waEditTitle: "Mesej WhatsApp anda",
   waEditHint: "Tulis mesej Follow-Up 1 / 2 / 3. Seret variable masuk kotak, atau ketik untuk masukkan.",

@@ -110,6 +110,14 @@ export interface ChartDataPoint {
   leads_three_plus: number;
 }
 
+/** Sentinel for leads with empty / blank destination_or_product */
+export const PACKAGE_FILTER_NONE = "__none__";
+
+export interface PackageCount {
+  name: string;
+  count: number;
+}
+
 export interface FollowUpFilterParams {
   startDate?: string;
   endDate?: string;
@@ -125,6 +133,8 @@ export interface FollowUpFilterParams {
     | "overdue"
     | "due_today"
     | "not_today";
+  /** Exact package name, or PACKAGE_FILTER_NONE for blank */
+  packageFilter?: string;
 }
 
 export interface CreateLeadInput {

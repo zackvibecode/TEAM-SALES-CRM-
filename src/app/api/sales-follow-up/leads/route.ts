@@ -36,6 +36,7 @@ export async function GET(request: Request) {
     search: searchParams.get("search") || undefined,
     followUpFilter:
       (searchParams.get("followUpFilter") as FollowUpFilterParams["followUpFilter"]) || "all",
+    packageFilter: searchParams.get("packageFilter") || undefined,
   };
 
   try {

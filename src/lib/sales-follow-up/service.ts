@@ -13,9 +13,11 @@ import type {
   UpdateLeadInput,
   CreateFollowUpInput,
   LeadStatus,
+  PackageCount,
+  FollowUpStatusType,
 } from "./types";
+import { PACKAGE_FILTER_NONE } from "./types";
 import { daysFromNow, todayKL } from "./dates";
-import type { FollowUpStatusType } from "./types";
 
 type DbClient = ReturnType<typeof createDbClient>;
 
@@ -56,6 +58,10 @@ type LeadFilterQuery = {
   lt: (column: string, value: string | number) => LeadFilterQuery;
   not: (column: string, operator: string, value: unknown) => LeadFilterQuery;
 };
+
+function isBlankPackage(value: string | null | undefined): boolean {
+  return !(value ?? "").trim();
+}
 
 function buildLeadFilters(
   query: LeadFilterQuery,
@@ -102,6 +108,7 @@ function buildLeadFilters(
       .not("lead_status", "in", '("Booked","Closed")');
   }
   // not_today is applied after fetch (needs follow-up rows)
+  // packageFilter applied after fetch (trim-safe match)
 
   return q;
 }
@@ -121,6 +128,15 @@ export async function getLeads(
   if (error) throw new Error(`Failed to fetch leads: ${error.message}`);
 
   let leads = (data ?? []) as SalesLead[];
+  if (filters.packageFilter) {
+    if (filters.packageFilter === PACKAGE_FILTER_NONE) {
+      leads = leads.filter((lead) => isBlankPackage(lead.destination_or_product));
+    } else {
+      leads = leads.filter(
+        (lead) => (lead.destination_or_product ?? "").trim() === filters.packageFilter
+      );
+    }
+  }
   let leadIds = leads.map((l) => l.id);
 
   const lastFollowUpByLead = new Map<string, { date: string; at: string }>();
@@ -321,8 +337,48 @@ export async function updateLead(
 }
 
 export async function deleteLead(db: DbClient, leadId: string): Promise<void> {
-  const { error } = await db.from("sales_leads").delete().eq("id", leadId);
+  // Delete child rows first in case live DB lacks ON DELETE CASCADE
+  const { error: fuError } = await db
+    .from("lead_follow_ups")
+    .delete()
+    .eq("lead_id", leadId);
+  if (fuError) {
+    throw new Error(`Failed to delete follow-ups: ${fuError.message}`);
+  }
+
+  const { data, error } = await db
+    .from("sales_leads")
+    .delete()
+    .eq("id", leadId)
+    .select("id");
+
   if (error) throw new Error(`Failed to delete lead: ${error.message}`);
+  if (!data || data.length === 0) {
+    throw new Error("Lead tidak dijumpai atau gagal dipadam.");
+  }
+}
+
+export async function bulkDeleteLeads(
+  db: DbClient,
+  leadIds: string[]
+): Promise<number> {
+  if (leadIds.length === 0) return 0;
+
+  const { error: fuError } = await db
+    .from("lead_follow_ups")
+    .delete()
+    .in("lead_id", leadIds);
+  if (fuError) {
+    throw new Error(`Failed to delete follow-ups: ${fuError.message}`);
+  }
+
+  const { data, error } = await db
+    .from("sales_leads")
+    .delete()
+    .in("id", leadIds)
+    .select("id");
+  if (error) throw new Error(`Failed to bulk delete: ${error.message}`);
+  return data?.length ?? 0;
 }
 
 // ===================================================
@@ -449,16 +505,6 @@ export async function updateFollowUpStatus(
   return data as LeadFollowUp;
 }
 
-export async function bulkDeleteLeads(
-  db: DbClient,
-  leadIds: string[]
-): Promise<number> {
-  if (leadIds.length === 0) return 0;
-  const { error } = await db.from("sales_leads").delete().in("id", leadIds);
-  if (error) throw new Error(`Failed to bulk delete: ${error.message}`);
-  return leadIds.length;
-}
-
 export async function bulkAssignPic(
   db: DbClient,
   leadIds: string[],
@@ -560,7 +606,12 @@ export async function getDashboardStats(
 ): Promise<DashboardStats> {
   const today = todayKL();
 
-  let leadQuery = db.from("sales_leads").select("id, lead_status, total_follow_ups, next_follow_up_date, created_at, assigned_pic_id", { count: "exact" });
+  let leadQuery = db
+    .from("sales_leads")
+    .select(
+      "id, lead_status, total_follow_ups, next_follow_up_date, created_at, assigned_pic_id, destination_or_product",
+      { count: "exact" }
+    );
   let fuQuery = db.from("lead_follow_ups").select("id, follow_up_date", { count: "exact" });
 
   if (filters.startDate) {
@@ -579,13 +630,24 @@ export async function getDashboardStats(
   const { data: leads, error: leadError } = await leadQuery;
   if (leadError) throw new Error(`Failed to fetch leads: ${leadError.message}`);
 
-  const leadData = (leads ?? []) as Array<{
+  let leadData = (leads ?? []) as Array<{
     id: string;
     lead_status: string;
     total_follow_ups: number;
     next_follow_up_date: string | null;
     assigned_pic_id: string | null;
+    destination_or_product?: string | null;
   }>;
+
+  if (filters.packageFilter) {
+    if (filters.packageFilter === PACKAGE_FILTER_NONE) {
+      leadData = leadData.filter((l) => isBlankPackage(l.destination_or_product));
+    } else {
+      leadData = leadData.filter(
+        (l) => (l.destination_or_product ?? "").trim() === filters.packageFilter
+      );
+    }
+  }
 
   let fuCount = 0;
   if (filters.picId) {
@@ -641,6 +703,35 @@ export async function getDashboardStats(
     follow_up_1: followUp1,
     follow_up_2: followUp2,
   };
+}
+
+/** Distinct packages with counts. Ignores packageFilter so all tabs stay visible. */
+export async function listPackagesWithCounts(
+  db: DbClient,
+  filters: FollowUpFilterParams
+): Promise<PackageCount[]> {
+  const filtersWithoutPackage: FollowUpFilterParams = {
+    ...filters,
+    packageFilter: undefined,
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = db.from("sales_leads").select("destination_or_product");
+  query = buildLeadFilters(query, filtersWithoutPackage);
+  query = query.limit(5000);
+
+  const { data, error } = await query;
+  if (error) throw new Error(`Failed to list packages: ${error.message}`);
+
+  const counts = new Map<string, number>();
+  for (const row of (data ?? []) as Array<{ destination_or_product?: string | null }>) {
+    const name = (row.destination_or_product ?? "").trim();
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 }
 
 export async function getPicPerformance(
