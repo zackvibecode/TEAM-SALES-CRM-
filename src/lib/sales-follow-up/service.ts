@@ -115,25 +115,36 @@ export async function getLeads(
   const leads = (data ?? []) as SalesLead[];
   const leadIds = leads.map((l) => l.id);
 
-  const lastFollowUpByLead = new Map<string, string>();
+  const lastFollowUpByLead = new Map<string, { date: string; at: string }>();
   if (leadIds.length > 0) {
     const { data: followUps } = await db
       .from("lead_follow_ups")
-      .select("lead_id, follow_up_date")
+      .select("lead_id, follow_up_date, created_at")
       .in("lead_id", leadIds)
-      .order("follow_up_date", { ascending: false });
+      .order("created_at", { ascending: false });
 
-    for (const row of (followUps ?? []) as Array<{ lead_id: string; follow_up_date: string }>) {
+    for (const row of (followUps ?? []) as Array<{
+      lead_id: string;
+      follow_up_date: string;
+      created_at: string;
+    }>) {
       if (!lastFollowUpByLead.has(row.lead_id)) {
-        lastFollowUpByLead.set(row.lead_id, row.follow_up_date);
+        lastFollowUpByLead.set(row.lead_id, {
+          date: row.follow_up_date,
+          at: row.created_at,
+        });
       }
     }
   }
 
-  return leads.map((lead) => ({
-    ...lead,
-    last_follow_up_date: lastFollowUpByLead.get(lead.id) ?? null,
-  }));
+  return leads.map((lead) => {
+    const last = lastFollowUpByLead.get(lead.id);
+    return {
+      ...lead,
+      last_follow_up_date: last?.date ?? null,
+      last_follow_up_at: last?.at ?? null,
+    };
+  });
 }
 
 export async function getLeadById(
@@ -294,6 +305,8 @@ export async function createFollowUp(
   if (!lead) throw new Error("Lead tidak dijumpai.");
 
   const nextFollowUpNumber = lead.total_follow_ups + 1;
+  // Auto timestamp (option A): always record as today KL; wall-clock is created_at
+  const followUpDate = todayKL();
 
   const { data, error } = await db
     .from("lead_follow_ups")
@@ -301,7 +314,7 @@ export async function createFollowUp(
       lead_id: input.lead_id,
       pic_id: input.pic_id || lead.assigned_pic_id,
       follow_up_number: nextFollowUpNumber,
-      follow_up_date: input.follow_up_date,
+      follow_up_date: followUpDate,
       response: input.response || "",
       status: input.status || "No Response",
       notes: input.notes || "",
@@ -429,20 +442,32 @@ export async function getDashboardStats(
   let fuCount = 0;
   if (filters.picId) {
     const leadIds = leadData.map((l) => l.id);
-    if (leadIds.length > 0) {
+    if (leadIds.length === 0) {
+      // PIC has no leads — do not count global follow-ups
+      fuCount = 0;
+    } else {
       fuQuery = fuQuery.in("lead_id", leadIds);
+      if (filters.startDate) {
+        fuQuery = fuQuery.gte("follow_up_date", filters.startDate);
+      }
+      if (filters.endDate) {
+        fuQuery = fuQuery.lte("follow_up_date", filters.endDate);
+      }
+      const { count: fuTotal, error: fuError } = await fuQuery;
+      if (fuError) throw new Error(`Failed to count follow-ups: ${fuError.message}`);
+      fuCount = fuTotal ?? 0;
     }
+  } else {
+    if (filters.startDate) {
+      fuQuery = fuQuery.gte("follow_up_date", filters.startDate);
+    }
+    if (filters.endDate) {
+      fuQuery = fuQuery.lte("follow_up_date", filters.endDate);
+    }
+    const { count: fuTotal, error: fuError } = await fuQuery;
+    if (fuError) throw new Error(`Failed to count follow-ups: ${fuError.message}`);
+    fuCount = fuTotal ?? 0;
   }
-  if (filters.startDate) {
-    fuQuery = fuQuery.gte("follow_up_date", filters.startDate);
-  }
-  if (filters.endDate) {
-    fuQuery = fuQuery.lte("follow_up_date", filters.endDate);
-  }
-
-  const { count: fuTotal, error: fuError } = await fuQuery;
-  if (fuError) throw new Error(`Failed to count follow-ups: ${fuError.message}`);
-  fuCount = fuTotal ?? 0;
 
   const totalLeads = leadData.length;
   const followedUpOnce = leadData.filter((l) => l.total_follow_ups >= 1).length;
@@ -470,7 +495,10 @@ export async function getPicPerformance(
   db: DbClient,
   filters: FollowUpFilterParams
 ): Promise<PicPerformanceRow[]> {
-  const pics = await getPics(db);
+  let pics = await getPics(db);
+  if (filters.picId) {
+    pics = pics.filter((p) => p.id === filters.picId);
+  }
   if (pics.length === 0) return [];
 
   const picIds = pics.map((p) => p.id);
@@ -563,7 +591,10 @@ export async function getChartData(
   db: DbClient,
   filters: FollowUpFilterParams
 ): Promise<ChartDataPoint[]> {
-  const pics = await getPics(db);
+  let pics = await getPics(db);
+  if (filters.picId) {
+    pics = pics.filter((p) => p.id === filters.picId);
+  }
   if (pics.length === 0) return [];
 
   const picIds = pics.map((p) => p.id);
@@ -620,6 +651,7 @@ export async function getChartData(
     const fuCount = fuByPic.get(picId) ?? 0;
 
     result.push({
+      pic_id: picId,
       pic_name: picNameMap.get(picId) ?? "Unknown",
       total_activities: fuCount,
       leads_assigned: picLeads.length,
@@ -644,3 +676,139 @@ export async function insertSeedPics(db: DbClient): Promise<void> {
     });
   }
 }
+
+export interface SalesLeadImportRow {
+  name: string;
+  whatsapp: string;
+  package_interest?: string;
+  notes?: string;
+}
+
+export interface ImportSalesLeadsResult {
+  inserted: number;
+  skippedDuplicate: number;
+  /** Existing phone assigned to a different PIC */
+  skippedOwnedByOther: number;
+  skippedInvalid: number;
+  totalParsed: number;
+}
+
+/** Bulk insert phone list into sales_leads for one PIC. Skips duplicate normalized phones. */
+export async function importSalesLeadsForPic(
+  db: DbClient,
+  params: {
+    rows: SalesLeadImportRow[];
+    assignedPicId: string;
+    source: string;
+  }
+): Promise<ImportSalesLeadsResult> {
+  const { rows, assignedPicId, source } = params;
+  let skippedInvalid = 0;
+  const candidates: Array<{
+    customer_name: string;
+    phone_number: string;
+    normalized_phone_number: string;
+    destination_or_product: string;
+    source: string;
+    assigned_pic_id: string;
+    lead_status: string;
+    latest_response: string;
+    total_follow_ups: number;
+  }> = [];
+
+  const seenInFile = new Set<string>();
+  for (const row of rows) {
+    const phone = (row.whatsapp || "").trim();
+    if (!phone) {
+      skippedInvalid += 1;
+      continue;
+    }
+    const normalized = formatWhatsAppNumber(phone);
+    if (!normalized || normalized.replace(/\D/g, "").length < 8) {
+      skippedInvalid += 1;
+      continue;
+    }
+    if (seenInFile.has(normalized)) {
+      skippedInvalid += 1;
+      continue;
+    }
+    seenInFile.add(normalized);
+    candidates.push({
+      customer_name: (row.name || "").trim() || "Unknown",
+      phone_number: phone,
+      normalized_phone_number: normalized,
+      destination_or_product: (row.package_interest || "").trim(),
+      source,
+      assigned_pic_id: assignedPicId,
+      lead_status: "New",
+      latest_response: "",
+      total_follow_ups: 0,
+    });
+  }
+
+  if (candidates.length === 0) {
+    return {
+      inserted: 0,
+      skippedDuplicate: 0,
+      skippedOwnedByOther: 0,
+      skippedInvalid,
+      totalParsed: rows.length,
+    };
+  }
+
+  const normalizedList = candidates.map((c) => c.normalized_phone_number);
+  const existingByPhone = new Map<string, string | null>();
+
+  const chunkSize = 200;
+  for (let i = 0; i < normalizedList.length; i += chunkSize) {
+    const chunk = normalizedList.slice(i, i + chunkSize);
+    const { data: existing, error } = await db
+      .from("sales_leads")
+      .select("normalized_phone_number, assigned_pic_id")
+      .in("normalized_phone_number", chunk);
+    if (error) throw new Error(`Failed to check duplicates: ${error.message}`);
+    for (const row of (existing ?? []) as Array<{
+      normalized_phone_number: string;
+      assigned_pic_id: string | null;
+    }>) {
+      existingByPhone.set(row.normalized_phone_number, row.assigned_pic_id);
+    }
+  }
+
+  let skippedDuplicate = 0;
+  let skippedOwnedByOther = 0;
+  const toInsert = candidates.filter((c) => {
+    if (!existingByPhone.has(c.normalized_phone_number)) return true;
+    const owner = existingByPhone.get(c.normalized_phone_number);
+    if (owner && owner !== assignedPicId) skippedOwnedByOther += 1;
+    else skippedDuplicate += 1;
+    return false;
+  });
+
+  let inserted = 0;
+  for (let i = 0; i < toInsert.length; i += 100) {
+    const batch = toInsert.slice(i, i + 100);
+    const { error, data } = await db.from("sales_leads").insert(batch).select("id");
+    if (error) {
+      if (error.code === "23505") {
+        for (const row of batch) {
+          const one = await db.from("sales_leads").insert(row).select("id").single();
+          if (!one.error && one.data) inserted += 1;
+          else skippedDuplicate += 1;
+        }
+        continue;
+      }
+      throw new Error(`Failed to import leads: ${error.message}`);
+    }
+    inserted += data?.length ?? batch.length;
+  }
+
+  return {
+    inserted,
+    skippedDuplicate,
+    skippedOwnedByOther,
+    skippedInvalid,
+    totalParsed: rows.length,
+  };
+}
+

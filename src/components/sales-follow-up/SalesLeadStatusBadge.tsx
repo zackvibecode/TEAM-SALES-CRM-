@@ -2,6 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import type { LeadStatus } from "@/lib/sales-follow-up/types";
+import { leadStatusLabel } from "@/lib/sales-follow-up/labels";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 const STATUS_STYLES: Record<string, string> = {
   New: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-400",
@@ -15,6 +17,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export function SalesLeadStatusBadge({ status }: { status: LeadStatus }) {
+  const { t } = useAppLocale();
   return (
     <span
       className={cn(
@@ -22,7 +25,7 @@ export function SalesLeadStatusBadge({ status }: { status: LeadStatus }) {
         STATUS_STYLES[status] || STATUS_STYLES["New"]
       )}
     >
-      {status}
+      {leadStatusLabel(t.salesFollowUp, status)}
     </span>
   );
 }

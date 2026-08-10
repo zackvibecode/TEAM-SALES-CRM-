@@ -7,6 +7,7 @@ import { enSales } from "./en/sales";
 import { enFollowUp } from "./en/followUp";
 import { enRotator } from "./en/rotator";
 import { enActivity } from "./en/activity";
+import { enSalesFollowUp } from "./en/salesFollowUp";
 import { bmCommon } from "./bm/common";
 import { bmNav } from "./bm/nav";
 import { bmPromo } from "./bm/promo";
@@ -15,6 +16,7 @@ import { bmSales } from "./bm/sales";
 import { bmFollowUp } from "./bm/followUp";
 import { bmRotator } from "./bm/rotator";
 import { bmActivity } from "./bm/activity";
+import { bmSalesFollowUp } from "./bm/salesFollowUp";
 
 export interface AppCopy {
   common: typeof enCommon;
@@ -25,6 +27,7 @@ export interface AppCopy {
   followUp: typeof enFollowUp;
   rotator: typeof enRotator;
   activity: typeof enActivity;
+  salesFollowUp: typeof enSalesFollowUp;
 }
 
 const COPY: Record<Locale, AppCopy> = {
@@ -37,6 +40,7 @@ const COPY: Record<Locale, AppCopy> = {
     followUp: enFollowUp,
     rotator: enRotator,
     activity: enActivity,
+    salesFollowUp: enSalesFollowUp,
   },
   bm: {
     common: bmCommon,
@@ -47,6 +51,7 @@ const COPY: Record<Locale, AppCopy> = {
     followUp: bmFollowUp,
     rotator: bmRotator,
     activity: bmActivity,
+    salesFollowUp: bmSalesFollowUp,
   },
 };
 

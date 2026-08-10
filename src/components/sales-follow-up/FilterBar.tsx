@@ -5,9 +5,10 @@ import { Search, X, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SalesPic } from "@/lib/sales-follow-up/types";
 import {
-  LEAD_STATUS_OPTIONS,
-  FOLLOW_UP_FILTER_OPTIONS,
-} from "@/lib/sales-follow-up/types";
+  getFollowUpFilterOptions,
+  getLeadStatusOptions,
+} from "@/lib/sales-follow-up/labels";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 interface FilterBarProps {
   startDate: string;
@@ -42,6 +43,8 @@ export function FilterBar({
   onSearchChange,
   onFollowUpFilterChange,
 }: FilterBarProps) {
+  const { t } = useAppLocale();
+  const sf = t.salesFollowUp;
   const [showFilters, setShowFilters] = useState(false);
   const hasActiveFilters =
     startDate || endDate || (!hidePicFilter && picId) || status || followUpFilter !== "all";
@@ -56,7 +59,7 @@ export function FilterBar({
           />
           <input
             type="text"
-            placeholder="Cari nama atau nombor telefon..."
+            placeholder={sf.searchPlaceholder}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="input-field pl-10 w-full text-sm"
@@ -81,7 +84,7 @@ export function FilterBar({
           )}
         >
           <Filter className="size-4" />
-          Filter
+          {sf.filter}
           {hasActiveFilters && (
             <span className="inline-flex items-center justify-center size-5 rounded-full bg-white/20 text-xs font-bold">
               !
@@ -94,7 +97,7 @@ export function FilterBar({
         <div className="surface-card rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <label className="text-xs font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-              Tarikh Mula
+              {sf.startDate}
             </label>
             <input
               type="date"
@@ -106,7 +109,7 @@ export function FilterBar({
           </div>
           <div>
             <label className="text-xs font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-              Tarikh Akhir
+              {sf.endDate}
             </label>
             <input
               type="date"
@@ -119,7 +122,7 @@ export function FilterBar({
           {!hidePicFilter && (
             <div>
               <label className="text-xs font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-                PIC
+                {sf.colPic}
               </label>
               <select
                 value={picId}
@@ -127,7 +130,7 @@ export function FilterBar({
                 className="input-field w-full text-sm"
                 style={{ minHeight: "40px" }}
               >
-                <option value="">Semua PIC</option>
+                <option value="">{sf.allPics}</option>
                 {pics.map((pic) => (
                   <option key={pic.id} value={pic.id}>
                     {pic.name}
@@ -138,7 +141,7 @@ export function FilterBar({
           )}
           <div>
             <label className="text-xs font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>
-              Status Lead
+              {sf.leadStatus}
             </label>
             <select
               value={status}
@@ -146,8 +149,8 @@ export function FilterBar({
               className="input-field w-full text-sm"
               style={{ minHeight: "40px" }}
             >
-              <option value="">Semua Status</option>
-              {LEAD_STATUS_OPTIONS.map((opt) => (
+              <option value="">{sf.allStatuses}</option>
+              {getLeadStatusOptions(sf).map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>
@@ -157,10 +160,10 @@ export function FilterBar({
 
           <div className="sm:col-span-2 lg:col-span-4">
             <label className="text-xs font-medium mb-2 block" style={{ color: "var(--text-muted)" }}>
-              Status Follow-Up
+              {sf.followUpStatus}
             </label>
             <div className="flex flex-wrap gap-2">
-              {FOLLOW_UP_FILTER_OPTIONS.map((opt) => (
+              {getFollowUpFilterOptions(sf).map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => onFollowUpFilterChange(opt.value)}
@@ -192,7 +195,7 @@ export function FilterBar({
                 className="text-xs font-medium underline"
                 style={{ color: "var(--text-muted)" }}
               >
-                Reset Semua Filter
+                {sf.resetFilters}
               </button>
             </div>
           )}

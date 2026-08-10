@@ -16,11 +16,23 @@ export async function getProfileForFollowUp(
   return data ?? null;
 }
 
+/** Prefer PIC already linked to this user, then any with user_id, then oldest. */
+function pickBestPic(rows: SalesPic[], preferredUserId?: string): SalesPic | null {
+  if (rows.length === 0) return null;
+  if (preferredUserId) {
+    const linked = rows.find((r) => r.user_id === preferredUserId);
+    if (linked) return linked;
+  }
+  const withUser = rows.find((r) => !!r.user_id);
+  if (withUser) return withUser;
+  return [...rows].sort((a, b) => a.created_at.localeCompare(b.created_at))[0] ?? null;
+}
+
 /**
  * Resolve the PIC record for a sales user.
  * Match order: sales_pics.user_id → email → full_name (case-insensitive).
  * Auto-links user_id when matched by name/email.
- * Creates a PIC from profile if none exists.
+ * Creates a PIC from profile only if no matching active PIC exists.
  */
 export async function resolvePicForSalesUser(
   db: DbClient,
@@ -29,16 +41,18 @@ export async function resolvePicForSalesUser(
   const profile = await getProfileForFollowUp(db, userId);
   if (!profile) return null;
 
-  // 1) Direct user_id link
+  // 1) Direct user_id link (may have duplicates — pick one)
   {
-    const { data: byUserId, error } = await db
+    const { data: byUserId } = await db
       .from("sales_pics")
       .select("*")
       .eq("user_id", userId)
       .eq("status", "active")
-      .maybeSingle();
+      .order("created_at", { ascending: true })
+      .limit(10);
 
-    if (!error && byUserId) return byUserId as SalesPic;
+    const picked = pickBestPic((byUserId ?? []) as SalesPic[], userId);
+    if (picked) return picked;
   }
 
   // 2) Match by email
@@ -48,31 +62,35 @@ export async function resolvePicForSalesUser(
       .select("*")
       .ilike("email", profile.email)
       .eq("status", "active")
-      .maybeSingle();
+      .order("created_at", { ascending: true })
+      .limit(10);
 
-    if (byEmail) {
-      await tryLinkPicUser(db, byEmail.id, userId);
-      return { ...(byEmail as SalesPic), user_id: userId };
+    const picked = pickBestPic((byEmail ?? []) as SalesPic[], userId);
+    if (picked) {
+      await tryLinkPicUser(db, picked.id, userId);
+      return { ...picked, user_id: userId };
     }
   }
 
-  // 3) Match by full name
-  if (profile.full_name?.trim()) {
+  // 3) Match by full name (never auto-create if a same-name active PIC exists)
+  const name = profile.full_name?.trim() || profile.email?.split("@")[0] || "Sales User";
+  if (name) {
     const { data: byName } = await db
       .from("sales_pics")
       .select("*")
-      .ilike("name", profile.full_name.trim())
+      .ilike("name", name)
       .eq("status", "active")
-      .maybeSingle();
+      .order("created_at", { ascending: true })
+      .limit(10);
 
-    if (byName) {
-      await tryLinkPicUser(db, byName.id, userId);
-      return { ...(byName as SalesPic), user_id: userId };
+    const picked = pickBestPic((byName ?? []) as SalesPic[], userId);
+    if (picked) {
+      await tryLinkPicUser(db, picked.id, userId);
+      return { ...picked, user_id: userId };
     }
   }
 
-  // 4) Auto-create PIC from profile so sales can use the module immediately
-  const name = profile.full_name?.trim() || profile.email?.split("@")[0] || "Sales User";
+  // 4) Auto-create only when no active PIC matches
   const insertPayload: Record<string, unknown> = {
     name,
     email: profile.email,
@@ -87,6 +105,23 @@ export async function resolvePicForSalesUser(
 
   if (!withUser.error && withUser.data) {
     return withUser.data as SalesPic;
+  }
+
+  // Race: another request may have created the same name — link that row
+  {
+    const { data: raceRows } = await db
+      .from("sales_pics")
+      .select("*")
+      .ilike("name", name)
+      .eq("status", "active")
+      .order("created_at", { ascending: true })
+      .limit(10);
+
+    const picked = pickBestPic((raceRows ?? []) as SalesPic[], userId);
+    if (picked) {
+      await tryLinkPicUser(db, picked.id, userId);
+      return { ...picked, user_id: userId };
+    }
   }
 
   const withoutUser = await db
@@ -121,7 +156,7 @@ export async function resolveScopedPicId(
   if (!pic) {
     return {
       pic: null,
-      error: "Akaun sales belum dipautkan kepada PIC. Hubungi admin.",
+      error: "PIC_NOT_LINKED",
     };
   }
 
@@ -148,13 +183,13 @@ export async function assertLeadAccess(
     .maybeSingle();
 
   if (!lead) {
-    return { ok: false, error: "Lead tidak dijumpai.", status: 404 };
+    return { ok: false, error: "LEAD_NOT_FOUND", status: 404 };
   }
 
   if (lead.assigned_pic_id !== scoped.picId) {
     return {
       ok: false,
-      error: "Anda hanya boleh akses lead yang assigned kepada anda.",
+      error: "LEAD_FORBIDDEN",
       status: 403,
     };
   }

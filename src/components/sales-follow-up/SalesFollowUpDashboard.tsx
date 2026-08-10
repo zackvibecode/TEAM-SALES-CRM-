@@ -13,8 +13,11 @@ import {
   RefreshCw,
   Copy,
   Check,
+  Upload,
 } from "lucide-react";
 import { DashboardMetricTile, DashboardMetricSection } from "@/components/shared/DashboardMetricTile";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
+import { sfReplace } from "@/lib/i18n/en/salesFollowUp";
 import { FilterBar } from "./FilterBar";
 import { FollowUpChart } from "./FollowUpChart";
 import { LeadTable } from "./LeadTable";
@@ -22,8 +25,10 @@ import { LeadFormModal } from "./LeadFormModal";
 import { FollowUpFormModal } from "./FollowUpFormModal";
 import { PicPerformanceTable } from "./PicPerformanceTable";
 import { FollowUpIntroTip } from "./FollowUpIntroTip";
+import { UploadExcelModal } from "./UploadExcelModal";
 import { ToastContainer, useToast } from "./Toast";
 import { SALES_FOLLOW_UP_SETUP_SQL } from "@/lib/sales-follow-up/setup-sql";
+import { mapSalesFollowUpApiError } from "@/lib/sales-follow-up/api-error";
 import type {
   SalesPic,
   SalesLead,
@@ -41,6 +46,8 @@ export function SalesFollowUpDashboard({
   mode?: "admin" | "sales";
 }) {
   const router = useRouter();
+  const { t } = useAppLocale();
+  const sf = t.salesFollowUp;
   const isSales = mode === "sales";
   const detailBase = isSales
     ? "/dashboard/sales/sales-follow-up/leads"
@@ -73,6 +80,7 @@ export function SalesFollowUpDashboard({
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
   const [showAddLead, setShowAddLead] = useState(false);
+  const [showUploadExcel, setShowUploadExcel] = useState(false);
   const [editLead, setEditLead] = useState<SalesLead | null>(null);
   const [followUpTarget, setFollowUpTarget] = useState<SalesLeadWithLastFollowUp | null>(null);
   const [setupError, setSetupError] = useState<string | null>(null);
@@ -102,10 +110,10 @@ export function SalesFollowUpDashboard({
     try {
       await navigator.clipboard.writeText(SALES_FOLLOW_UP_SETUP_SQL);
       setSqlCopied(true);
-      toast("SQL sudah dicopy. Paste dalam Supabase SQL Editor.", "success");
+      toast(sf.toastSqlCopied, "success");
       setTimeout(() => setSqlCopied(false), 2500);
     } catch {
-      toast("Gagal copy. Select & copy manual dari kotak SQL.", "error");
+      toast(sf.toastSqlCopyFail, "error");
     }
   }
 
@@ -198,8 +206,8 @@ export function SalesFollowUpDashboard({
       body: JSON.stringify(data),
     });
     const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal mencipta lead.");
-    toast("Lead berjaya ditambah.", "success");
+    if (!res.ok) throw new Error(mapSalesFollowUpApiError(sf, result, "saveFail"));
+    toast(sf.toastLeadAdded, "success");
     fetchStats();
     fetchLeads();
     fetchChartAndPerformance();
@@ -212,8 +220,8 @@ export function SalesFollowUpDashboard({
       body: JSON.stringify(data),
     });
     const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal mengemaskini lead.");
-    toast("Lead berjaya dikemaskini.", "success");
+    if (!res.ok) throw new Error(mapSalesFollowUpApiError(sf, result, "saveFail"));
+    toast(sf.toastLeadUpdated, "success");
     setEditLead(null);
     fetchStats();
     fetchLeads();
@@ -226,9 +234,9 @@ export function SalesFollowUpDashboard({
     });
     if (!res.ok) {
       const result = await res.json();
-      throw new Error(result.error || "Gagal memadam lead.");
+      throw new Error(mapSalesFollowUpApiError(sf, result, "saveFail"));
     }
-    toast("Lead berjaya dipadam.", "success");
+    toast(sf.toastLeadDeleted, "success");
     fetchStats();
     fetchLeads();
     fetchChartAndPerformance();
@@ -241,8 +249,8 @@ export function SalesFollowUpDashboard({
       body: JSON.stringify(data),
     });
     const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal menyimpan follow-up.");
-    toast("Follow-up berjaya disimpan.", "success");
+    if (!res.ok) throw new Error(mapSalesFollowUpApiError(sf, result, "saveFollowUpFail"));
+    toast(sf.toastFollowUpSaved, "success");
     setFollowUpTarget(null);
     fetchStats();
     fetchLeads();
@@ -286,16 +294,15 @@ export function SalesFollowUpDashboard({
             <AlertCircle className="size-5 shrink-0 mt-0.5" style={{ color: "var(--color-warning-600, #d97706)" }} />
             <div className="space-y-2 min-w-0">
               <p className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
-                Aktifkan Sales Follow-Up (sekali je)
+                {sf.setupTitle}
               </p>
               <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                Sistem ni untuk rekod follow-up customer: berapa kali dah follow,
-                status, nota, dan PIC. Database belum diaktifkan lagi — buat 3 step ni:
+                {sf.setupBody}
               </p>
               <ol className="text-sm space-y-1 list-decimal pl-5" style={{ color: "var(--text-secondary)" }}>
-                <li>Buka <strong>Supabase</strong> → <strong>SQL Editor</strong></li>
-                <li>Klik <strong>Copy SQL</strong> bawah, paste, tekan <strong>Run</strong></li>
-                <li>Balik sini, tekan <strong>Refresh</strong></li>
+                <li>{sf.setupStep1}</li>
+                <li>{sf.setupStep2}</li>
+                <li>{sf.setupStep3}</li>
               </ol>
             </div>
           </div>
@@ -307,7 +314,7 @@ export function SalesFollowUpDashboard({
               className="btn-primary-solid inline-flex items-center gap-2 text-sm"
             >
               {sqlCopied ? <Check className="size-4" /> : <Copy className="size-4" />}
-              {sqlCopied ? "Sudah dicopy" : "Copy SQL"}
+              {sqlCopied ? sf.sqlCopied : sf.copySql}
             </button>
             <button
               type="button"
@@ -315,7 +322,7 @@ export function SalesFollowUpDashboard({
               className="btn-secondary inline-flex items-center gap-2 text-sm"
             >
               <RefreshCw className="size-4" />
-              Refresh
+              {sf.refreshBtn}
             </button>
           </div>
 
@@ -333,21 +340,27 @@ export function SalesFollowUpDashboard({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="page-title">
-            {isSales ? "Follow-Up Lead Saya" : "Follow-Up Lead"}
+            {isSales ? sf.titleSales : sf.titleAdmin}
           </h1>
           <p className="page-subtitle mt-1">
-            {isSales
-              ? "Tengok berapa kali dah follow customer anda — target minimum 3 kali"
-              : "Tengok berapa kali team dah follow customer — target minimum 3 kali"}
+            {isSales ? sf.subtitleSales : sf.subtitleAdmin}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleRefresh}
             className="btn-secondary flex items-center gap-2 text-sm"
-            title="Segar semula data"
+            title={sf.refresh}
           >
             <RefreshCw className="size-4" />
+          </button>
+          <button
+            onClick={() => setShowUploadExcel(true)}
+            className="btn-secondary flex items-center gap-2 text-sm"
+            title={sf.uploadExcel}
+          >
+            <Upload className="size-4" />
+            {sf.uploadExcel}
           </button>
           <button
             onClick={() => {
@@ -357,7 +370,7 @@ export function SalesFollowUpDashboard({
             className="btn-primary-solid flex items-center gap-2 text-sm"
           >
             <Plus className="size-4" />
-            Tambah Lead Baru
+            {sf.addLead}
           </button>
         </div>
       </div>
@@ -385,25 +398,25 @@ export function SalesFollowUpDashboard({
       {/* KPI Cards */}
       <DashboardMetricSection>
         <DashboardMetricTile
-          label="Jumlah Lead"
+          label={sf.kpiTotalLeads}
           value={loadingStats ? "..." : stats.total_leads}
           icon={Users}
           accent="gray"
         />
         <DashboardMetricTile
-          label="Aktiviti Follow-Up"
+          label={sf.kpiActivities}
           value={loadingStats ? "..." : stats.total_follow_ups}
           icon={MessageSquare}
           accent="info"
         />
         <DashboardMetricTile
-          label="Difollow-Up (Min 1x)"
+          label={sf.kpiFollowedOnce}
           value={loadingStats ? "..." : stats.followed_up_once}
           icon={UserCheck}
           accent="warning"
         />
         <DashboardMetricTile
-          label="Selesai (Min 3x FU)"
+          label={sf.kpiDoneThree}
           value={loadingStats ? "..." : stats.followed_up_three}
           icon={Award}
           accent="success"
@@ -413,13 +426,13 @@ export function SalesFollowUpDashboard({
 
       <DashboardMetricSection>
         <DashboardMetricTile
-          label="Belum Follow-Up"
+          label={sf.kpiNoFollowUp}
           value={loadingStats ? "..." : stats.no_follow_up}
           icon={UserX}
           accent="error"
         />
         <DashboardMetricTile
-          label="Overdue Follow-Up"
+          label={sf.kpiOverdue}
           value={loadingStats ? "..." : stats.overdue}
           icon={AlertCircle}
           accent="error"
@@ -480,6 +493,27 @@ export function SalesFollowUpDashboard({
           currentFollowUpCount={followUpTarget.total_follow_ups}
         />
       )}
+
+      <UploadExcelModal
+        open={showUploadExcel}
+        onClose={() => setShowUploadExcel(false)}
+        pics={pics}
+        lockPic={isSales}
+        onSuccess={(summary) => {
+          toast(
+            sfReplace(sf.toastUploadOk, {
+              inserted: summary.inserted,
+              dup: summary.skippedDuplicate,
+              owned: summary.skippedOwnedByOther ?? 0,
+              invalid: summary.skippedInvalid,
+            }),
+            "success"
+          );
+          fetchLeads();
+          fetchStats();
+          fetchChartAndPerformance();
+        }}
+      />
     </div>
   );
 }
