@@ -4,8 +4,9 @@ import { useState, useEffect, type FormEvent } from "react";
 import { X, Loader2, Phone, User, MapPin, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatWhatsAppNumber } from "@/lib/whatsapp";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
+import { getLeadStatusOptions } from "@/lib/sales-follow-up/labels";
 import type { SalesPic, SalesLead, CreateLeadInput } from "@/lib/sales-follow-up/types";
-import { LEAD_STATUS_OPTIONS } from "@/lib/sales-follow-up/types";
 
 interface LeadFormModalProps {
   open: boolean;
@@ -17,6 +18,10 @@ interface LeadFormModalProps {
 }
 
 export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic = false }: LeadFormModalProps) {
+  const { t } = useAppLocale();
+  const sf = t.salesFollowUp;
+  const leadStatusOptions = getLeadStatusOptions(sf);
+
   const [customerName, setCustomerName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [destination, setDestination] = useState("");
@@ -61,13 +66,13 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
     setError("");
 
     if (!phoneNumber.trim()) {
-      setError("Nombor telefon diperlukan.");
+      setError(sf.phoneRequired);
       return;
     }
 
     const normalized = formatWhatsAppNumber(phoneNumber.trim());
     if (normalized.length < 10) {
-      setError("Nombor telefon tidak sah.");
+      setError(sf.phoneInvalid);
       return;
     }
 
@@ -85,7 +90,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
       });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan lead.");
+      setError(err instanceof Error ? err.message : sf.saveFail);
     } finally {
       setSaving(false);
     }
@@ -104,10 +109,10 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
         >
           <div>
             <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
-              {isEdit ? "Edit Lead" : "Tambah Lead Baru"}
+              {isEdit ? sf.editLeadTitle : sf.addLeadTitle}
             </h2>
             <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-              {isEdit ? "Kemaskini maklumat pelanggan" : "Daftar pelanggan baru untuk follow-up"}
+              {isEdit ? sf.editLeadSubtitle : sf.addLeadSubtitle}
             </p>
           </div>
           <button
@@ -135,7 +140,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                Nama Pelanggan
+                {sf.customerName}
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: "var(--text-muted)" }} />
@@ -143,7 +148,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Contoh: Ahmad bin Ali"
+                  placeholder={sf.customerNamePlaceholder}
                   className="input-field pl-10 w-full text-sm"
                 />
               </div>
@@ -151,7 +156,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
 
             <div className="sm:col-span-2">
               <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                Nombor Telefon <span style={{ color: "var(--color-error-500, #ef4444)" }}>*</span>
+                {sf.phoneNumber} <span style={{ color: "var(--color-error-500, #ef4444)" }}>*</span>
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: "var(--text-muted)" }} />
@@ -159,7 +164,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="Contoh: 0123456789"
+                  placeholder={sf.phonePlaceholder}
                   required
                   className="input-field pl-10 w-full text-sm"
                 />
@@ -168,7 +173,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
 
             <div>
               <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                Produk / Destinasi
+                {sf.destinationProduct}
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: "var(--text-muted)" }} />
@@ -176,7 +181,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
-                  placeholder="Contoh: Umrah"
+                  placeholder={sf.destinationPlaceholder}
                   className="input-field pl-10 w-full text-sm"
                 />
               </div>
@@ -184,7 +189,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
 
             <div>
               <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                Sumber Lead
+                {sf.source}
               </label>
               <div className="relative">
                 <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: "var(--text-muted)" }} />
@@ -192,7 +197,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
                   type="text"
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
-                  placeholder="Contoh: Facebook"
+                  placeholder={sf.sourcePlaceholder}
                   className="input-field pl-10 w-full text-sm"
                 />
               </div>
@@ -200,7 +205,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
 
             <div>
               <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                PIC <span style={{ color: "var(--color-error-500, #ef4444)" }}>*</span>
+                {sf.assignPic} <span style={{ color: "var(--color-error-500, #ef4444)" }}>*</span>
               </label>
               <select
                 value={assignedPicId}
@@ -208,7 +213,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
                 className="input-field w-full text-sm"
                 disabled={lockPic}
               >
-                <option value="">Pilih PIC</option>
+                <option value="">{sf.selectPic}</option>
                 {pics.map((pic) => (
                   <option key={pic.id} value={pic.id}>
                     {pic.name}
@@ -219,14 +224,14 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
 
             <div>
               <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                Status Lead
+                {sf.leadStatus}
               </label>
               <select
                 value={leadStatus}
                 onChange={(e) => setLeadStatus(e.target.value)}
                 className="input-field w-full text-sm"
               >
-                {LEAD_STATUS_OPTIONS.map((opt) => (
+                {leadStatusOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
@@ -236,7 +241,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
 
             <div>
               <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                Tarikh Follow-Up Seterusnya
+                {sf.nextFollowUpDate}
               </label>
               <input
                 type="date"
@@ -249,12 +254,12 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
 
           <div>
             <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-              Nota
+              {sf.notes}
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Nota awal untuk follow-up pertama..."
+              placeholder={sf.notesPlaceholder}
               rows={3}
               className="input-field w-full text-sm resize-none"
             />
@@ -267,7 +272,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
               className="btn-secondary flex-1"
               disabled={saving}
             >
-              Batal
+              {sf.cancel}
             </button>
             <button
               type="submit"
@@ -275,7 +280,7 @@ export function LeadFormModal({ open, onClose, onSave, pics, editLead, lockPic =
               disabled={saving}
             >
               {saving && <Loader2 className="size-4 animate-spin" />}
-              {isEdit ? "Simpan Perubahan" : "Simpan Lead"}
+              {isEdit ? sf.saveChanges : sf.saveLead}
             </button>
           </div>
         </form>

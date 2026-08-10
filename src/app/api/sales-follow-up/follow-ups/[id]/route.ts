@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedContext } from "@/lib/auth-context";
 import { deleteFollowUp } from "@/lib/sales-follow-up/service";
+import { SF_ERROR, sfError } from "@/lib/sales-follow-up/errors";
 
 export async function DELETE(
   _request: Request,
@@ -8,11 +9,13 @@ export async function DELETE(
 ) {
   const ctx = await getAuthenticatedContext();
   if (!ctx) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const e = sfError(SF_ERROR.UNAUTHORIZED, 401);
+    return NextResponse.json(e.body, { status: e.status });
   }
 
   if (ctx.role !== "admin") {
-    return NextResponse.json({ error: "Hanya admin boleh padam follow-up." }, { status: 403 });
+    const e = sfError(SF_ERROR.ADMIN_DELETE_FU_ONLY, 403);
+    return NextResponse.json(e.body, { status: e.status });
   }
 
   const { id } = await params;
@@ -22,6 +25,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to delete follow-up";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const e = sfError(SF_ERROR.GENERIC, 500, message);
+    return NextResponse.json(e.body, { status: e.status });
   }
 }

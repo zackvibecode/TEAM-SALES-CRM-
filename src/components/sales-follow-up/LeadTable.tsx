@@ -13,7 +13,8 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatDateShort, formatDateMY } from "@/lib/sales-follow-up/dates";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
+import { formatDate, formatDateTime } from "@/lib/i18n/format";
 import { FollowUpProgressBadge } from "./FollowUpProgressBadge";
 import { SalesLeadStatusBadge } from "./SalesLeadStatusBadge";
 import type { SalesLeadWithLastFollowUp } from "@/lib/sales-follow-up/types";
@@ -37,6 +38,8 @@ export function LeadTable({
   onEdit,
   onDelete,
 }: LeadTableProps) {
+  const { t, locale } = useAppLocale();
+  const sf = t.salesFollowUp;
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
 
@@ -45,7 +48,7 @@ export function LeadTable({
       <div className="surface-card rounded-xl p-12 text-center">
         <Loader2 className="size-8 mx-auto animate-spin" style={{ color: "var(--text-muted)" }} />
         <p className="text-sm mt-3" style={{ color: "var(--text-muted)" }}>
-          Memuatkan data...
+          {sf.loadingData}
         </p>
       </div>
     );
@@ -61,10 +64,10 @@ export function LeadTable({
           <Eye className="size-7" style={{ color: "var(--text-muted)" }} />
         </div>
         <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-          Tiada lead dijumpai
+          {sf.noLeads}
         </p>
         <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-          Tambah lead baru atau ubah filter untuk melihat data.
+          {sf.noLeadsHint}
         </p>
       </div>
     );
@@ -91,28 +94,28 @@ export function LeadTable({
           <thead>
             <tr style={{ backgroundColor: "var(--surface-muted)" }}>
               <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
-                Pelanggan
+                {sf.colCustomer}
               </th>
               <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
-                Telefon
+                {sf.colPhone}
               </th>
               <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
-                PIC
+                {sf.colPic}
               </th>
               <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
-                Produk
+                {sf.colProduct}
               </th>
               <th className="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
-                Follow-Up
+                {sf.colFollowUps}
               </th>
               <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
-                Respon Terkini
+                {sf.colLatestResponse}
               </th>
               <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
-                Status
+                {sf.colStatus}
               </th>
               <th className="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
-                Tindakan
+                {sf.colActions}
               </th>
             </tr>
           </thead>
@@ -122,10 +125,10 @@ export function LeadTable({
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div>
                     <p className="text-sm font-semibold truncate max-w-[180px]" style={{ color: "var(--text-primary)" }}>
-                      {lead.customer_name || "-"}
+                      {lead.customer_name || sf.unnamed}
                     </p>
                     <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
-                      {formatDateMY(lead.created_at)}
+                      {formatDate(lead.created_at, locale)}
                     </p>
                   </div>
                 </td>
@@ -155,11 +158,15 @@ export function LeadTable({
                 <td className="px-4 py-3 text-center">
                   <div className="flex flex-col items-center gap-1">
                     <FollowUpProgressBadge count={lead.total_follow_ups} />
-                    {lead.last_follow_up_date && (
+                    {lead.last_follow_up_at ? (
                       <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
-                        {formatDateShort(lead.last_follow_up_date)}
+                        {formatDateTime(lead.last_follow_up_at, locale)}
                       </span>
-                    )}
+                    ) : lead.last_follow_up_date ? (
+                      <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                        {formatDate(lead.last_follow_up_date, locale)}
+                      </span>
+                    ) : null}
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -188,24 +195,24 @@ export function LeadTable({
                         onAddFollowUp(lead);
                       }}
                       className="btn-primary-solid inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5"
-                      title="WhatsApp & rekod follow-up baru"
+                      title={sf.followUpAction}
                     >
                       <Phone className="size-3.5" />
-                      Follow-Up
+                      {sf.followUpAction}
                     </button>
                     <ActionBtn
-                      title="Lihat sejarah follow-up"
+                      title={sf.viewLead}
                       onClick={() => onView(lead)}
                       icon={<Eye className="size-3.5" />}
                     />
                     <ActionBtn
-                      title="WhatsApp"
+                      title={sf.whatsapp}
                       onClick={() => openWhatsApp(lead.normalized_phone_number)}
                       icon={<MessageCircle className="size-3.5" />}
                       colorClass="text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-500/10"
                     />
                     <ActionBtn
-                      title="Edit lead"
+                      title={sf.editLead}
                       onClick={() => onEdit(lead)}
                       icon={<Pencil className="size-3.5" />}
                     />
@@ -218,7 +225,7 @@ export function LeadTable({
                             onClick={() => handleDelete(lead)}
                             disabled={deletingId === lead.id}
                             className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition"
-                            title="Sahkan padam"
+                            title={sf.confirmDelete}
                           >
                             {deletingId === lead.id ? (
                               <Loader2 className="size-3.5 animate-spin" />
@@ -229,14 +236,14 @@ export function LeadTable({
                           <button
                             onClick={() => setShowConfirm(null)}
                             className="p-1.5 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 dark:bg-white/5 dark:text-white/50 dark:hover:bg-white/10 transition"
-                            title="Batal"
+                            title={sf.cancel}
                           >
                             <X className="size-3.5" />
                           </button>
                         </div>
                       ) : (
                         <ActionBtn
-                          title="Padam lead"
+                          title={sf.deleteLead}
                           onClick={() => setShowConfirm(lead.id)}
                           icon={<Trash2 className="size-3.5" />}
                           colorClass="text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"

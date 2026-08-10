@@ -5,7 +5,21 @@ import {
   createFollowUp,
 } from "@/lib/sales-follow-up/service";
 import { assertLeadAccess, resolveScopedPicId } from "@/lib/sales-follow-up/access";
+import { SF_ERROR, sfError } from "@/lib/sales-follow-up/errors";
 import type { CreateFollowUpInput } from "@/lib/sales-follow-up/types";
+
+function accessErrorResponse(access: { error: string; status: number }) {
+  const code =
+    access.error === "LEAD_NOT_FOUND"
+      ? SF_ERROR.LEAD_NOT_FOUND
+      : access.error === "LEAD_FORBIDDEN"
+        ? SF_ERROR.LEAD_FORBIDDEN
+        : access.error === "PIC_NOT_LINKED"
+          ? SF_ERROR.PIC_NOT_LINKED
+          : SF_ERROR.GENERIC;
+  const e = sfError(code, access.status);
+  return NextResponse.json(e.body, { status: e.status });
+}
 
 export async function GET(
   _request: Request,
@@ -13,21 +27,21 @@ export async function GET(
 ) {
   const ctx = await getAuthenticatedContext();
   if (!ctx) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const e = sfError(SF_ERROR.UNAUTHORIZED, 401);
+    return NextResponse.json(e.body, { status: e.status });
   }
 
   const { id: leadId } = await params;
   const access = await assertLeadAccess(ctx.db, ctx.role, ctx.user.id, leadId);
-  if (!access.ok) {
-    return NextResponse.json({ error: access.error }, { status: access.status });
-  }
+  if (!access.ok) return accessErrorResponse(access);
 
   try {
     const followUps = await getLeadFollowUps(ctx.db, leadId);
     return NextResponse.json({ followUps });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to fetch follow-ups";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const e = sfError(SF_ERROR.GENERIC, 500, message);
+    return NextResponse.json(e.body, { status: e.status });
   }
 }
 
@@ -37,22 +51,17 @@ export async function POST(
 ) {
   const ctx = await getAuthenticatedContext();
   if (!ctx) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const e = sfError(SF_ERROR.UNAUTHORIZED, 401);
+    return NextResponse.json(e.body, { status: e.status });
   }
 
   const { id: leadId } = await params;
   const access = await assertLeadAccess(ctx.db, ctx.role, ctx.user.id, leadId);
-  if (!access.ok) {
-    return NextResponse.json({ error: access.error }, { status: access.status });
-  }
+  if (!access.ok) return accessErrorResponse(access);
 
   try {
     const body: CreateFollowUpInput = await request.json();
     body.lead_id = leadId;
-
-    if (!body.follow_up_date) {
-      return NextResponse.json({ error: "Tarikh follow-up diperlukan." }, { status: 400 });
-    }
 
     if (ctx.role === "sales") {
       const scoped = await resolveScopedPicId(ctx.db, ctx.role, ctx.user.id);
@@ -63,6 +72,7 @@ export async function POST(
     return NextResponse.json({ followUp }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to create follow-up";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const e = sfError(SF_ERROR.GENERIC, 500, message);
+    return NextResponse.json(e.body, { status: e.status });
   }
 }

@@ -2,6 +2,7 @@
 
 import { ArrowUpDown, Download, Printer } from "lucide-react";
 import type { PicPerformanceRow } from "@/lib/sales-follow-up/types";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 interface PicPerformanceTableProps {
   data: PicPerformanceRow[];
@@ -9,13 +10,16 @@ interface PicPerformanceTableProps {
 }
 
 export function PicPerformanceTable({ data, onExportCsv }: PicPerformanceTableProps) {
+  const { t } = useAppLocale();
+  const sf = t.salesFollowUp;
+
   if (data.length === 0) {
     return (
       <div
         className="surface-card rounded-xl p-8 text-center"
         style={{ color: "var(--text-muted)" }}
       >
-        <p className="text-sm font-medium">Tiada data prestasi untuk dipaparkan.</p>
+        <p className="text-sm font-medium">{sf.perfEmpty}</p>
       </div>
     );
   }
@@ -27,7 +31,7 @@ export function PicPerformanceTable({ data, onExportCsv }: PicPerformanceTablePr
         style={{ borderColor: "var(--border-color)" }}
       >
         <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-          Laporan Prestasi PIC
+          {sf.perfTitle}
         </h3>
         <div className="flex items-center gap-2">
           <button
@@ -35,14 +39,14 @@ export function PicPerformanceTable({ data, onExportCsv }: PicPerformanceTablePr
             className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
           >
             <Download className="size-3.5" />
-            Export Lead (CSV)
+            {sf.exportCsv}
           </button>
           <button
             onClick={() => window.print()}
             className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
           >
             <Printer className="size-3.5" />
-            Cetak
+            {sf.print}
           </button>
         </div>
       </div>
@@ -51,22 +55,19 @@ export function PicPerformanceTable({ data, onExportCsv }: PicPerformanceTablePr
         <table className="w-full">
           <thead>
             <tr style={{ backgroundColor: "var(--surface-muted)" }}>
-              <Th>PIC</Th>
-              <Th align="right">Lead</Th>
-              <Th align="right">Aktiviti FU</Th>
-              <Th align="right">Difollow-Up</Th>
-              <Th align="right">Min 3x FU</Th>
-              <Th align="right">Belum FU</Th>
-              <Th align="right">Overdue</Th>
-              <Th align="right">Kadar Selesai</Th>
+              <Th>{sf.colPic}</Th>
+              <Th align="right">{sf.colLead}</Th>
+              <Th align="right">{sf.colFuActivities}</Th>
+              <Th align="right">{sf.colFollowedUp}</Th>
+              <Th align="right">{sf.colMin3x}</Th>
+              <Th align="right">{sf.colNoFu}</Th>
+              <Th align="right">{sf.colOverdue}</Th>
+              <Th align="right">{sf.colCompletion}</Th>
             </tr>
           </thead>
           <tbody>
             {data.map((row) => (
-              <tr
-                key={row.pic_id}
-                className="table-row"
-              >
+              <tr key={row.pic_id} className="table-row">
                 <Td>
                   <span className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>
                     {row.pic_name}
@@ -83,12 +84,24 @@ export function PicPerformanceTable({ data, onExportCsv }: PicPerformanceTablePr
                   </span>
                 </Td>
                 <Td align="right">
-                  <span className={row.no_follow_up > 0 ? "text-orange-600 dark:text-orange-400" : "text-green-600 dark:text-green-400"}>
+                  <span
+                    className={
+                      row.no_follow_up > 0
+                        ? "text-orange-600 dark:text-orange-400"
+                        : "text-green-600 dark:text-green-400"
+                    }
+                  >
                     {row.no_follow_up}
                   </span>
                 </Td>
                 <Td align="right">
-                  <span className={row.overdue > 0 ? "text-red-600 dark:text-red-400 font-semibold" : "text-green-600 dark:text-green-400"}>
+                  <span
+                    className={
+                      row.overdue > 0
+                        ? "text-red-600 dark:text-red-400 font-semibold"
+                        : "text-green-600 dark:text-green-400"
+                    }
+                  >
                     {row.overdue}
                   </span>
                 </Td>
@@ -99,11 +112,12 @@ export function PicPerformanceTable({ data, onExportCsv }: PicPerformanceTablePr
                         className="h-full rounded-full transition-all"
                         style={{
                           width: `${Math.min(row.completion_rate, 100)}%`,
-                          backgroundColor: row.completion_rate >= 50
-                            ? "var(--color-success-500, #22c55e)"
-                            : row.completion_rate >= 30
-                              ? "var(--color-warning-500, #f59e0b)"
-                              : "var(--color-error-500, #ef4444)",
+                          backgroundColor:
+                            row.completion_rate >= 50
+                              ? "var(--color-success-500, #22c55e)"
+                              : row.completion_rate >= 30
+                                ? "var(--color-warning-500, #f59e0b)"
+                                : "var(--color-error-500, #ef4444)",
                         }}
                       />
                     </div>
@@ -130,7 +144,10 @@ function Th({ children, align }: { children: React.ReactNode; align?: "right" })
         textAlign: align || "left",
       }}
     >
-      <div className="flex items-center gap-1" style={{ justifyContent: align === "right" ? "flex-end" : "flex-start" }}>
+      <div
+        className="flex items-center gap-1"
+        style={{ justifyContent: align === "right" ? "flex-end" : "flex-start" }}
+      >
         {children}
         <ArrowUpDown className="size-3 opacity-40" />
       </div>

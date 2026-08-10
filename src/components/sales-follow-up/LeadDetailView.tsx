@@ -13,7 +13,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatDateMY } from "@/lib/sales-follow-up/dates";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
+import { formatDate } from "@/lib/i18n/format";
+import { sfReplace } from "@/lib/i18n/en/salesFollowUp";
+import { mapSalesFollowUpApiError } from "@/lib/sales-follow-up/api-error";
 import { FollowUpProgressBadge } from "./FollowUpProgressBadge";
 import { SalesLeadStatusBadge } from "./SalesLeadStatusBadge";
 import { FollowUpTimeline } from "./FollowUpTimeline";
@@ -31,6 +34,8 @@ interface LeadDetailViewProps {
 }
 
 export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
+  const { t, locale } = useAppLocale();
+  const sf = t.salesFollowUp;
   const { toasts, toast, removeToast } = useToast();
 
   const [lead, setLead] = useState<SalesLead | null>(null);
@@ -72,8 +77,8 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
       body: JSON.stringify(data),
     });
     const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal menyimpan follow-up.");
-    toast("Follow-up berjaya disimpan.", "success");
+    if (!res.ok) throw new Error(mapSalesFollowUpApiError(sf, result, "saveFollowUpFail"));
+    toast(sf.toastFollowUpSaved, "success");
     setShowAddFU(false);
     fetchData();
   }
@@ -96,10 +101,10 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
     return (
       <div className="text-center py-20">
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          Lead tidak dijumpai.
+          {sf.leadNotFound}
         </p>
         <button onClick={onBack} className="btn-secondary mt-4 text-sm">
-          Kembali
+          {sf.back}
         </button>
       </div>
     );
@@ -115,7 +120,7 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
         style={{ color: "var(--text-secondary)" }}
       >
         <ArrowLeft className="size-4" />
-        Kembali ke Dashboard
+        {sf.backToDashboard}
       </button>
 
       <div className="surface-card rounded-xl p-6">
@@ -123,20 +128,20 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
           <div className="space-y-3 min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-xl font-bold truncate" style={{ color: "var(--text-primary)" }}>
-                {lead.customer_name || "Tanpa Nama"}
+                {lead.customer_name || sf.unnamed}
               </h2>
               <SalesLeadStatusBadge status={lead.lead_status} />
               <FollowUpProgressBadge count={lead.total_follow_ups} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <InfoItem icon={<Phone className="size-4" />} label="Telefon" value={lead.phone_number} />
-              <InfoItem icon={<MapPin className="size-4" />} label="Produk" value={lead.destination_or_product || "-"} />
-              <InfoItem icon={<Tag className="size-4" />} label="Sumber" value={lead.source || "-"} />
-              <InfoItem icon={<User className="size-4" />} label="PIC" value={lead.assigned_pic?.name || "-"} />
-              <InfoItem icon={<Calendar className="size-4" />} label="Dicipta" value={formatDateMY(lead.created_at)} />
-              <InfoItem icon={<Calendar className="size-4" />} label="FU Seterusnya" value={lead.next_follow_up_date ? formatDateMY(lead.next_follow_up_date) : "-"} />
-              <InfoItem icon={<MessageSquare className="size-4" />} label="Respon Terkini" value={lead.latest_response || "-"} span={2} />
+              <InfoItem icon={<Phone className="size-4" />} label={sf.phone} value={lead.phone_number} />
+              <InfoItem icon={<MapPin className="size-4" />} label={sf.product} value={lead.destination_or_product || "-"} />
+              <InfoItem icon={<Tag className="size-4" />} label={sf.source} value={lead.source || "-"} />
+              <InfoItem icon={<User className="size-4" />} label={sf.colPic} value={lead.assigned_pic?.name || "-"} />
+              <InfoItem icon={<Calendar className="size-4" />} label={sf.created} value={formatDate(lead.created_at, locale)} />
+              <InfoItem icon={<Calendar className="size-4" />} label={sf.nextFu} value={lead.next_follow_up_date ? formatDate(lead.next_follow_up_date, locale) : "-"} />
+              <InfoItem icon={<MessageSquare className="size-4" />} label={sf.latestResponse} value={lead.latest_response || "-"} span={2} />
             </div>
           </div>
 
@@ -146,14 +151,14 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
               className="btn-whatsapp flex items-center gap-2 text-sm"
             >
               <Phone className="size-4" />
-              WhatsApp
+              {sf.whatsapp}
             </button>
             <button
               onClick={() => setShowAddFU(true)}
               className="btn-primary-solid flex items-center gap-2 text-sm"
             >
               <CheckCircle2 className="size-4" />
-              Tambah Follow-Up
+              {sf.addFollowUp}
             </button>
           </div>
         </div>
@@ -162,10 +167,10 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-            Sejarah Follow-Up ({followUps.length})
+            {sfReplace(sf.historyTitle, { n: followUps.length })}
           </h3>
         </div>
-        <FollowUpTimeline followUps={followUps} emptyMessage="Tiada rekod follow-up untuk lead ini." />
+        <FollowUpTimeline followUps={followUps} emptyMessage={sf.historyEmpty} />
       </div>
 
       {showAddFU && (

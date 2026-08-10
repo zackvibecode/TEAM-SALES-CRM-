@@ -37,8 +37,8 @@ export async function GET(request: Request) {
         getChartData(ctx.db, filters),
       ]);
       const chartData =
-        ctx.role === "sales" && scoped.pic
-          ? chartRes.filter((row) => row.pic_name === scoped.pic!.name)
+        ctx.role === "sales" && scoped.picId
+          ? chartRes.filter((row) => row.pic_id === scoped.picId)
           : chartRes;
       const performance =
         ctx.role === "sales" && scoped.picId
@@ -50,8 +50,8 @@ export async function GET(request: Request) {
     if (type === "chart") {
       const data = await getChartData(ctx.db, filters);
       const chartData =
-        ctx.role === "sales" && scoped.pic
-          ? data.filter((row) => row.pic_name === scoped.pic!.name)
+        ctx.role === "sales" && scoped.picId
+          ? data.filter((row) => row.pic_id === scoped.picId)
           : data;
       return NextResponse.json({ chartData });
     }

@@ -65,6 +65,8 @@ export interface LeadFollowUp {
 
 export interface SalesLeadWithLastFollowUp extends SalesLead {
   last_follow_up_date?: string | null;
+  /** Exact time of last follow-up from lead_follow_ups.created_at */
+  last_follow_up_at?: string | null;
 }
 
 export interface DashboardStats {
@@ -89,6 +91,7 @@ export interface PicPerformanceRow {
 }
 
 export interface ChartDataPoint {
+  pic_id: string;
   pic_name: string;
   total_activities: number;
   leads_assigned: number;
@@ -129,7 +132,8 @@ export interface UpdateLeadInput {
 export interface CreateFollowUpInput {
   lead_id: string;
   pic_id?: string;
-  follow_up_date: string;
+  /** Optional — server auto-sets to today (KL) when omitted */
+  follow_up_date?: string;
   response?: string;
   status?: FollowUpStatusType;
   notes?: string;

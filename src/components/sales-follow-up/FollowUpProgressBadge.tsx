@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
+import { sfReplace } from "@/lib/i18n/en/salesFollowUp";
 
 interface FollowUpProgressBadgeProps {
   count: number;
@@ -13,24 +15,27 @@ export function FollowUpProgressBadge({
   size = "md",
   showSteps = true,
 }: FollowUpProgressBadgeProps) {
+  const { t } = useAppLocale();
+  const sf = t.salesFollowUp;
+
   let label: string;
   let colorClass: string;
 
   if (count === 0) {
-    label = "Belum Follow-Up";
+    label = sf.badgeNone;
     colorClass =
       "bg-[var(--surface-muted)] text-[var(--text-secondary)] border border-[var(--border-color)]";
   } else if (count === 1) {
-    label = "1 / 3 Follow-Up";
+    label = sf.badgeOne;
     colorClass = "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400";
   } else if (count === 2) {
-    label = "2 / 3 Follow-Up";
+    label = sf.badgeTwo;
     colorClass = "bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-400";
   } else if (count === 3) {
-    label = "3 / 3 Selesai";
+    label = sf.badgeThree;
     colorClass = "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400";
   } else {
-    label = `${count}x Follow-Up`;
+    label = sfReplace(sf.badgeMore, { n: count });
     colorClass = "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400";
   }
 
@@ -69,8 +74,10 @@ export function FollowUpProgressBadge({
 }
 
 export function FollowUpStatusLabel({ count }: { count: number }) {
-  if (count === 0) return "Belum Follow-Up";
-  if (count === 1) return "1 Kali Follow-Up";
-  if (count === 2) return "2 Kali Follow-Up";
-  return "Minimum 3 Kali Selesai";
+  const { t } = useAppLocale();
+  const sf = t.salesFollowUp;
+  if (count === 0) return sf.labelNone;
+  if (count === 1) return sf.labelOne;
+  if (count === 2) return sf.labelTwo;
+  return sf.labelThreePlus;
 }

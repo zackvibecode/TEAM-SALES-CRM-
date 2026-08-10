@@ -7,7 +7,21 @@ import {
   checkDuplicatePhone,
 } from "@/lib/sales-follow-up/service";
 import { assertLeadAccess, resolveScopedPicId } from "@/lib/sales-follow-up/access";
+import { SF_ERROR, sfError } from "@/lib/sales-follow-up/errors";
 import type { UpdateLeadInput } from "@/lib/sales-follow-up/types";
+
+function accessErrorResponse(access: { error: string; status: number }) {
+  const code =
+    access.error === "LEAD_NOT_FOUND"
+      ? SF_ERROR.LEAD_NOT_FOUND
+      : access.error === "LEAD_FORBIDDEN"
+        ? SF_ERROR.LEAD_FORBIDDEN
+        : access.error === "PIC_NOT_LINKED"
+          ? SF_ERROR.PIC_NOT_LINKED
+          : SF_ERROR.GENERIC;
+  const e = sfError(code, access.status);
+  return NextResponse.json(e.body, { status: e.status });
+}
 
 export async function GET(
   _request: Request,
@@ -15,24 +29,25 @@ export async function GET(
 ) {
   const ctx = await getAuthenticatedContext();
   if (!ctx) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const e = sfError(SF_ERROR.UNAUTHORIZED, 401);
+    return NextResponse.json(e.body, { status: e.status });
   }
 
   const { id } = await params;
   const access = await assertLeadAccess(ctx.db, ctx.role, ctx.user.id, id);
-  if (!access.ok) {
-    return NextResponse.json({ error: access.error }, { status: access.status });
-  }
+  if (!access.ok) return accessErrorResponse(access);
 
   try {
     const lead = await getLeadById(ctx.db, id);
     if (!lead) {
-      return NextResponse.json({ error: "Lead tidak dijumpai." }, { status: 404 });
+      const e = sfError(SF_ERROR.LEAD_NOT_FOUND, 404);
+      return NextResponse.json(e.body, { status: e.status });
     }
     return NextResponse.json({ lead });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to fetch lead";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const e = sfError(SF_ERROR.GENERIC, 500, message);
+    return NextResponse.json(e.body, { status: e.status });
   }
 }
 
@@ -42,14 +57,13 @@ export async function PUT(
 ) {
   const ctx = await getAuthenticatedContext();
   if (!ctx) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const e = sfError(SF_ERROR.UNAUTHORIZED, 401);
+    return NextResponse.json(e.body, { status: e.status });
   }
 
   const { id } = await params;
   const access = await assertLeadAccess(ctx.db, ctx.role, ctx.user.id, id);
-  if (!access.ok) {
-    return NextResponse.json({ error: access.error }, { status: access.status });
-  }
+  if (!access.ok) return accessErrorResponse(access);
 
   try {
     const body: UpdateLeadInput = await request.json();
@@ -62,10 +76,8 @@ export async function PUT(
     if (body.phone_number) {
       const isDuplicate = await checkDuplicatePhone(ctx.db, body.phone_number, id);
       if (isDuplicate) {
-        return NextResponse.json(
-          { error: "Nombor telefon ini sudah berada dalam database." },
-          { status: 409 }
-        );
+        const e = sfError(SF_ERROR.PHONE_DUPLICATE, 409);
+        return NextResponse.json(e.body, { status: e.status });
       }
     }
 
@@ -73,8 +85,11 @@ export async function PUT(
     return NextResponse.json({ lead });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to update lead";
-    const status = message.includes("sudah berada") ? 409 : 500;
-    return NextResponse.json({ error: message }, { status });
+    const code = /sudah berada|duplicate|23505/i.test(message)
+      ? SF_ERROR.PHONE_DUPLICATE
+      : SF_ERROR.GENERIC;
+    const e = sfError(code, code === SF_ERROR.PHONE_DUPLICATE ? 409 : 500, message);
+    return NextResponse.json(e.body, { status: e.status });
   }
 }
 
@@ -84,12 +99,13 @@ export async function DELETE(
 ) {
   const ctx = await getAuthenticatedContext();
   if (!ctx) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const e = sfError(SF_ERROR.UNAUTHORIZED, 401);
+    return NextResponse.json(e.body, { status: e.status });
   }
 
-  // Only admin can delete leads.
   if (ctx.role !== "admin") {
-    return NextResponse.json({ error: "Hanya admin boleh padam lead." }, { status: 403 });
+    const e = sfError(SF_ERROR.ADMIN_DELETE_ONLY, 403);
+    return NextResponse.json(e.body, { status: e.status });
   }
 
   const { id } = await params;
@@ -99,6 +115,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to delete lead";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const e = sfError(SF_ERROR.GENERIC, 500, message);
+    return NextResponse.json(e.body, { status: e.status });
   }
 }

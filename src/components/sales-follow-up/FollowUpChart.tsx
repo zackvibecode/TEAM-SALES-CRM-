@@ -2,12 +2,15 @@
 
 import type { ChartDataPoint } from "@/lib/sales-follow-up/types";
 import { BarChart3 } from "lucide-react";
+import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 interface FollowUpChartProps {
   data: ChartDataPoint[];
 }
 
 export function FollowUpChart({ data }: FollowUpChartProps) {
+  const { t } = useAppLocale();
+  const sf = t.salesFollowUp;
   const maxValue = Math.max(...data.map((d) => d.total_activities), 1);
 
   if (data.length === 0) {
@@ -17,8 +20,8 @@ export function FollowUpChart({ data }: FollowUpChartProps) {
         style={{ color: "var(--text-muted)" }}
       >
         <BarChart3 className="size-10 mx-auto mb-3 opacity-40" />
-        <p className="text-sm font-medium">Tiada data untuk dipaparkan.</p>
-        <p className="text-xs mt-1">Tambah lead dan follow-up untuk melihat carta prestasi.</p>
+        <p className="text-sm font-medium">{sf.chartEmpty}</p>
+        <p className="text-xs mt-1">{sf.chartEmptyHint}</p>
       </div>
     );
   }
@@ -28,13 +31,13 @@ export function FollowUpChart({ data }: FollowUpChartProps) {
       <div className="flex items-center gap-2 mb-5">
         <BarChart3 className="size-5" style={{ color: "var(--text-secondary)" }} />
         <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-          Follow-Up Performance by PIC
+          {sf.chartTitle}
         </h3>
       </div>
 
       <div className="space-y-4">
         {data.map((item) => (
-          <div key={item.pic_name}>
+          <div key={item.pic_id}>
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-3 min-w-0">
                 <span
@@ -52,7 +55,7 @@ export function FollowUpChart({ data }: FollowUpChartProps) {
                   <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
                     {item.total_activities}
                   </span>{" "}
-                  aktiviti
+                  {sf.chartActivities}
                 </span>
                 <span
                   className="text-xs tabular-nums"
@@ -61,7 +64,7 @@ export function FollowUpChart({ data }: FollowUpChartProps) {
                   <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
                     {item.leads_assigned}
                   </span>{" "}
-                  lead
+                  {sf.chartLeads}
                 </span>
               </div>
             </div>
@@ -88,10 +91,10 @@ export function FollowUpChart({ data }: FollowUpChartProps) {
 
             <div className="flex gap-4 mt-1">
               <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
-                <span className="font-semibold">{item.leads_followed_up}</span> difollow-up
+                <span className="font-semibold">{item.leads_followed_up}</span> {sf.chartFollowedUp}
               </span>
               <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
-                <span className="font-semibold">{item.leads_three_plus}</span> min 3x
+                <span className="font-semibold">{item.leads_three_plus}</span> {sf.chartMin3x}
               </span>
             </div>
           </div>
