@@ -45,10 +45,7 @@ export function PackageFilterTabs({
     });
   }
 
-  if (packages.length === 0) {
-    return null;
-  }
-
+  // Always render for every user (admin + sales), even with 0 packages
   return (
     <section
       className="surface-card rounded-2xl border-2 px-4 py-4 sm:px-5 sm:py-5 space-y-3"
