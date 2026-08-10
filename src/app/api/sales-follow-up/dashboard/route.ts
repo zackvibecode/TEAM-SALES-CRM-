@@ -32,10 +32,14 @@ export async function GET(request: Request) {
   };
 
   try {
-    const [stats, packages] = await Promise.all([
-      getDashboardStats(ctx.db, filters),
-      listPackagesWithCounts(ctx.db, filters),
-    ]);
+    const stats = await getDashboardStats(ctx.db, filters);
+    let packages: Awaited<ReturnType<typeof listPackagesWithCounts>> = [];
+    try {
+      packages = await listPackagesWithCounts(ctx.db, filters);
+    } catch {
+      // Package list must not break dashboard for any user
+      packages = [];
+    }
     return NextResponse.json({ ...stats, packages });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to load dashboard stats";

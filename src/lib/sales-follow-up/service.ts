@@ -705,19 +705,25 @@ export async function getDashboardStats(
   };
 }
 
-/** Distinct packages with counts. Ignores packageFilter so all tabs stay visible. */
+/** Distinct packages with counts.
+ * Ignores packageFilter + stage + search so every user always sees package tabs
+ * for their PIC/date/status scope.
+ */
 export async function listPackagesWithCounts(
   db: DbClient,
   filters: FollowUpFilterParams
 ): Promise<PackageCount[]> {
-  const filtersWithoutPackage: FollowUpFilterParams = {
-    ...filters,
-    packageFilter: undefined,
+  const filtersForPackages: FollowUpFilterParams = {
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+    picId: filters.picId,
+    status: filters.status,
+    // Intentionally omit followUpFilter, search, packageFilter
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query: any = db.from("sales_leads").select("destination_or_product");
-  query = buildLeadFilters(query, filtersWithoutPackage);
+  query = buildLeadFilters(query, filtersForPackages);
   query = query.limit(5000);
 
   const { data, error } = await query;

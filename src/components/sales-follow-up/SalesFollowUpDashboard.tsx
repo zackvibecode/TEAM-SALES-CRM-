@@ -171,7 +171,8 @@ export function SalesFollowUpDashboard({
           packages?: PackageCount[];
         };
         setStats(rest);
-        setPackages(packageRows || []);
+        // Always update packages array (never leave stale / missing for some users)
+        setPackages(Array.isArray(packageRows) ? packageRows : []);
       }
     } catch {} finally {
       setLoadingStats(false);
