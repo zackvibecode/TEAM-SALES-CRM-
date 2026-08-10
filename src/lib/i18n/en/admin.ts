@@ -83,7 +83,7 @@ export const enAdmin = {
   },
   apiKey: {
     title: "AI API Key",
-    subtitle: "Manage the agent API key for external integrations",
+    subtitle: "Agent API key + ChatGPT Custom GPT setup (admin only)",
     badge: "API",
   },
   settings: {
@@ -193,7 +193,7 @@ export const bmAdmin = {
   },
   apiKey: {
     title: "Kunci API AI",
-    subtitle: "Urus kunci API agent untuk integrasi luar",
+    subtitle: "Kunci Agent API + setup ChatGPT Custom GPT (admin sahaja)",
     badge: "API",
   },
   settings: {

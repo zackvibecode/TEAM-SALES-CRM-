@@ -13,6 +13,9 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
+  BookOpen,
+  ExternalLink,
+  MessageSquare,
 } from "lucide-react";
 
 type ApiKeyInfo = {
@@ -28,7 +31,24 @@ type ApiKeyInfo = {
   exampleUrlWithQuery?: string;
 };
 
-type CopyTarget = "key" | "curl" | "url" | null;
+type CopyTarget = "key" | "curl" | "url" | "openapi" | "instructions" | null;
+
+const GPT_INSTRUCTIONS = `You are the Zaqone SaleCRM assistant.
+
+Rules:
+- Use Actions (API) only to answer CRM questions.
+- Never ask the user for email or password.
+- Never tell the user to open the CRM website login page.
+- Authentication is already configured via X-API-Key.
+- Prefer sales slugs like: shiema, alip, fatin (lowercase).
+- If unsure which sales user, call listSalesUsers first.
+
+Typical tasks:
+- Test connection
+- List sales users
+- Performance summary for a sales user (default last 30 days)
+- Recent activity
+- Daily breakdown`;
 
 export function AdminAgentApiKeyPanel() {
   const [info, setInfo] = useState<ApiKeyInfo | null>(null);
@@ -39,6 +59,7 @@ export function AdminAgentApiKeyPanel() {
   const [copied, setCopied] = useState<CopyTarget>(null);
   const [showModal, setShowModal] = useState(false);
   const [showEndpoints, setShowEndpoints] = useState(false);
+  const [showChatGptDocs, setShowChatGptDocs] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -141,8 +162,8 @@ export function AdminAgentApiKeyPanel() {
                   </span>
                 </div>
                 <p className="text-sm mt-2 max-w-xl leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                  Jana API key supaya Hermes, Telegram bot, atau AI lain boleh baca prestasi sales
-                  team. Admin sahaja — jangan kongsi dengan sales.
+                  Jana API key untuk ChatGPT Custom GPT, Hermes, Telegram, atau AI lain baca prestasi
+                  sales. Admin sahaja — jangan kongsi dengan sales.
                 </p>
               </div>
             </div>
@@ -310,6 +331,197 @@ export function AdminAgentApiKeyPanel() {
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
+
+        {/* ChatGPT Custom GPT docs — admin only (this page) */}
+        <div
+          id="chatgpt"
+          className="card-padded border-2"
+          style={{ borderColor: "rgba(16, 185, 129, 0.28)", background: "rgba(16, 185, 129, 0.04)" }}
+        >
+          <button
+            type="button"
+            onClick={() => setShowChatGptDocs((v) => !v)}
+            className="w-full flex items-start justify-between gap-3 text-left"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-600 shrink-0">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold text-base" style={{ color: "var(--text-primary)" }}>
+                    ChatGPT Custom GPT (Cara 1)
+                  </p>
+                  <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700">
+                    Admin sahaja
+                  </span>
+                </div>
+                <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+                  Sambung ChatGPT ke SaleCRM guna Agent API — tiada MCP server. Auth = API key{" "}
+                  <code className="text-xs">zaqone_...</code> sahaja.
+                </p>
+              </div>
+            </div>
+            {showChatGptDocs ? (
+              <ChevronUp className="w-5 h-5 shrink-0 mt-1" style={{ color: "var(--text-muted)" }} />
+            ) : (
+              <ChevronDown className="w-5 h-5 shrink-0 mt-1" style={{ color: "var(--text-muted)" }} />
+            )}
+          </button>
+
+          {showChatGptDocs && (
+            <div className="mt-5 space-y-5">
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href="https://chatgpt.com/gpts"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary min-h-[40px] text-sm"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Buka ChatGPT GPTs
+                </a>
+                <button
+                  type="button"
+                  onClick={() =>
+                    copyText(
+                      `${info?.baseUrl ?? "https://salescrm.zaqone.com"}/agent-openapi.json`,
+                      "openapi"
+                    )
+                  }
+                  className="btn-secondary min-h-[40px] text-sm"
+                >
+                  {copied === "openapi" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copied === "openapi" ? "Disalin" : "Salin OpenAPI URL"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => copyText(GPT_INSTRUCTIONS, "instructions")}
+                  className="btn-secondary min-h-[40px] text-sm"
+                >
+                  {copied === "instructions" ? <Check className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
+                  {copied === "instructions" ? "Disalin" : "Salin GPT Instructions"}
+                </button>
+              </div>
+
+              <div
+                className="rounded-xl p-4 space-y-2 text-sm"
+                style={{ background: "var(--surface-muted)" }}
+              >
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                  OpenAPI (Import dari URL)
+                </p>
+                <p className="font-mono text-xs break-all" style={{ color: "var(--text-primary)" }}>
+                  {(info?.baseUrl ?? "https://salescrm.zaqone.com") + "/agent-openapi.json"}
+                </p>
+                <p className="font-mono text-xs break-all" style={{ color: "var(--text-secondary)" }}>
+                  {(info?.baseUrl ?? "https://salescrm.zaqone.com") + "/api/agent/openapi"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>
+                  Setup langkah demi langkah
+                </p>
+                <ol className="space-y-3 text-sm list-decimal list-inside" style={{ color: "var(--text-muted)" }}>
+                  <li>
+                    Jana & salin API key <code className="text-xs">zaqone_...</code> di atas (admin).
+                  </li>
+                  <li>
+                    Uji:{" "}
+                    <code className="text-xs break-all">
+                      {(info?.baseUrl ?? "https://salescrm.zaqone.com") +
+                        "/api/agent/test?api_key=zaqone_YOUR_KEY"}
+                    </code>
+                  </li>
+                  <li>
+                    ChatGPT → Explore GPTs → <strong>Create a GPT</strong> → tab Configure.
+                  </li>
+                  <li>
+                    Name: <code className="text-xs">Zaqone CRM</code> — paste Instructions (butang salin
+                    di atas).
+                  </li>
+                  <li>
+                    Actions → Create → <strong>Import from URL</strong> (OpenAPI di atas).
+                  </li>
+                  <li>
+                    Auth Type: <strong>API Key</strong> → Custom header{" "}
+                    <code className="text-xs">X-API-Key</code> → paste key.
+                  </li>
+                  <li>Save / Publish GPT, kemudian test dengan prompt di bawah.</li>
+                </ol>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
+                  Prompt ujian
+                </p>
+                <ul className="space-y-1.5 text-sm" style={{ color: "var(--text-muted)" }}>
+                  {[
+                    "Test CRM connection",
+                    "List all sales users",
+                    "Summary for alip last 30 days",
+                    "Recent activity for shiema",
+                    "Daily breakdown for fatin last 14 days",
+                  ].map((p) => (
+                    <li key={p} className="flex gap-2">
+                      <span className="text-emerald-600 shrink-0">•</span>
+                      <code className="text-xs">{p}</code>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
+                  Troubleshooting
+                </p>
+                <ul className="space-y-2 text-sm" style={{ color: "var(--text-muted)" }}>
+                  <li>
+                    <strong className="text-[var(--text-secondary)]">401</strong> — jana semula key,
+                    kemas kini Auth dalam GPT Actions.
+                  </li>
+                  <li>
+                    <strong className="text-[var(--text-secondary)]">503</strong> — key belum dijana di
+                    Admin.
+                  </li>
+                  <li>
+                    <strong className="text-[var(--text-secondary)]">Import OpenAPI gagal</strong> —
+                    pastikan URL buka dalam browser; tunggu deploy Vercel.
+                  </li>
+                  <li>
+                    <strong className="text-[var(--text-secondary)]">GPT cipta data</strong> — pastikan
+                    Actions enabled; arahkan guna Actions sahaja.
+                  </li>
+                </ul>
+              </div>
+
+              <div
+                className="rounded-xl border p-4 text-sm space-y-2"
+                style={{ borderColor: "var(--border-color)", color: "var(--text-muted)" }}
+              >
+                <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                  Keselamatan
+                </p>
+                <ul className="space-y-1.5 list-disc list-inside">
+                  <li>
+                    Jangan minta ChatGPT buka login CRM atau guna email/password.
+                  </li>
+                  <li>
+                    Treat <code className="text-xs">zaqone_...</code> macam password — jangan share ke
+                    sales.
+                  </li>
+                  <li>API ni read-oriented (monitor sales), bukan tulis admin tools.</li>
+                </ul>
+              </div>
+
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                Docs penuh dalam repo:{" "}
+                <code className="text-xs">docs/chatgpt-custom-gpt.md</code>
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Telegram troubleshooting */}
         <div
