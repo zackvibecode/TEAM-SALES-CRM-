@@ -134,10 +134,14 @@ export function LeadTable({
 
   function followUpButtonLabel(lead: SalesLeadWithLastFollowUp) {
     if (followingUpId === lead.id) return sf.followUpSaving;
-    if (justDoneId === lead.id) return sf.alreadyFollowedUp;
+    if (justDoneId === lead.id || lead.total_follow_ups >= 3) return sf.alreadyFollowedUp;
     const next = lead.total_follow_ups + 1;
     if (next <= 3) return sfReplace(sf.followUpNext, { n: next });
     return sf.followUpAction;
+  }
+
+  function isFollowUpDone(lead: SalesLeadWithLastFollowUp) {
+    return justDoneId === lead.id || lead.total_follow_ups >= 3;
   }
 
   const allSelected = leads.length > 0 && selectedIds.length === leads.length;
@@ -186,7 +190,7 @@ export function LeadTable({
           <tbody>
             {leads.map((lead) => {
               const isSaving = followingUpId === lead.id;
-              const isDone = justDoneId === lead.id;
+              const isDone = isFollowUpDone(lead);
               const pending = pendingQuick[lead.id];
               const showQuick = Boolean(pending && onQuickStatus);
               const showComplete =
@@ -280,7 +284,7 @@ export function LeadTable({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap max-w-[22rem]">
                           <button
                             type="button"
                             disabled={isSaving}
@@ -304,16 +308,34 @@ export function LeadTable({
                             {followUpButtonLabel(lead)}
                           </button>
 
-                          <ActionBtn
-                            title={sf.viewLead}
+                          <button
+                            type="button"
                             onClick={() => onView(lead)}
-                            icon={<Eye className="size-3.5" />}
-                          />
-                          <ActionBtn
-                            title={sf.editLead}
+                            className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border transition"
+                            style={{
+                              borderColor: "var(--border-color)",
+                              color: "var(--text-secondary)",
+                              backgroundColor: "var(--surface-muted)",
+                            }}
+                            title={sf.viewLead}
+                          >
+                            <Eye className="size-3.5" />
+                            {sf.btnView}
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => onEdit(lead)}
-                            icon={<Pencil className="size-3.5" />}
-                          />
+                            className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border transition"
+                            style={{
+                              borderColor: "var(--border-color)",
+                              color: "var(--text-secondary)",
+                              backgroundColor: "var(--surface-muted)",
+                            }}
+                            title={sf.editLead}
+                          >
+                            <Pencil className="size-3.5" />
+                            {sf.btnEdit}
+                          </button>
 
                           {canDelete &&
                             (showConfirm === lead.id ? (
@@ -322,7 +344,7 @@ export function LeadTable({
                                   type="button"
                                   onClick={() => handleDelete(lead)}
                                   disabled={deletingId === lead.id}
-                                  className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition"
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
                                   title={sf.confirmDelete}
                                 >
                                   {deletingId === lead.id ? (
@@ -330,23 +352,32 @@ export function LeadTable({
                                   ) : (
                                     <Check className="size-3.5" />
                                   )}
+                                  {sf.yesDelete}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setShowConfirm(null)}
-                                  className="p-1.5 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 dark:bg-white/5 dark:text-white/50 dark:hover:bg-white/10 transition"
+                                  className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border transition"
+                                  style={{
+                                    borderColor: "var(--border-color)",
+                                    color: "var(--text-muted)",
+                                  }}
                                   title={sf.cancel}
                                 >
                                   <X className="size-3.5" />
+                                  {sf.cancel}
                                 </button>
                               </div>
                             ) : (
-                              <ActionBtn
-                                title={sf.deleteLead}
+                              <button
+                                type="button"
                                 onClick={() => setShowConfirm(lead.id)}
-                                icon={<Trash2 className="size-3.5" />}
-                                colorClass="text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                              />
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition"
+                                title={sf.deleteLead}
+                              >
+                                <Trash2 className="size-3.5" />
+                                {sf.btnDelete}
+                              </button>
                             ))}
                         </div>
 
@@ -442,32 +473,5 @@ export function LeadTable({
         </table>
       </div>
     </div>
-  );
-}
-
-function ActionBtn({
-  title,
-  onClick,
-  icon,
-  colorClass,
-}: {
-  title: string;
-  onClick: () => void;
-  icon: React.ReactNode;
-  colorClass?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className={cn(
-        "p-1.5 rounded-lg transition",
-        colorClass ||
-          "text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
-      )}
-    >
-      {icon}
-    </button>
   );
 }

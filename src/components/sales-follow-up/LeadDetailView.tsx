@@ -198,9 +198,10 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
   }
 
   const nextN = lead.total_follow_ups + 1;
+  const fuDone = justDone || lead.total_follow_ups >= 3;
   const fuLabel = savingFu
     ? sf.followUpSaving
-    : justDone
+    : fuDone
       ? sf.alreadyFollowedUp
       : nextN <= 3
         ? sfReplace(sf.followUpNext, { n: nextN })
@@ -261,7 +262,7 @@ export function LeadDetailView({ leadId, onBack }: LeadDetailViewProps) {
               onClick={() => void handleQuickFollowUp()}
               className={cn(
                 "flex items-center gap-2 text-sm px-4 py-2 rounded-lg font-semibold transition",
-                justDone
+                fuDone
                   ? "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400"
                   : "btn-primary-solid",
                 savingFu && "opacity-70"
