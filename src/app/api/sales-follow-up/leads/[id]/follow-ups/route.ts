@@ -5,6 +5,7 @@ import {
   createFollowUp,
 } from "@/lib/sales-follow-up/service";
 import { assertLeadAccess, resolveScopedPicId } from "@/lib/sales-follow-up/access";
+import { logSalesFollowUpEvent } from "@/lib/sales-follow-up/audit";
 import { SF_ERROR, sfError } from "@/lib/sales-follow-up/errors";
 import type { CreateFollowUpInput } from "@/lib/sales-follow-up/types";
 
@@ -65,10 +66,29 @@ export async function POST(
 
     if (ctx.role === "sales") {
       const scoped = await resolveScopedPicId(ctx.db, ctx.role, ctx.user.id);
-      body.pic_id = scoped.picId;
+      body.pic_id = scoped.picId ?? undefined;
     }
 
     const followUp = await createFollowUp(ctx.db, body);
+
+    const userName =
+      (ctx.user.user_metadata?.full_name as string | undefined) ||
+      ctx.user.email ||
+      "Unknown";
+
+    await logSalesFollowUpEvent(ctx.db, {
+      leadId,
+      picId: followUp.pic_id,
+      userId: ctx.user.id,
+      userName,
+      action: "follow_up_created",
+      details: {
+        followUpId: followUp.id,
+        followUpNumber: followUp.follow_up_number,
+        status: followUp.status,
+      },
+    });
+
     return NextResponse.json({ followUp }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to create follow-up";

@@ -66,9 +66,24 @@ CREATE INDEX IF NOT EXISTS idx_sales_leads_assigned_pic ON public.sales_leads(as
 CREATE INDEX IF NOT EXISTS idx_sales_leads_status ON public.sales_leads(lead_status);
 CREATE INDEX IF NOT EXISTS idx_lead_follow_ups_lead_id ON public.lead_follow_ups(lead_id);
 
+CREATE TABLE IF NOT EXISTS public.sales_follow_up_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id UUID REFERENCES public.sales_leads(id) ON DELETE SET NULL,
+  pic_id UUID,
+  user_id UUID,
+  user_name TEXT DEFAULT '',
+  action TEXT NOT NULL,
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sfu_events_lead ON public.sales_follow_up_events(lead_id);
+CREATE INDEX IF NOT EXISTS idx_sfu_events_created ON public.sales_follow_up_events(created_at DESC);
+
 GRANT ALL ON TABLE public.sales_pics TO postgres, anon, authenticated, service_role;
 GRANT ALL ON TABLE public.sales_leads TO postgres, anon, authenticated, service_role;
 GRANT ALL ON TABLE public.lead_follow_ups TO postgres, anon, authenticated, service_role;
+GRANT ALL ON TABLE public.sales_follow_up_events TO postgres, anon, authenticated, service_role;
 
 INSERT INTO public.sales_pics (name, status)
 SELECT v.name, 'active'
@@ -97,6 +112,6 @@ NOTIFY pgrst, 'reload schema';
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
-  AND table_name IN ('sales_pics', 'sales_leads', 'lead_follow_ups')
+  AND table_name IN ('sales_pics', 'sales_leads', 'lead_follow_ups', 'sales_follow_up_events')
 ORDER BY table_name;
 `;

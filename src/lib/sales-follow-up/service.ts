@@ -14,7 +14,8 @@ import type {
   CreateFollowUpInput,
   LeadStatus,
 } from "./types";
-import { todayKL } from "./dates";
+import { daysFromNow, todayKL } from "./dates";
+import type { FollowUpStatusType } from "./types";
 
 type DbClient = ReturnType<typeof createDbClient>;
 
@@ -90,10 +91,17 @@ function buildLeadFilters(
     q = q.gte("total_follow_ups", 3);
   } else if (filters.followUpFilter === "overdue") {
     const today = todayKL();
-    q = q.lt("next_follow_up_date", today)
+    q = q
+      .lt("next_follow_up_date", today)
       .not("lead_status", "in", '("Booked","Closed")')
       .not("next_follow_up_date", "is", null);
+  } else if (filters.followUpFilter === "due_today") {
+    const today = todayKL();
+    q = q
+      .eq("next_follow_up_date", today)
+      .not("lead_status", "in", '("Booked","Closed")');
   }
+  // not_today is applied after fetch (needs follow-up rows)
 
   return q;
 }
@@ -112,29 +120,66 @@ export async function getLeads(
 
   if (error) throw new Error(`Failed to fetch leads: ${error.message}`);
 
-  const leads = (data ?? []) as SalesLead[];
-  const leadIds = leads.map((l) => l.id);
+  let leads = (data ?? []) as SalesLead[];
+  let leadIds = leads.map((l) => l.id);
 
   const lastFollowUpByLead = new Map<string, { date: string; at: string }>();
+  const recentByLead = new Map<
+    string,
+    Array<{
+      id: string;
+      follow_up_number: number;
+      status: FollowUpStatusType;
+      created_at: string;
+    }>
+  >();
+  const followedToday = new Set<string>();
+  const today = todayKL();
+
   if (leadIds.length > 0) {
     const { data: followUps } = await db
       .from("lead_follow_ups")
-      .select("lead_id, follow_up_date, created_at")
+      .select("id, lead_id, follow_up_number, status, follow_up_date, created_at")
       .in("lead_id", leadIds)
-      .order("created_at", { ascending: false });
+      .order("follow_up_number", { ascending: true });
 
     for (const row of (followUps ?? []) as Array<{
+      id: string;
       lead_id: string;
+      follow_up_number: number;
+      status: FollowUpStatusType;
       follow_up_date: string;
       created_at: string;
     }>) {
-      if (!lastFollowUpByLead.has(row.lead_id)) {
-        lastFollowUpByLead.set(row.lead_id, {
-          date: row.follow_up_date,
-          at: row.created_at,
-        });
+      const list = recentByLead.get(row.lead_id) ?? [];
+      list.push({
+        id: row.id,
+        follow_up_number: row.follow_up_number,
+        status: row.status,
+        created_at: row.created_at,
+      });
+      recentByLead.set(row.lead_id, list);
+
+      if (row.follow_up_date === today || row.created_at.startsWith(today)) {
+        followedToday.add(row.lead_id);
       }
+
+      // last = highest number (list already ascending)
+      lastFollowUpByLead.set(row.lead_id, {
+        date: row.follow_up_date,
+        at: row.created_at,
+      });
     }
+  }
+
+  if (filters.followUpFilter === "not_today") {
+    leads = leads.filter(
+      (lead) =>
+        !followedToday.has(lead.id) &&
+        lead.lead_status !== "Booked" &&
+        lead.lead_status !== "Closed"
+    );
+    leadIds = leads.map((l) => l.id);
   }
 
   return leads.map((lead) => {
@@ -143,6 +188,7 @@ export async function getLeads(
       ...lead,
       last_follow_up_date: last?.date ?? null,
       last_follow_up_at: last?.at ?? null,
+      recent_follow_ups: recentByLead.get(lead.id) ?? [],
     };
   });
 }
@@ -307,6 +353,18 @@ export async function createFollowUp(
   const nextFollowUpNumber = lead.total_follow_ups + 1;
   // Auto timestamp (option A): always record as today KL; wall-clock is created_at
   const followUpDate = todayKL();
+  const status = input.status || "No Response";
+  const terminalStatuses: FollowUpStatusType[] = [
+    "Booked",
+    "Not Interested",
+    "Wrong Number",
+  ];
+  const nextDate =
+    input.next_follow_up_date !== undefined
+      ? input.next_follow_up_date
+      : terminalStatuses.includes(status)
+        ? null
+        : daysFromNow(1);
 
   const { data, error } = await db
     .from("lead_follow_ups")
@@ -316,9 +374,9 @@ export async function createFollowUp(
       follow_up_number: nextFollowUpNumber,
       follow_up_date: followUpDate,
       response: input.response || "",
-      status: input.status || "No Response",
+      status,
       notes: input.notes || "",
-      next_follow_up_date: input.next_follow_up_date || null,
+      next_follow_up_date: nextDate,
     })
     .select()
     .single();
@@ -331,15 +389,105 @@ export async function createFollowUp(
     .from("sales_leads")
     .update({
       total_follow_ups: nextFollowUpNumber,
-      latest_response: input.response || input.status || lead.latest_response,
-      lead_status: input.status && input.status !== "No Response"
-        ? mapFollowUpStatusToLeadStatus(input.status)
-        : lead.lead_status,
-      next_follow_up_date: input.next_follow_up_date || lead.next_follow_up_date,
+      latest_response: input.response || status || lead.latest_response,
+      lead_status:
+        status !== "No Response"
+          ? mapFollowUpStatusToLeadStatus(status)
+          : lead.lead_status === "New"
+            ? "Follow-Up"
+            : lead.lead_status,
+      next_follow_up_date: nextDate,
     })
     .eq("id", input.lead_id);
 
   return followUp;
+}
+
+export async function updateFollowUpStatus(
+  db: DbClient,
+  followUpId: string,
+  status: FollowUpStatusType,
+  response?: string
+): Promise<LeadFollowUp> {
+  const { data: existing, error: fetchError } = await db
+    .from("lead_follow_ups")
+    .select("*")
+    .eq("id", followUpId)
+    .single();
+
+  if (fetchError || !existing) {
+    throw new Error(`Failed to find follow-up: ${fetchError?.message ?? "not found"}`);
+  }
+
+  const fu = existing as LeadFollowUp;
+  const updatePayload: Record<string, unknown> = { status };
+  if (response !== undefined) updatePayload.response = response;
+
+  const { data, error } = await db
+    .from("lead_follow_ups")
+    .update(updatePayload)
+    .eq("id", followUpId)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to update follow-up: ${error.message}`);
+
+  const lead = await getLeadById(db, fu.lead_id);
+  if (lead) {
+    const isLatest = fu.follow_up_number === lead.total_follow_ups;
+    if (isLatest) {
+      await db
+        .from("sales_leads")
+        .update({
+          latest_response: response || status,
+          lead_status: mapFollowUpStatusToLeadStatus(status),
+        })
+        .eq("id", fu.lead_id);
+    }
+  }
+
+  return data as LeadFollowUp;
+}
+
+export async function bulkDeleteLeads(
+  db: DbClient,
+  leadIds: string[]
+): Promise<number> {
+  if (leadIds.length === 0) return 0;
+  const { error } = await db.from("sales_leads").delete().in("id", leadIds);
+  if (error) throw new Error(`Failed to bulk delete: ${error.message}`);
+  return leadIds.length;
+}
+
+export async function bulkAssignPic(
+  db: DbClient,
+  leadIds: string[],
+  picId: string
+): Promise<number> {
+  if (leadIds.length === 0) return 0;
+  const { error } = await db
+    .from("sales_leads")
+    .update({ assigned_pic_id: picId })
+    .in("id", leadIds);
+  if (error) throw new Error(`Failed to bulk assign: ${error.message}`);
+  return leadIds.length;
+}
+
+export async function bulkCreateFollowUps(
+  db: DbClient,
+  leadIds: string[],
+  picId?: string | null
+): Promise<number> {
+  let created = 0;
+  for (const leadId of leadIds) {
+    await createFollowUp(db, {
+      lead_id: leadId,
+      pic_id: picId ?? undefined,
+      status: "No Response",
+    });
+    created += 1;
+  }
+  return created;
 }
 
 export async function deleteFollowUp(

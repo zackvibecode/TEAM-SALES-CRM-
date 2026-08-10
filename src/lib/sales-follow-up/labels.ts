@@ -56,13 +56,18 @@ export function getFollowUpStatusOptions(
 
 export function getFollowUpFilterOptions(
   t: Sf
-): { value: "all" | "0" | "1" | "2" | "3+" | "overdue"; label: string }[] {
+): {
+  value: "all" | "0" | "1" | "2" | "3+" | "overdue" | "due_today" | "not_today";
+  label: string;
+}[] {
   return [
     { value: "all", label: t.filterAll },
     { value: "0", label: t.filter0 },
     { value: "1", label: t.filter1 },
     { value: "2", label: t.filter2 },
     { value: "3+", label: t.filter3Plus },
+    { value: "due_today", label: t.filterDueToday },
+    { value: "not_today", label: t.filterNotToday },
     { value: "overdue", label: t.filterOverdue },
   ];
 }
