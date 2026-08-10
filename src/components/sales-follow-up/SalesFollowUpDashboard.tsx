@@ -269,21 +269,27 @@ export function SalesFollowUpDashboard({
   }
 
   async function handleDeleteLead(lead: SalesLeadWithLastFollowUp) {
+    // Remove from UI immediately — don't wait for API / refetch
+    const snapshot = leads;
+    setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+    setSelectedIds((prev) => prev.filter((id) => id !== lead.id));
+    setStats((prev) => ({
+      ...prev,
+      total_leads: Math.max(0, (prev.total_leads ?? 0) - 1),
+    }));
+    toast(sf.toastLeadDeleted, "success");
+
     const res = await fetch(`/api/sales-follow-up/leads/${lead.id}`, {
       method: "DELETE",
     });
     if (!res.ok) {
       const result = await res.json().catch(() => ({}));
+      setLeads(snapshot);
       toast(mapSalesFollowUpApiError(sf, result, "errGeneric"), "error");
       throw new Error(mapSalesFollowUpApiError(sf, result, "errGeneric"));
     }
-    // Optimistic remove so list updates even if refetch is slow
-    setLeads((prev) => prev.filter((l) => l.id !== lead.id));
-    setSelectedIds((prev) => prev.filter((id) => id !== lead.id));
-    toast(sf.toastLeadDeleted, "success");
-    fetchStats();
-    fetchLeads();
-    fetchChartAndPerformance();
+    // Soft background refresh — do not block UX with full table reload
+    void fetchStats();
   }
 
   async function handleQuickFollowUp(lead: SalesLeadWithLastFollowUp) {
