@@ -491,7 +491,7 @@ export function AdminAgentApiKeyPanel() {
               </details>
 
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Docs: <code className="text-xs">docs/chatgpt-custom-gpt.md</code>
+                Docs: <code className="text-xs">docs/chatgpt/chatgpt-custom-gpt.md</code>
               </p>
             </div>
           )}
