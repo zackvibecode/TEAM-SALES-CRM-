@@ -22,7 +22,7 @@ export const enSalesFollowUp = {
 
   // Package tabs
   packageTabsLabel: "Filter by package",
-  packageTabsHint: "Tap a package to push that list only — focus your follow-ups.",
+  packageTabsHint: "Showing leads for the selected package only.",
   packageAll: "All packages",
   packageNone: "No package",
 
@@ -306,7 +306,7 @@ export const bmSalesFollowUp = {
   stageDone: "Dah Follow-Up (3+)",
 
   packageTabsLabel: "Asingkan ikut pakej",
-  packageTabsHint: "Tekan pakej untuk push list tu je — fokus follow-up.",
+  packageTabsHint: "Paparkan lead untuk pakej yang dipilih sahaja.",
   packageAll: "Semua pakej",
   packageNone: "Tiada pakej",
 
