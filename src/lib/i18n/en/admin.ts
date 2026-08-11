@@ -82,9 +82,9 @@ export const enAdmin = {
     actionCol: "Action",
   },
   apiKey: {
-    title: "AI API Key / ChatGPT",
-    subtitle: "Jana API key + panduan setup ChatGPT Custom GPT (admin sahaja)",
-    badge: "API",
+    title: "MCP / ChatGPT",
+    subtitle: "API key + panduan setup MCP & ChatGPT (admin sahaja)",
+    badge: "MCP",
   },
   settings: {
     title: "Settings",
@@ -192,9 +192,9 @@ export const bmAdmin = {
     actionCol: "Tindakan",
   },
   apiKey: {
-    title: "Kunci API AI / ChatGPT",
-    subtitle: "Jana kunci API + panduan setup ChatGPT Custom GPT (admin sahaja)",
-    badge: "API",
+    title: "MCP / ChatGPT",
+    subtitle: "Kunci API + panduan setup MCP & ChatGPT (admin sahaja)",
+    badge: "MCP",
   },
   settings: {
     title: "Tetapan",
