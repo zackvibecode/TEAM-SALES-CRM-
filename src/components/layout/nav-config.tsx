@@ -29,6 +29,7 @@ export interface NavItem {
 export function getAdminNavItems(t: AppCopy): NavItem[] {
   return [
     { label: t.nav.dashboard, href: "/admin/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
+    { label: t.nav.aiApiKey, href: "/admin/api-key", icon: <KeyRound className="w-4 h-4" /> },
     { label: t.nav.packages, href: "/admin/packages", icon: <Package className="w-4 h-4" /> },
     { label: t.nav.activityLog, href: "/admin/activity", icon: <Activity className="w-4 h-4" /> },
     { label: t.nav.sales, isSectionHeader: true },
@@ -43,7 +44,6 @@ export function getAdminNavItems(t: AppCopy): NavItem[] {
     { label: t.nav.followUpQueue, href: "/admin/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
     { label: t.nav.rotatorTeam, href: "/dashboard/rotator-team", icon: <RotateCw className="w-4 h-4" /> },
     { label: t.nav.auditLog, href: "/admin/audit", icon: <ClipboardList className="w-4 h-4" /> },
-    { label: t.nav.aiApiKey, href: "/admin/api-key", icon: <KeyRound className="w-4 h-4" /> },
     { label: t.nav.settings, href: "/admin/settings", icon: <Settings className="w-4 h-4" /> },
   ];
 }
