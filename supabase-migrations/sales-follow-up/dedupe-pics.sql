@@ -1,26 +1,25 @@
--- Manual cleanup: merge duplicate sales_pics that share the same name (case-insensitive).
--- Run in Supabase SQL Editor AFTER reviewing the preview queries.
--- Does NOT auto-run from the app.
+-- Manual cleanup: merge duplicate sales_pics that share the same name (case-insensitive + trim).
+-- Prefer running: unique-active-pic-name.sql (merge + unique index in one file).
+-- Does NOT auto-run from the app (app also auto-merges on getPics).
 
 -- 1) Preview duplicate names
-SELECT lower(name) AS name_key, count(*) AS cnt, array_agg(id ORDER BY created_at) AS pic_ids
+SELECT lower(trim(name)) AS name_key, count(*) AS cnt, array_agg(id ORDER BY created_at) AS pic_ids
 FROM public.sales_pics
 WHERE status = 'active'
-GROUP BY lower(name)
+GROUP BY lower(trim(name))
 HAVING count(*) > 1
 ORDER BY cnt DESC;
 
 -- 2) Preview which row would be the "keeper" per name
--- Keeper = has user_id first, else oldest created_at
 WITH ranked AS (
   SELECT
     id,
     name,
     user_id,
     created_at,
-    lower(name) AS name_key,
+    lower(trim(name)) AS name_key,
     row_number() OVER (
-      PARTITION BY lower(name)
+      PARTITION BY lower(trim(name))
       ORDER BY
         CASE WHEN user_id IS NOT NULL THEN 0 ELSE 1 END,
         created_at ASC
@@ -31,10 +30,10 @@ WITH ranked AS (
 SELECT *
 FROM ranked
 WHERE name_key IN (
-  SELECT lower(name)
+  SELECT lower(trim(name))
   FROM public.sales_pics
   WHERE status = 'active'
-  GROUP BY lower(name)
+  GROUP BY lower(trim(name))
   HAVING count(*) > 1
 )
 ORDER BY name_key, rn;
@@ -47,15 +46,15 @@ DECLARE
   dup_id UUID;
 BEGIN
   FOR r IN
-    SELECT lower(name) AS name_key
+    SELECT lower(trim(name)) AS name_key
     FROM public.sales_pics
     WHERE status = 'active'
-    GROUP BY lower(name)
+    GROUP BY lower(trim(name))
     HAVING count(*) > 1
   LOOP
     SELECT id INTO keeper_id
     FROM public.sales_pics
-    WHERE status = 'active' AND lower(name) = r.name_key
+    WHERE status = 'active' AND lower(trim(name)) = r.name_key
     ORDER BY
       CASE WHEN user_id IS NOT NULL THEN 0 ELSE 1 END,
       created_at ASC
@@ -65,9 +64,17 @@ BEGIN
       SELECT id
       FROM public.sales_pics
       WHERE status = 'active'
-        AND lower(name) = r.name_key
+        AND lower(trim(name)) = r.name_key
         AND id <> keeper_id
     LOOP
+      UPDATE public.sales_pics AS keeper
+      SET user_id = dup.user_id
+      FROM public.sales_pics AS dup
+      WHERE keeper.id = keeper_id
+        AND dup.id = dup_id
+        AND keeper.user_id IS NULL
+        AND dup.user_id IS NOT NULL;
+
       UPDATE public.sales_leads
       SET assigned_pic_id = keeper_id
       WHERE assigned_pic_id = dup_id;
@@ -84,8 +91,8 @@ BEGIN
 END $$;
 
 -- 4) Verify no active duplicates remain
-SELECT lower(name) AS name_key, count(*) AS cnt
+SELECT lower(trim(name)) AS name_key, count(*) AS cnt
 FROM public.sales_pics
 WHERE status = 'active'
-GROUP BY lower(name)
+GROUP BY lower(trim(name))
 HAVING count(*) > 1;
