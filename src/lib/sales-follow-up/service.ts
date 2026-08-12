@@ -26,6 +26,9 @@ type DbClient = ReturnType<typeof createDbClient>;
 // ===================================================
 
 export async function getPics(db: DbClient): Promise<SalesPic[]> {
+  // Self-heal: merge active PIC rows that share the same name (case-insensitive).
+  await mergeDuplicateSalesPics(db);
+
   const { data, error } = await db
     .from("sales_pics")
     .select("*")
@@ -44,6 +47,89 @@ export async function getAllPics(db: DbClient): Promise<SalesPic[]> {
 
   if (error) throw new Error(`Failed to fetch PICs: ${error.message}`);
   return data ?? [];
+}
+
+function picNameKey(name: string | null | undefined): string {
+  return (name ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/**
+ * Merge active sales_pics that share the same name (case/whitespace-insensitive).
+ * Keeper = has user_id, else oldest. Reassigns leads + follow-ups, deactivates extras.
+ */
+export async function mergeDuplicateSalesPics(
+  db: DbClient
+): Promise<{ groupsMerged: number; picsDeactivated: number }> {
+  const { data, error } = await db
+    .from("sales_pics")
+    .select("*")
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(`Failed to load PICs for dedupe: ${error.message}`);
+
+  const pics = (data ?? []) as SalesPic[];
+  const byName = new Map<string, SalesPic[]>();
+  for (const pic of pics) {
+    const key = picNameKey(pic.name);
+    if (!key) continue;
+    const list = byName.get(key) ?? [];
+    list.push(pic);
+    byName.set(key, list);
+  }
+
+  let groupsMerged = 0;
+  let picsDeactivated = 0;
+
+  for (const group of byName.values()) {
+    if (group.length < 2) continue;
+    groupsMerged += 1;
+
+    const sorted = [...group].sort((a, b) => {
+      const aLink = a.user_id ? 0 : 1;
+      const bLink = b.user_id ? 0 : 1;
+      if (aLink !== bLink) return aLink - bLink;
+      return a.created_at.localeCompare(b.created_at);
+    });
+    const keeper = sorted[0]!;
+    const dups = sorted.slice(1);
+
+    for (const dup of dups) {
+      const { error: leadErr } = await db
+        .from("sales_leads")
+        .update({ assigned_pic_id: keeper.id })
+        .eq("assigned_pic_id", dup.id);
+      if (leadErr) {
+        throw new Error(`Failed to reassign leads from duplicate PIC: ${leadErr.message}`);
+      }
+
+      const { error: fuErr } = await db
+        .from("lead_follow_ups")
+        .update({ pic_id: keeper.id })
+        .eq("pic_id", dup.id);
+      if (fuErr) {
+        throw new Error(`Failed to reassign follow-ups from duplicate PIC: ${fuErr.message}`);
+      }
+
+      // If keeper has no user_id but dup does, move the link to keeper first
+      if (!keeper.user_id && dup.user_id) {
+        await db.from("sales_pics").update({ user_id: dup.user_id }).eq("id", keeper.id);
+        keeper.user_id = dup.user_id;
+        await db.from("sales_pics").update({ user_id: null }).eq("id", dup.id);
+      }
+
+      const { error: deactErr } = await db
+        .from("sales_pics")
+        .update({ status: "inactive", updated_at: new Date().toISOString() })
+        .eq("id", dup.id);
+      if (deactErr) {
+        throw new Error(`Failed to deactivate duplicate PIC: ${deactErr.message}`);
+      }
+      picsDeactivated += 1;
+    }
+  }
+
+  return { groupsMerged, picsDeactivated };
 }
 
 // ===================================================
@@ -966,15 +1052,25 @@ export async function getChartData(
 }
 
 export async function insertSeedPics(db: DbClient): Promise<void> {
-  const { data: existing } = await db.from("sales_pics").select("id").limit(1);
-  if (existing && existing.length > 0) return;
+  const { data: existing, error } = await db
+    .from("sales_pics")
+    .select("id, name, status")
+    .eq("status", "active");
+  if (error) throw new Error(`Failed to check PICs: ${error.message}`);
+
+  const existingKeys = new Set(
+    (existing ?? []).map((p) => picNameKey((p as { name?: string }).name))
+  );
 
   const seedNames = ["Fatin", "Alip", "Fadhlin", "Sheima", "Ain"];
   for (const name of seedNames) {
-    await db.from("sales_pics").insert({
+    const key = picNameKey(name);
+    if (existingKeys.has(key)) continue;
+    const { error: insertErr } = await db.from("sales_pics").insert({
       name,
       status: "active",
     });
+    if (!insertErr) existingKeys.add(key);
   }
 }
 

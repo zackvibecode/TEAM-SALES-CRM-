@@ -72,18 +72,21 @@ export async function resolvePicForSalesUser(
     }
   }
 
-  // 3) Match by full name (never auto-create if a same-name active PIC exists)
+  // 3) Match by full name (case/whitespace-insensitive) — never auto-create if match exists
   const name = profile.full_name?.trim() || profile.email?.split("@")[0] || "Sales User";
   if (name) {
-    const { data: byName } = await db
+    const { data: activePics } = await db
       .from("sales_pics")
       .select("*")
-      .ilike("name", name)
       .eq("status", "active")
       .order("created_at", { ascending: true })
-      .limit(10);
+      .limit(200);
 
-    const picked = pickBestPic((byName ?? []) as SalesPic[], userId);
+    const nameKey = name.trim().toLowerCase().replace(/\s+/g, " ");
+    const nameMatches = ((activePics ?? []) as SalesPic[]).filter(
+      (p) => (p.name ?? "").trim().toLowerCase().replace(/\s+/g, " ") === nameKey
+    );
+    const picked = pickBestPic(nameMatches, userId);
     if (picked) {
       await tryLinkPicUser(db, picked.id, userId);
       return { ...picked, user_id: userId };
@@ -112,12 +115,15 @@ export async function resolvePicForSalesUser(
     const { data: raceRows } = await db
       .from("sales_pics")
       .select("*")
-      .ilike("name", name)
       .eq("status", "active")
       .order("created_at", { ascending: true })
-      .limit(10);
+      .limit(200);
 
-    const picked = pickBestPic((raceRows ?? []) as SalesPic[], userId);
+    const nameKey = name.trim().toLowerCase().replace(/\s+/g, " ");
+    const nameMatches = ((raceRows ?? []) as SalesPic[]).filter(
+      (p) => (p.name ?? "").trim().toLowerCase().replace(/\s+/g, " ") === nameKey
+    );
+    const picked = pickBestPic(nameMatches, userId);
     if (picked) {
       await tryLinkPicUser(db, picked.id, userId);
       return { ...picked, user_id: userId };

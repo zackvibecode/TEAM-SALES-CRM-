@@ -15,6 +15,7 @@ Run in order: `001` → highest number.
 | `verify-and-fix.sql` | Verify + fix |
 | `events-table.sql` | Audit events table |
 | `sfu-wa-templates.sql` | WhatsApp template columns |
-| `dedupe-pics.sql` | Dedupe PIC rows |
+| `dedupe-pics.sql` | Dedupe PIC rows (manual) |
+| `unique-active-pic-name.sql` | Unique index on active PIC names |
 
 Also: `supabase-schema.sql` (full dump reference, if present).
