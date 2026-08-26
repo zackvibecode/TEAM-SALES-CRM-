@@ -7,7 +7,6 @@ import {
   Eye,
   FileText,
   Loader2,
-  Upload,
 } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import {
@@ -59,8 +58,6 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
   const [submitting, setSubmitting] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const submitLock = useRef(false);
 
   const load = useCallback(async () => {
@@ -98,10 +95,6 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
       setError("Please enter your full name.");
       return;
     }
-    if (!file) {
-      setError("Please upload your payment receipt.");
-      return;
-    }
 
     submitLock.current = true;
     setSubmitting(true);
@@ -109,27 +102,24 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
     setSuccess("");
 
     try {
-      const fd = new FormData();
-      fd.append("receipt", file);
-      fd.append("fullName", fullName.trim());
-      if (phone.trim()) fd.append("phone", phone.trim());
-
       const res = await fetch("/api/payment/submit", {
         method: "POST",
-        body: fd,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          phone: phone.trim(),
+        }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Submit failed");
 
-      setSuccess(json.message);
-      setFile(null);
-      if (fileRef.current) fileRef.current.value = "";
+      setSuccess(json.message || "Payment confirmed. Your invoice has been generated.");
+      setFullName("");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submit failed");
     } finally {
       setSubmitting(false);
-      // brief cooldown against double-click
       setTimeout(() => {
         submitLock.current = false;
       }, 1500);
@@ -274,7 +264,7 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
             Make Payment
           </h2>
           <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-            Scan the Malaysia National QR, pay the amount below, then upload your receipt.
+            Scan the Malaysia National QR, pay the amount below, then confirm to generate your invoice.
           </p>
         </div>
 
@@ -307,8 +297,7 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
             <ol className="list-decimal list-inside space-y-2 text-sm" style={{ color: "var(--text-secondary)" }}>
               <li>Scan the QR code.</li>
               <li>Make payment of {formatPlanPrice(settings.plan_price)}.</li>
-              <li>Upload your payment receipt.</li>
-              <li>Submit payment for verification.</li>
+              <li>Enter your name and press Generate Invoice.</li>
             </ol>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -349,31 +338,6 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
-                  Upload Payment Receipt
-                </label>
-                <div
-                  className="rounded-xl border border-dashed p-4 flex flex-col sm:flex-row sm:items-center gap-3"
-                  style={{ borderColor: "var(--input-border)", background: "var(--surface-muted)" }}
-                >
-                  <Upload className="w-5 h-5 shrink-0" style={{ color: "var(--text-muted)" }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                      {file ? file.name : "JPG, JPEG, PNG, or PDF · max 5MB"}
-                    </p>
-                    <input
-                      ref={fileRef}
-                      type="file"
-                      accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
-                      className="mt-2 text-sm w-full"
-                      disabled={!gate.ok || submitting}
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                    />
-                  </div>
-                </div>
-              </div>
-
               {!gate.ok && (
                 <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   {gate.reason}
@@ -383,15 +347,15 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
               <button
                 type="submit"
                 className="btn-primary-solid w-full sm:w-auto"
-                disabled={!gate.ok || submitting || !file}
+                disabled={!gate.ok || submitting || !fullName.trim()}
               >
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Submitting…
+                    Generating…
                   </>
                 ) : (
-                  "Submit Payment"
+                  "Generate Invoice"
                 )}
               </button>
             </form>
@@ -406,7 +370,7 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
             Payment History
           </h2>
           <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-            Invoices and receipts for your account.
+            Invoices for your account.
           </p>
         </div>
 
