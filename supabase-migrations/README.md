@@ -6,6 +6,10 @@ Run in Supabase SQL Editor against the same project as `NEXT_PUBLIC_SUPABASE_URL
 
 Run in order: `001` → highest number.
 
+| File | Purpose |
+|------|---------|
+| `019_payments_subscriptions.sql` | Payment, subscription, invoice tables + storage buckets + RLS |
+
 ## Sales Follow-Up (`sales-follow-up/`)
 
 | File | Purpose |

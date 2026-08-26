@@ -19,6 +19,10 @@ export const enNav = {
   sales: "Sales",
   salesFollowUp: "Follow-Up Lead",
   promotion: "Promotion",
+  billing: "Billing",
+  payment: "Payment",
+  paymentsAdmin: "Payments",
+  paymentSettings: "Payment Settings",
   pageTitles: {
     "/admin/sales-follow-up": "Follow-Up Lead",
     "/dashboard/sales/sales-follow-up": "Follow-Up Lead",
@@ -43,6 +47,9 @@ export const enNav = {
     "/dashboard/sales/promos": "Package Update",
     "/dashboard/sales/team-sales": "Team Sales",
     "/admin/team-sales": "Team Sales",
+    "/payment": "Payment",
+    "/admin/payments": "Payments",
+    "/admin/payment-settings": "Payment Settings",
   } as Record<string, string>,
 };
 
@@ -67,6 +74,10 @@ export const bmNav = {
   sales: "Sales",
   salesFollowUp: "Follow-Up Lead",
   promotion: "Promosi",
+  billing: "Bil",
+  payment: "Bayaran",
+  paymentsAdmin: "Bayaran",
+  paymentSettings: "Tetapan Bayaran",
   pageTitles: {
     "/admin/sales-follow-up": "Follow-Up Lead",
     "/dashboard/sales/sales-follow-up": "Follow-Up Lead",
@@ -91,5 +102,8 @@ export const bmNav = {
     "/dashboard/sales/promos": "Kemas Kini Pakej",
     "/dashboard/sales/team-sales": "Jualan Pasukan",
     "/admin/team-sales": "Jualan Pasukan",
+    "/payment": "Bayaran",
+    "/admin/payments": "Bayaran",
+    "/admin/payment-settings": "Tetapan Bayaran",
   } as Record<string, string>,
 };

@@ -7,6 +7,7 @@ import { SalesDashboardOverview } from "./SalesDashboardOverview";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TeamLeaderboard } from "@/components/shared/TeamLeaderboard";
 import { ActivePackagesButton } from "@/components/promo/ActivePackagesButton";
+import { DashboardSubscriptionBanner } from "@/components/payment/DashboardSubscriptionBanner";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { ArrowRight } from "lucide-react";
 
@@ -57,6 +58,8 @@ export function SalesPremiumDashboard(props: Props) {
           </>
         }
       />
+
+      <DashboardSubscriptionBanner />
 
       <SalesDashboardOverview
         stats={{

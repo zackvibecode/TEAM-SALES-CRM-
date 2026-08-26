@@ -7,6 +7,7 @@ import { DashboardTable } from "@/components/shared/DashboardTable";
 import { TeamLeaderboard } from "@/components/shared/TeamLeaderboard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ActivePackagesButton } from "@/components/promo/ActivePackagesButton";
+import { DashboardSubscriptionBanner } from "@/components/payment/DashboardSubscriptionBanner";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 interface SalesProfile {
@@ -86,6 +87,8 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
         compact
         actions={<ActivePackagesButton href="/admin/promos" />}
       />
+
+      <DashboardSubscriptionBanner />
 
       <AdminDashboardOverview
         stats={currentStats}

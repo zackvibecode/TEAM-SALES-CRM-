@@ -5,6 +5,7 @@ export interface UserProfile {
   email: string;
   full_name: string;
   role: UserRole;
+  phone?: string | null;
   kpi_monthly_clicks?: number | null;
   kpi_monthly_converts?: number | null;
   whatsapp_pretext?: string | null;

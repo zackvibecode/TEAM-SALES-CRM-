@@ -16,6 +16,9 @@ import {
   Package,
   TrendingUp,
   PhoneCall,
+  CreditCard,
+  Wallet,
+  SlidersHorizontal,
 } from "lucide-react";
 import type { AppCopy } from "@/lib/i18n/get-copy";
 
@@ -44,6 +47,10 @@ export function getAdminNavItems(t: AppCopy): NavItem[] {
     { label: t.nav.followUpQueue, href: "/admin/follow-ups", icon: <CalendarClock className="w-4 h-4" /> },
     { label: t.nav.rotatorTeam, href: "/dashboard/rotator-team", icon: <RotateCw className="w-4 h-4" /> },
     { label: t.nav.auditLog, href: "/admin/audit", icon: <ClipboardList className="w-4 h-4" /> },
+    { label: t.nav.billing, isSectionHeader: true },
+    { label: t.nav.payment, href: "/payment", icon: <CreditCard className="w-4 h-4" /> },
+    { label: t.nav.paymentsAdmin, href: "/admin/payments", icon: <Wallet className="w-4 h-4" /> },
+    { label: t.nav.paymentSettings, href: "/admin/payment-settings", icon: <SlidersHorizontal className="w-4 h-4" /> },
     { label: t.nav.settings, href: "/admin/settings", icon: <Settings className="w-4 h-4" /> },
   ];
 }
@@ -58,6 +65,7 @@ export function getSalesNavItems(t: AppCopy): NavItem[] {
     { label: t.nav.salesFollowUp, href: "/dashboard/sales/sales-follow-up", icon: <PhoneCall className="w-4 h-4" /> },
     { label: t.nav.whatsappMessage, href: "/dashboard/sales/message", icon: <MessageCircle className="w-4 h-4" /> },
     { label: t.nav.teamSales, href: "/dashboard/sales/team-sales", icon: <TrendingUp className="w-4 h-4" /> },
+    { label: t.nav.payment, href: "/payment", icon: <CreditCard className="w-4 h-4" /> },
   ];
 }
 
