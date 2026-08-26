@@ -57,6 +57,7 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -93,6 +94,10 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitLock.current || submitting || !gate.ok) return;
+    if (!fullName.trim()) {
+      setError("Please enter your full name.");
+      return;
+    }
     if (!file) {
       setError("Please upload your payment receipt.");
       return;
@@ -106,6 +111,7 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
     try {
       const fd = new FormData();
       fd.append("receipt", file);
+      fd.append("fullName", fullName.trim());
       if (phone.trim()) fd.append("phone", phone.trim());
 
       const res = await fetch("/api/payment/submit", {
@@ -275,8 +281,8 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <div className="flex flex-col items-center gap-3">
             <div
-              className="rounded-2xl p-3 shadow-sm"
-              style={{ background: "#E91E63", maxWidth: 280 }}
+              className="rounded-2xl p-4 shadow-sm w-full"
+              style={{ background: "#E91E63", maxWidth: 440 }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -312,9 +318,11 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
                 </label>
                 <input
                   className="input-field w-full"
-                  value={profile.full_name || ""}
-                  disabled
-                  readOnly
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter full name"
+                  required
+                  disabled={!gate.ok || submitting}
                 />
               </div>
               <div>

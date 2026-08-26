@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     const { user, db } = ctx;
     const formData = await request.formData();
     const file = formData.get("receipt") as File | null;
+    const nameOverride = String(formData.get("fullName") ?? "").trim();
     const phoneOverride = String(formData.get("phone") ?? "").trim();
 
     if (!file) {
@@ -68,7 +69,10 @@ export async function POST(request: NextRequest) {
     }
 
     const profile = profileRes.data;
-    const customerName = profile?.full_name?.trim() || "Customer";
+    if (!nameOverride) {
+      return NextResponse.json({ error: "Full name is required" }, { status: 400 });
+    }
+    const customerName = nameOverride;
     const customerEmail = profile?.email?.trim() || user.email || "";
     const customerPhone = phoneOverride || profile?.phone?.trim() || "";
 
