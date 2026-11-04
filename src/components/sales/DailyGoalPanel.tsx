@@ -64,8 +64,8 @@ export function DailyGoalPanel({ onGoalReached }: { onGoalReached?: () => void }
   return (
     <>
       <div className="card-padded-sm flex flex-col justify-center">
-        <div className="flex flex-col md:flex-row md:items-center gap-5">
-          <div className="flex-1 space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <div className="flex-1 space-y-2.5">
             <div className="flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
               <Target className="w-4 h-4" />
               <span className="text-xs font-semibold">Today&apos;s mission</span>
@@ -104,7 +104,7 @@ export function DailyGoalPanel({ onGoalReached }: { onGoalReached?: () => void }
           </div>
         </div>
         {stats.goalReached && (
-          <p className="mt-4 text-sm text-emerald-600 font-medium flex items-center gap-2">
+          <p className="mt-3 text-sm text-emerald-600 font-medium flex items-center gap-2">
             <Sparkles className="w-4 h-4" />
             Daily target reached — great work!
           </p>

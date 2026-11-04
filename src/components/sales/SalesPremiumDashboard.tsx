@@ -42,7 +42,7 @@ export function SalesPremiumDashboard(props: Props) {
           : "Good evening";
 
   return (
-    <div className="dashboard-shell space-y-5">
+    <div className="dashboard-shell space-y-4">
       <PageHeader
         greeting={greeting}
         title={props.fullName || t.sales.dashboard.badge}
@@ -71,7 +71,7 @@ export function SalesPremiumDashboard(props: Props) {
         }}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
         <DailyGoalPanel />
         <TeamLeaderboard currentUserId={props.currentUserId} />
       </div>
