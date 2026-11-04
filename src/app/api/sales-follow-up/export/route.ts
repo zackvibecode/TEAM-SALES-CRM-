@@ -89,7 +89,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ performance: data });
     }
 
-    const leads = await getLeads(ctx.db, filters);
+    // maxLeads tinggi — export perlu SEMUA leads, bukan 1000 pertama sahaja
+    const leads = await getLeads(ctx.db, { ...filters, maxLeads: 100_000 });
 
     // Follow-up activity report: one row per follow-up with date and time split
     // into separate columns for easy Excel/CSV filtering.

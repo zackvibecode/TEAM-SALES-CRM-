@@ -82,9 +82,6 @@ export async function POST(request: NextRequest) {
       sheetRows.length > 0 ? Object.keys(sheetRows[0] as Record<string, unknown>) : [];
     const packageColumnDetected = Boolean(detectPackageColumn(sampleKeys));
     const parsed = parseLeadRows(sheetRows);
-  // #region agent log
-  fetch('http://127.0.0.1:7580/ingest/054cbf78-26eb-4041-921c-54ee472d2df8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7ab8ec'},body:JSON.stringify({sessionId:'7ab8ec',runId:'auto-import',hypothesisId:'A',location:'parse-leads.ts:290',message:'Excel import projection',data:{inputHeaders:sampleKeys,projectedFields:['name','whatsapp','date_created','notes'],rows:parsed.length,blankNames:parsed.filter(r=>!r.name).length,blankNotes:parsed.filter(r=>!r.notes).length,withDate:parsed.filter(r=>!!r.date_created).length},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 
     if (parsed.length === 0) {
       const e = sfError(SF_ERROR.UPLOAD_NO_PHONES, 400);

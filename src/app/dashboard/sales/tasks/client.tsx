@@ -70,37 +70,6 @@ function TasksClientInner({
       const json = await res.json();
       if (res.ok && json.leads) {
         setLeads(json.leads);
-        // #region agent log
-        const arr = json.leads as Lead[];
-        const years = [
-          ...new Set(
-            arr
-              .slice(0, 200)
-              .map((l) => new Date(parseDateCreated(l.created_at)).getFullYear())
-              .filter((y) => y > 1970)
-          ),
-        ].sort();
-        fetch("http://127.0.0.1:7550/ingest/9ea49f98-0131-4e47-8093-2c8680050cb4", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ef1fce" },
-          body: JSON.stringify({
-            sessionId: "ef1fce",
-            hypothesisId: "H-DISPLAY",
-            location: "client.tsx:refreshData",
-            message: "leads years in UI",
-            data: {
-              count: arr.length,
-              distinctYears: years,
-              sampleDisplay: arr.slice(0, 3).map((l) => ({
-                name: l.name,
-                created_at: l.created_at,
-                display: formatLeadDateCreated(l.created_at),
-              })),
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
       } else if (!res.ok) {
         console.error("Load leads:", json.error);
       }

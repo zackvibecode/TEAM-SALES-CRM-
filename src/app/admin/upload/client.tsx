@@ -104,30 +104,7 @@ export function UploadClient({ salesUsers, whatsappPretext }: UploadClientProps)
             .map((r) => new Date(dateCreatedToISO(r.date_created!)!).getFullYear())
         ),
       ].sort();
-      // #region agent log
-      fetch("http://127.0.0.1:7550/ingest/9ea49f98-0131-4e47-8093-2c8680050cb4", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ef1fce" },
-        body: JSON.stringify({
-          sessionId: "ef1fce",
-          hypothesisId: "H-EXCEL",
-          location: "upload/client.tsx:parsePreview",
-          message: "excel parse preview",
-          data: {
-            fileName: f.name,
-            columns: json.length > 0 ? Object.keys(json[0]) : [],
-            totalRows: parsed.length,
-            parseableDates,
-            sampleYears,
-            sampleRawDates: parsed
-              .filter((r) => r.date_created)
-              .slice(0, 3)
-              .map((r) => r.date_created),
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
+      void sampleYears;
       const headers = json.length > 0 ? Object.keys(json[0]) : [];
       const dateCol = detectDateCreatedColumn(headers);
       setDetectedDateCol(dateCol);

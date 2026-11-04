@@ -231,19 +231,29 @@ function buildLeadFilters(
 
 export async function getLeads(
   db: DbClient,
-  filters: FollowUpFilterParams
+  filters: FollowUpFilterParams & { maxLeads?: number }
 ): Promise<SalesLeadWithLastFollowUp[]> {
   // Use untyped query builder to avoid PostgREST deep instantiation in CI.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = db.from("sales_leads").select("*, assigned_pic:assigned_pic_id(*)");
-  query = buildLeadFilters(query, filters);
-  query = query.order("created_at", { ascending: false }).limit(1000);
+  const maxLeads = filters.maxLeads ?? 1000;
 
-  const { data, error } = await query;
+  let leads: SalesLead[] = [];
+  // Paginate — PostgREST (Supabase db-max-rows) caps each response at 1000 rows.
+  // Export perlu SEMUA leads, jadi kita loop .range() sehingga maxLeads.
+  const PAGE = 1000;
+  for (let offset = 0; offset < maxLeads; offset += PAGE) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any = db.from("sales_leads").select("*, assigned_pic:assigned_pic_id(*)");
+    query = buildLeadFilters(query, filters);
+    query = query.order("created_at", { ascending: false }).range(offset, Math.min(offset + PAGE, maxLeads) - 1);
 
-  if (error) throw new Error(`Failed to fetch leads: ${error.message}`);
+    const { data, error } = await query;
+    if (error) throw new Error(`Failed to fetch leads: ${error.message}`);
 
-  let leads = (data ?? []) as SalesLead[];
+    const rows = (data ?? []) as SalesLead[];
+    leads = leads.concat(rows);
+    if (rows.length < PAGE) break;
+  }
   if (filters.packageFilter) {
     if (filters.packageFilter === PACKAGE_FILTER_NONE) {
       leads = leads.filter((lead) => isBlankPackage(lead.destination_or_product));
@@ -766,10 +776,7 @@ export async function getDashboardStats(
 
   let leadQuery = db
     .from("sales_leads")
-    .select(
-      "id, lead_status, total_follow_ups, next_follow_up_date, created_at, assigned_pic_id, destination_or_product",
-      { count: "exact" }
-    );
+    .select("id, lead_status, total_follow_ups, next_follow_up_date, assigned_pic_id, destination_or_product");
   let fuQuery = db.from("lead_follow_ups").select("id, follow_up_date", { count: "exact" });
 
   if (filters.startDate) {
@@ -785,17 +792,27 @@ export async function getDashboardStats(
     leadQuery = leadQuery.eq("lead_status", filters.status);
   }
 
-  const { data: leads, error: leadError } = await leadQuery;
-  if (leadError) throw new Error(`Failed to fetch leads: ${leadError.message}`);
-
-  let leadData = (leads ?? []) as Array<{
+  // Fetch SEMUA leads dengan pagination (PostgREST caps response at 1000 rows —
+  // tanpa ni, dashboard KPI undercount bila data > 1000 leads)
+  let leadData: Array<{
     id: string;
     lead_status: string;
     total_follow_ups: number;
     next_follow_up_date: string | null;
     assigned_pic_id: string | null;
     destination_or_product?: string | null;
-  }>;
+  }> = [];
+  {
+    const PAGE = 1000;
+    for (let offset = 0; ; offset += PAGE) {
+      const { data: pageRows, error: pageError } = await leadQuery.range(offset, offset + PAGE - 1);
+      if (pageError) throw new Error(`Failed to fetch leads: ${pageError.message}`);
+      const rows = (pageRows ?? []) as typeof leadData;
+      leadData = leadData.concat(rows);
+      if (!rows || rows.length < PAGE) break;
+      if (leadData.length >= 200_000) break; // safety cap
+    }
+  }
 
   if (filters.packageFilter) {
     if (filters.packageFilter === PACKAGE_FILTER_NONE) {
@@ -917,6 +934,26 @@ export async function listPackagesWithCounts(
     );
 }
 
+/**
+ * Fetch ALL rows from a query by paginating in chunks (PostgREST caps responses at 1000 rows).
+ * Applies .range() on the final query builder passed in.
+ */
+async function fetchAllPages<T>(
+  buildQuery: (offset: number, limit: number) => { range: (from: number, to: number) => PromiseLike<{ data: T[] | null }> }
+): Promise<T[]> {
+  const pageSize = 1000;
+  const out: T[] = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const { data } = await buildQuery(offset, pageSize).range(offset, offset + pageSize - 1);
+    if (!data || data.length === 0) break;
+    out.push(...data);
+    if (data.length < pageSize) break;
+    // Safety cap
+    if (out.length >= 200_000) break;
+  }
+  return out;
+}
+
 export async function getPicPerformance(
   db: DbClient,
   filters: FollowUpFilterParams
@@ -931,43 +968,27 @@ export async function getPicPerformance(
   const picNameMap = new Map(pics.map((p) => [p.id, p.name]));
   const today = todayKL();
 
-  // Bulk fetch ALL leads and follow-ups in 2 queries instead of N+1 per-PIC loop
-  let leadQuery = db
-    .from("sales_leads")
-    .select("id, assigned_pic_id, lead_status, total_follow_ups, next_follow_up_date, created_at")
-    .in("assigned_pic_id", picIds);
+  // Bulk fetch ALL leads and follow-ups in 2 paginated queries (PostgREST caps at 1000 rows per request)
+  const leads = await fetchAllPages<{ id: string; assigned_pic_id: string; lead_status: string; total_follow_ups: number; next_follow_up_date: string | null }>((offset, limit) => {
+    let q: any = db
+      .from("sales_leads")
+      .select("id, assigned_pic_id, lead_status, total_follow_ups, next_follow_up_date, created_at")
+      .in("assigned_pic_id", picIds);
+    if (filters.startDate) q = q.gte("created_at", `${filters.startDate}T00:00:00`);
+    if (filters.endDate) q = q.lte("created_at", `${filters.endDate}T23:59:59.999Z`);
+    if (filters.status) q = q.eq("lead_status", filters.status);
+    return q;
+  });
 
-  let fuQuery = db
-    .from("lead_follow_ups")
-    .select("id, lead_id, pic_id, follow_up_date")
-    .in("pic_id", picIds);
-
-  if (filters.startDate) {
-    leadQuery = leadQuery.gte("created_at", `${filters.startDate}T00:00:00`);
-    fuQuery = fuQuery.gte("follow_up_date", filters.startDate);
-  }
-  if (filters.endDate) {
-    leadQuery = leadQuery.lte("created_at", `${filters.endDate}T23:59:59.999Z`);
-    fuQuery = fuQuery.lte("follow_up_date", filters.endDate);
-  }
-  if (filters.status) {
-    leadQuery = leadQuery.eq("lead_status", filters.status);
-  }
-
-  const [{ data: allLeads }, { data: allFollowUps }] = await Promise.all([leadQuery, fuQuery]);
-
-  const leads = (allLeads ?? []) as Array<{
-    id: string;
-    assigned_pic_id: string;
-    lead_status: string;
-    total_follow_ups: number;
-    next_follow_up_date: string | null;
-  }>;
-  const followUps = (allFollowUps ?? []) as Array<{
-    lead_id: string;
-    pic_id: string;
-    follow_up_date: string;
-  }>;
+  const followUps = await fetchAllPages<{ lead_id: string; pic_id: string; follow_up_date: string }>((offset, limit) => {
+    let q: any = db
+      .from("lead_follow_ups")
+      .select("id, lead_id, pic_id, follow_up_date")
+      .in("pic_id", picIds);
+    if (filters.startDate) q = q.gte("follow_up_date", filters.startDate);
+    if (filters.endDate) q = q.lte("follow_up_date", filters.endDate);
+    return q;
+  });
 
   // Group by PIC
   const leadsByPic = new Map<string, typeof leads>();
@@ -1026,40 +1047,27 @@ export async function getChartData(
   const picIds = pics.map((p) => p.id);
   const picNameMap = new Map(pics.map((p) => [p.id, p.name]));
 
-  // Bulk fetch ALL leads and follow-ups in 2 queries instead of N+1 per-PIC loop
-  let leadQuery = db
-    .from("sales_leads")
-    .select("id, assigned_pic_id, total_follow_ups, created_at")
-    .in("assigned_pic_id", picIds);
+  // Bulk fetch ALL leads and follow-ups in 2 paginated queries (PostgREST caps at 1000 rows per request)
+  const leads = await fetchAllPages<{ id: string; assigned_pic_id: string; total_follow_ups: number }>(() => {
+    let q: any = db
+      .from("sales_leads")
+      .select("id, assigned_pic_id, total_follow_ups, created_at")
+      .in("assigned_pic_id", picIds);
+    if (filters.startDate) q = q.gte("created_at", `${filters.startDate}T00:00:00`);
+    if (filters.endDate) q = q.lte("created_at", `${filters.endDate}T23:59:59.999Z`);
+    if (filters.status) q = q.eq("lead_status", filters.status);
+    return q;
+  });
 
-  let fuQuery = db
-    .from("lead_follow_ups")
-    .select("id, lead_id, pic_id, follow_up_date")
-    .in("pic_id", picIds);
-
-  if (filters.startDate) {
-    leadQuery = leadQuery.gte("created_at", `${filters.startDate}T00:00:00`);
-    fuQuery = fuQuery.gte("follow_up_date", filters.startDate);
-  }
-  if (filters.endDate) {
-    leadQuery = leadQuery.lte("created_at", `${filters.endDate}T23:59:59.999Z`);
-    fuQuery = fuQuery.lte("follow_up_date", filters.endDate);
-  }
-  if (filters.status) {
-    leadQuery = leadQuery.eq("lead_status", filters.status);
-  }
-
-  const [{ data: allLeads }, { data: allFollowUps }] = await Promise.all([leadQuery, fuQuery]);
-
-  const leads = (allLeads ?? []) as Array<{
-    id: string;
-    assigned_pic_id: string;
-    total_follow_ups: number;
-  }>;
-  const followUps = (allFollowUps ?? []) as Array<{
-    lead_id: string;
-    pic_id: string;
-  }>;
+  const followUps = await fetchAllPages<{ lead_id: string; pic_id: string }>(() => {
+    let q: any = db
+      .from("lead_follow_ups")
+      .select("id, lead_id, pic_id, follow_up_date")
+      .in("pic_id", picIds);
+    if (filters.startDate) q = q.gte("follow_up_date", filters.startDate);
+    if (filters.endDate) q = q.lte("follow_up_date", filters.endDate);
+    return q;
+  });
 
   const leadsByPic = new Map<string, typeof leads>();
   const fuByPic = new Map<string, number>();
@@ -1222,9 +1230,6 @@ export async function importSalesLeadsRoundRobin(
     .maybeSingle();
   const cursorIndex = pics.findIndex((pic) => pic.id === cursorRow?.value);
   const startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
-  // #region agent log
-  fetch('http://127.0.0.1:7580/ingest/054cbf78-26eb-4041-921c-54ee472d2df8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7ab8ec'},body:JSON.stringify({sessionId:'7ab8ec',runId:'auto-import',hypothesisId:'B',location:'service.ts:1215',message:'Round robin before insert',data:{picIds:pics.map(p=>p.id),hasPreviousCursor:!!cursorRow?.value,cursorIndex,startIndex,candidates:toInsert.length,duplicates:duplicateCount,invalid:skippedInvalid},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 
   const assignmentCounts = new Map<string, number>();
   for (let i = 0; i < toInsert.length; i++) {
@@ -1282,9 +1287,6 @@ export async function importSalesLeadsRoundRobin(
     successfulCounts.set(picId, (successfulCounts.get(picId) ?? 0) + 1);
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7580/ingest/054cbf78-26eb-4041-921c-54ee472d2df8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7ab8ec'},body:JSON.stringify({sessionId:'7ab8ec',runId:'auto-import',hypothesisId:'B',location:'service.ts:1285',message:'Round robin import result',data:{inserted,duplicates:duplicateCount+raceDuplicates,invalid:skippedInvalid,assignedPicIds:insertedPicIds,savedCursor:insertedPicIds[insertedPicIds.length-1]||null},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   return {
     inserted,
     skippedDuplicate: duplicateCount + raceDuplicates,
