@@ -21,14 +21,14 @@ export function PricingCard({ tier }: PricingCardProps) {
     <article
       className={`m-card flex flex-col h-full relative p-7 sm:p-8 transition-all duration-200 ${
         tier.popular
-          ? "border-2 !border-[#9fe870] shadow-[0_24px_48px_-24px_rgba(22,51,0,0.25)]"
+          ? "border-2 !border-[#2563eb] shadow-[0_24px_48px_-24px_rgba(15,23,42,0.25)]"
           : "hover:-translate-y-1 motion-reduce:hover:translate-y-0"
       }`}
     >
       {tier.popular && (
         <span
           className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-extrabold"
-          style={{ background: "#9fe870", color: "#163300" }}
+          style={{ background: "#2563eb", color: "#ffffff" }}
         >
           {p.popular}
         </span>
@@ -54,7 +54,7 @@ export function PricingCard({ tier }: PricingCardProps) {
       <ul className="space-y-2.5 flex-1 mb-8">
         {highlightedFeatures.map((key) => (
           <li key={key} className="flex gap-2.5 text-sm">
-            <Check className="w-[18px] h-[18px] shrink-0 mt-0.5" style={{ color: "#4f9e2c" }} />
+            <Check className="w-[18px] h-[18px] shrink-0 mt-0.5" style={{ color: "#2563eb" }} />
             <span style={{ color: "var(--text-secondary)" }}>{p.featureLabels[key]}</span>
           </li>
         ))}

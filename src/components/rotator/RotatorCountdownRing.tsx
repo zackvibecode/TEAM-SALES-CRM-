@@ -33,23 +33,23 @@ export function RotatorCountdownRing({
         aria-label={`Countdown ${value}`}
       >
         {/* Soft glow */}
-        <div className="absolute inset-0 rounded-full bg-[#9fe870]/10 animate-rotator-count-glow" />
+        <div className="absolute inset-0 rounded-full bg-[#2563eb]/10 animate-rotator-count-glow" />
 
         {/* Outer ring */}
-        <div className="absolute inset-0 rounded-full border-[3px] border-[#9fe870]/15" />
+        <div className="absolute inset-0 rounded-full border-[3px] border-[#2563eb]/15" />
 
         {/* Tick pulse each second */}
         <div
           key={`pulse-${value}`}
-          className="absolute inset-0 rounded-full border-[3px] border-[#9fe870]/50 animate-rotator-count-tick"
+          className="absolute inset-0 rounded-full border-[3px] border-[#2563eb]/50 animate-rotator-count-tick"
         />
 
         {/* Inner disc — number perfectly centered via grid */}
-        <div className="absolute inset-[10%] grid place-items-center rounded-full bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_16px_rgba(159,232,112,0.12)] ring-1 ring-[#9fe870]/10">
+        <div className="absolute inset-[10%] grid place-items-center rounded-full bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_16px_rgba(37,99,235,0.12)] ring-1 ring-[#2563eb]/10">
           <span
             key={value}
             className={cn(
-              "font-bold tabular-nums leading-none text-[#9fe870] animate-rotator-count-pop",
+              "font-bold tabular-nums leading-none text-[#2563eb] animate-rotator-count-pop",
               fontSize
             )}
             style={{ fontFeatureSettings: '"tnum"' }}

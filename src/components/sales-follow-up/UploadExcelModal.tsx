@@ -20,6 +20,7 @@ interface UploadExcelModalProps {
     fileName: string;
     packageColumnDetected?: boolean;
     packagesInserted?: Array<{ name: string; count: number }>;
+    assignments?: Array<{ picId: string; picName: string; inserted: number }>;
   }) => void;
   pics: SalesPic[];
   lockPic?: boolean;
@@ -37,6 +38,8 @@ export function UploadExcelModal({
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [picId, setPicId] = useState(lockPic && pics[0]?.id ? pics[0].id : "");
+  const [assignMode, setAssignMode] = useState<"single" | "round_robin">("single");
+  const [batchName, setBatchName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -58,7 +61,7 @@ export function UploadExcelModal({
     }
 
     const targetPicId = lockPic ? pics[0]?.id : picId;
-    if (!lockPic && !targetPicId) {
+    if (!lockPic && assignMode === "single" && !targetPicId) {
       setError(sf.assignToPicRequired);
       return;
     }
@@ -67,7 +70,9 @@ export function UploadExcelModal({
     try {
       const form = new FormData();
       form.append("file", file);
-      if (targetPicId) form.append("picId", targetPicId);
+      form.append("assignMode", assignMode);
+      if (batchName.trim()) form.append("batchName", batchName.trim());
+      if (assignMode === "single" && targetPicId) form.append("picId", targetPicId);
 
       const res = await fetch("/api/sales-follow-up/upload", {
         method: "POST",
@@ -89,6 +94,7 @@ export function UploadExcelModal({
         packagesInserted: Array.isArray(data.packagesInserted)
           ? data.packagesInserted
           : [],
+        assignments: Array.isArray(data.assignments) ? data.assignments : [],
       });
       setFile(null);
       if (inputRef.current) inputRef.current.value = "";
@@ -130,6 +136,23 @@ export function UploadExcelModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
+              Nama Batch
+            </label>
+            <input
+              type="text"
+              value={batchName}
+              onChange={(e) => setBatchName(e.target.value)}
+              placeholder={file ? file.name : "Contoh: Campaign November"}
+              className="input-field w-full text-sm"
+              maxLength={120}
+            />
+            <p className="text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>
+              Kosongkan untuk guna nama fail. Nama ini muncul dalam Upload History.
+            </p>
+          </div>
+
           {error && (
             <div
               className="rounded-xl px-4 py-3 text-sm font-medium"
@@ -143,6 +166,41 @@ export function UploadExcelModal({
           )}
 
           {!lockPic && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setAssignMode("round_robin")}
+                className={cn(
+                  "rounded-xl border px-3 py-2.5 text-left transition",
+                  assignMode === "round_robin" && "btn-primary-solid"
+                )}
+                style={assignMode === "single" ? { borderColor: "var(--border-color)" } : undefined}
+              >
+                <span className="block text-xs font-semibold">Auto Assign</span>
+                <span className="block text-[10px] mt-0.5 opacity-75">Round Robin</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAssignMode("single")}
+                className={cn(
+                  "rounded-xl border px-3 py-2.5 text-left transition",
+                  assignMode === "single" && "btn-primary-solid"
+                )}
+                style={assignMode === "round_robin" ? { borderColor: "var(--border-color)" } : undefined}
+              >
+                <span className="block text-xs font-semibold">Satu PIC</span>
+                <span className="block text-[10px] mt-0.5 opacity-75">Pilih manual</span>
+              </button>
+            </div>
+          )}
+
+          {!lockPic && assignMode === "round_robin" && (
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+              Semua lead baru akan dibahagikan secara bergilir kepada {pics.length} PIC aktif. Giliran disambung dari upload sebelum ini.
+            </p>
+          )}
+
+          {!lockPic && assignMode === "single" && (
             <div>
               <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
                 {sf.assignToPic} <span style={{ color: "var(--color-error-500)" }}>*</span>

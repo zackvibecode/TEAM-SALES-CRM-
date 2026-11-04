@@ -159,27 +159,27 @@ export function LeadTable({
                   />
                 </th>
               )}
-              <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
+              <th className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
                 {sf.colCustomer}
               </th>
-              <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
+              <th className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
                 {sf.colPhone}
               </th>
               {showPicSelect && (
-                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
+                <th className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
                   {sf.colPic}
                 </th>
               )}
-              <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
+              <th className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
                 {sf.colProduct}
               </th>
-              <th className="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
+              <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
                 {sf.colFollowUps}
               </th>
-              <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
+              <th className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
                 {sf.colStatus}
               </th>
-              <th className="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
+              <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap" style={{ color: "var(--text-muted)" }}>
                 {sf.colActions}
               </th>
             </tr>
@@ -211,7 +211,7 @@ export function LeadTable({
                     )}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div>
-                        <p className="text-sm font-semibold truncate max-w-[180px]" style={{ color: "var(--text-primary)" }}>
+                        <p className="text-sm font-semibold truncate max-w-[45vw] sm:max-w-[180px]" style={{ color: "var(--text-primary)" }}>
                           {lead.customer_name || sf.unnamed}
                         </p>
                         <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
@@ -239,7 +239,7 @@ export function LeadTable({
                     )}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                        {lead.destination_or_product || "-"}
+                        {lead.import_notes || "-"}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -280,14 +280,14 @@ export function LeadTable({
                       <SalesLeadStatusBadge status={lead.lead_status} />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center justify-end gap-1.5 flex-wrap max-w-[22rem]">
+                      <div className="flex flex-col items-stretch sm:items-end gap-2 min-w-[140px]">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
                           <button
                             type="button"
                             disabled={isSaving}
                             onClick={() => onAddFollowUp(lead)}
                             className={cn(
-                              "inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-lg transition min-w-[7.5rem] justify-center",
+                              "inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-lg transition w-full sm:w-auto sm:min-w-[7.5rem] justify-center",
                               isDone
                                 ? "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400"
                                 : "btn-primary-solid",
@@ -308,30 +308,30 @@ export function LeadTable({
                           <button
                             type="button"
                             onClick={() => onView(lead)}
-                            className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border transition"
+                            className="inline-flex items-center justify-center size-8 rounded-lg border transition"
                             style={{
                               borderColor: "var(--border-color)",
                               color: "var(--text-secondary)",
                               backgroundColor: "var(--surface-muted)",
                             }}
                             title={sf.viewLead}
+                            aria-label={sf.viewLead}
                           >
-                            <Eye className="size-3.5" />
-                            {sf.btnView}
+                            <Eye className="size-4" />
                           </button>
                           <button
                             type="button"
                             onClick={() => onEdit(lead)}
-                            className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border transition"
+                            className="inline-flex items-center justify-center size-8 rounded-lg border transition"
                             style={{
                               borderColor: "var(--border-color)",
                               color: "var(--text-secondary)",
                               backgroundColor: "var(--surface-muted)",
                             }}
                             title={sf.editLead}
+                            aria-label={sf.editLead}
                           >
-                            <Pencil className="size-3.5" />
-                            {sf.btnEdit}
+                            <Pencil className="size-4" />
                           </button>
 
                           {canDelete &&

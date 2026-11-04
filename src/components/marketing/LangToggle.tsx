@@ -12,7 +12,7 @@ export function LangToggle() {
       onClick={() => setLocale(value)}
       className={`px-3 py-1.5 text-xs font-bold rounded-full transition ${
         locale === value
-          ? "bg-[#9fe870] text-[#163300]"
+          ? "bg-[#2563eb] text-white"
           : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
       }`}
       aria-pressed={locale === value}

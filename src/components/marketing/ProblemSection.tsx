@@ -27,11 +27,11 @@ export function ProblemSection() {
           <Reveal delay={2} className="h-full">
             <div
               className="m-card h-full p-7 sm:p-9 border-2"
-              style={{ borderColor: "#9fe870", background: "linear-gradient(160deg, rgba(233,247,218,0.6), var(--surface-card) 65%)" }}
+              style={{ borderColor: "#2563eb", background: "linear-gradient(160deg, rgba(219,234,254,0.6), var(--surface-card) 65%)" }}
             >
               <div
                 className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
-                style={{ background: "#9fe870", color: "#163300" }}
+                style={{ background: "#2563eb", color: "#ffffff" }}
               >
                 <CheckCircle2 className="w-6 h-6" />
               </div>

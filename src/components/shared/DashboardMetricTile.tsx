@@ -48,7 +48,7 @@ export function DashboardMetricSection({
     <div>
       {title && (
         <h3
-          className="text-xs font-bold uppercase tracking-wider mb-3"
+          className="text-xs font-semibold mb-3"
           style={{ color: "var(--text-muted)" }}
         >
           {title}

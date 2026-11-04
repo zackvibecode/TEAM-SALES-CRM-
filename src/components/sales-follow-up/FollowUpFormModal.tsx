@@ -76,8 +76,8 @@ export function FollowUpFormModal({
                 className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold"
                 style={{
                   backgroundColor:
-                    nextNumber <= 3 ? "var(--color-brand-100, #e8f5d1)" : "var(--color-success-100, #dcfce7)",
-                  color: nextNumber <= 3 ? "var(--color-brand-700, #3d6b00)" : "var(--color-success-700, #15803d)",
+                    nextNumber <= 3 ? "var(--color-brand-100, #dbeafe)" : "var(--color-success-100, #dcfce7)",
+                  color: nextNumber <= 3 ? "var(--color-brand-700, #1e40af)" : "var(--color-success-700, #15803d)",
                 }}
               >
                 {followUpLabel}

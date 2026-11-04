@@ -57,8 +57,8 @@ export function FollowUpTimeline({ followUps, emptyMessage }: FollowUpTimelinePr
               <div
                 className="absolute -left-8 top-1 flex items-center justify-center size-[14px] rounded-full border-2"
                 style={{
-                  backgroundColor: isLatest ? "var(--color-brand-500, #9fe870)" : "var(--surface-card)",
-                  borderColor: isLatest ? "var(--color-brand-500, #9fe870)" : "var(--border-color)",
+                  backgroundColor: isLatest ? "var(--color-brand-500, #2563eb)" : "var(--surface-card)",
+                  borderColor: isLatest ? "var(--color-brand-500, #2563eb)" : "var(--border-color)",
                 }}
               />
 
@@ -69,11 +69,11 @@ export function FollowUpTimeline({ followUps, emptyMessage }: FollowUpTimelinePr
                       className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold"
                       style={{
                         backgroundColor:
-                          fuNumber <= 3 ? "var(--color-brand-50, #f6fbef)" : "var(--color-success-50, #f0fdf4)",
+                          fuNumber <= 3 ? "var(--color-brand-50, #eff6ff)" : "var(--color-success-50, #f0fdf4)",
                         color:
-                          fuNumber <= 3 ? "var(--color-brand-700, #3d6b00)" : "var(--color-success-700, #15803d)",
+                          fuNumber <= 3 ? "var(--color-brand-700, #1e40af)" : "var(--color-success-700, #15803d)",
                         border: `1px solid ${
-                          fuNumber <= 3 ? "var(--color-brand-200, #d4edb3)" : "var(--color-success-200, #bbf7d0)"
+                          fuNumber <= 3 ? "var(--color-brand-200, #bfdbfe)" : "var(--color-success-200, #bbf7d0)"
                         }`,
                       }}
                     >

@@ -42,6 +42,7 @@ export async function GET(request: Request) {
     }
     return NextResponse.json({ ...stats, packages });
   } catch (err) {
+    console.error("[dashboard-stats] error:", err);
     const message = err instanceof Error ? err.message : "Failed to load dashboard stats";
     return NextResponse.json({ error: message }, { status: 500 });
   }

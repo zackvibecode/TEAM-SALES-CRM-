@@ -88,49 +88,45 @@ export function StatCard({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1.5 min-w-0">
-          <p
-            className={cn(
-              "stat-label text-xs font-medium tracking-wide",
-              isPrimary ? "" : "text-[var(--text-muted)]"
-            )}
-          >
-            {label}
-          </p>
-          <p
-            className={cn(
-              "stat-value font-bold tracking-tight truncate",
-              valueSize === "compact"
-                ? "text-sm md:text-base uppercase"
-                : "text-2xl md:text-[1.75rem] tabular-nums leading-none",
-              isPrimary ? "" : "text-[var(--text-primary)]"
-            )}
-            title={typeof value === "string" ? value : undefined}
-          >
-            {typeof value === "number" ? value.toLocaleString() : value}
-          </p>
-          {subtext && (
-            <p
-              className={cn(
-                "text-xs",
-                isPrimary ? "text-[#163300]/70" : "text-[var(--text-muted)]"
-              )}
-            >
-              {subtext}
-            </p>
+        <p
+          className={cn(
+            "stat-label text-xs font-medium",
+            isPrimary ? "" : "text-[var(--text-muted)]"
           )}
-        </div>
+        >
+          {label}
+        </p>
         {Icon && (
-          <div
+          <Icon
             className={cn(
-              "icon-stat",
-              !isPrimary && cn(styles.icon, "bg-[var(--surface-muted)]")
+              "size-4 shrink-0",
+              isPrimary ? "text-white/70" : cn(styles.icon, "opacity-60")
             )}
-          >
-            <Icon />
-          </div>
+          />
         )}
       </div>
+      <p
+        className={cn(
+          "stat-value font-bold tracking-tight truncate mt-2",
+          valueSize === "compact"
+            ? "text-sm md:text-base"
+            : "text-2xl md:text-[1.75rem] tabular-nums leading-none",
+          isPrimary ? "" : "text-[var(--text-primary)]"
+        )}
+        title={typeof value === "string" ? value : undefined}
+      >
+        {typeof value === "number" ? value.toLocaleString() : value}
+      </p>
+      {subtext && (
+        <p
+          className={cn(
+            "text-xs mt-2",
+            isPrimary ? "text-white/70" : "text-[var(--text-muted)]"
+          )}
+        >
+          {subtext}
+        </p>
+      )}
 
       {delta && (
         <span
@@ -142,7 +138,7 @@ export function StatCard({
               "bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500",
             delta.trend === "neutral" && styles.light,
             delta.trend === "neutral" && styles.dark,
-            isPrimary && "bg-[#163300]/15 text-[#163300]"
+            isPrimary && "bg-white/15 text-white"
           )}
         >
           {delta.trend === "up" && <ArrowUpIcon className="size-3" />}

@@ -33,6 +33,7 @@ export function BrandLogo({
       height={832}
       priority={priority}
       className={cn("object-contain object-left shrink-0", sizeClasses[size], className)}
+      style={{ filter: "hue-rotate(125deg) saturate(1.15)" }}
     />
   );
 }

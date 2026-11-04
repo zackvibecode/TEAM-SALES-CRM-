@@ -3,11 +3,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Users,
-  MessageSquare,
-  UserCheck,
-  Award,
-  UserX,
   AlertCircle,
   Plus,
   RefreshCw,
@@ -16,16 +11,15 @@ import {
   Upload,
   MessageCircle,
 } from "lucide-react";
-import { DashboardMetricTile, DashboardMetricSection } from "@/components/shared/DashboardMetricTile";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { sfReplace } from "@/lib/i18n/en/salesFollowUp";
-import { FilterBar } from "./FilterBar";
+import { FilterBar, type DatePreset } from "./FilterBar";
 import { FollowUpChart } from "./FollowUpChart";
 import { LeadTable, type PendingQuickState } from "./LeadTable";
 import { LeadFormModal } from "./LeadFormModal";
 import { PicPerformanceTable } from "./PicPerformanceTable";
-import { FollowUpIntroTip } from "./FollowUpIntroTip";
 import { UploadExcelModal } from "./UploadExcelModal";
+import { UploadHistoryTable, type UploadBatchRow } from "./UploadHistoryTable";
 import { FollowUpStageTabs, type FollowUpStageValue } from "./FollowUpStageTabs";
 import { PackageFilterTabs, type PackageFilterValue } from "./PackageFilterTabs";
 import { SfuWaTemplatesModal } from "./SfuWaTemplatesModal";
@@ -71,6 +65,7 @@ export function SalesFollowUpDashboard({
   const [search, setSearch] = useState("");
   const [followUpFilter, setFollowUpFilter] = useState("all");
   const [packageFilter, setPackageFilter] = useState<string>("all");
+  const [datePreset, setDatePreset] = useState<DatePreset>("all");
 
   // Data
   const [pics, setPics] = useState<SalesPic[]>([]);
@@ -90,10 +85,14 @@ export function SalesFollowUpDashboard({
   const [performance, setPerformance] = useState<PicPerformanceRow[]>([]);
   const [waTemplates, setWaTemplates] = useState<SfuWaTemplates>({});
   const [showWaTemplates, setShowWaTemplates] = useState(false);
+  const [batches, setBatches] = useState<UploadBatchRow[]>([]);
+  const [loadingBatches, setLoadingBatches] = useState(true);
 
   // UI state
   const [loadingLeads, setLoadingLeads] = useState(true);
+  // Stats loading state — KPI cards dah dibuang; state dikekalkan untuk fetch sync
   const [loadingStats, setLoadingStats] = useState(true);
+  void loadingStats;
   const [showAddLead, setShowAddLead] = useState(false);
   const [showUploadExcel, setShowUploadExcel] = useState(false);
   const [editLead, setEditLead] = useState<SalesLead | null>(null);
@@ -210,6 +209,20 @@ export function SalesFollowUpDashboard({
     }
   }, [buildFilterParams]);
 
+  const fetchBatches = useCallback(async () => {
+    try {
+      const res = await fetch("/api/sales-follow-up/batches");
+      if (res.ok) {
+        const data = await res.json();
+        setBatches(data.batches || []);
+      }
+    } catch {
+      // history is non-critical
+    } finally {
+      setLoadingBatches(false);
+    }
+  }, []);
+
   useEffect(() => {
     void (async () => {
       const ok = await checkHealth();
@@ -236,7 +249,8 @@ export function SalesFollowUpDashboard({
     fetchStats();
     fetchLeads();
     fetchChartAndPerformance();
-  }, [dbReady, fetchStats, fetchLeads, fetchChartAndPerformance]);
+    fetchBatches();
+  }, [dbReady, fetchStats, fetchLeads, fetchChartAndPerformance, fetchBatches]);
 
   /** Merge server package counts with packages visible in current lead list (post-upload safety). */
   const displayPackages = useMemo(() => {
@@ -381,9 +395,11 @@ export function SalesFollowUpDashboard({
       toast(sf.toastFollowUpSaved, "success");
       setJustDoneId(lead.id);
       window.setTimeout(() => setJustDoneId((id) => (id === lead.id ? null : id)), 2500);
+      // Keep all reports aligned: stats, leads, chart/performance and batch progress
       fetchStats();
       fetchLeads();
       fetchChartAndPerformance();
+      fetchBatches();
     } catch (err) {
       toast(err instanceof Error ? err.message : sf.saveFollowUpFail, "error");
     } finally {
@@ -489,6 +505,19 @@ export function SalesFollowUpDashboard({
     window.open(`/api/sales-follow-up/export?${params.toString()}`, "_blank");
   }
 
+  function handleExportFollowUpReport() {
+    const params = new URLSearchParams();
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+    if (picId) params.set("picId", picId);
+    if (status) params.set("status", status);
+    if (followUpFilter && followUpFilter !== "all") params.set("followUpFilter", followUpFilter);
+    if (packageFilter && packageFilter !== "all") params.set("packageFilter", packageFilter);
+    params.set("format", "csv");
+    params.set("report", "followups");
+    window.open(`/api/sales-follow-up/export?${params.toString()}`, "_blank");
+  }
+
   function handleExportPerfCsv() {
     const params = new URLSearchParams();
     if (startDate) params.set("startDate", startDate);
@@ -568,60 +597,48 @@ export function SalesFollowUpDashboard({
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="page-title">
-            {isSales ? sf.titleSales : sf.titleAdmin}
-          </h1>
-          <p className="page-subtitle mt-1">
-            {isSales ? sf.subtitleSales : sf.subtitleAdmin}
-          </p>
-        </div>
-        <div
-          className="flex items-center gap-2 flex-wrap rounded-2xl border px-3 py-2.5"
-          style={{
-            borderColor: "var(--border-color)",
-            backgroundColor: "var(--surface-muted)",
-          }}
-        >
+      {/* Header — nipis, satu baris. Mobile: icon-only actions. */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="page-title">
+          {isSales ? sf.titleSales : sf.titleAdmin}
+        </h1>
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleRefresh}
-            className="btn-secondary flex items-center gap-2 text-sm"
+            className="btn-secondary flex items-center gap-2 text-sm !min-h-[40px]"
             title={sf.refresh}
+            aria-label={sf.refresh}
           >
             <RefreshCw className="size-4" />
           </button>
           <button
             onClick={() => setShowWaTemplates(true)}
-            className="btn-secondary flex items-center gap-2 text-sm font-semibold"
+            className="btn-secondary flex items-center gap-2 text-sm font-semibold !min-h-[40px]"
             title={sf.editWaPretext}
           >
             <MessageCircle className="size-4" />
-            {sf.editWaPretext}
+            <span className="hidden sm:inline">{sf.editWaPretext}</span>
           </button>
           <button
             onClick={() => setShowUploadExcel(true)}
-            className="btn-secondary flex items-center gap-2 text-sm font-semibold"
+            className="btn-secondary flex items-center gap-2 text-sm font-semibold !min-h-[40px]"
             title={sf.uploadExcel}
           >
             <Upload className="size-4" />
-            {sf.uploadExcel}
+            <span className="hidden sm:inline">{sf.uploadExcel}</span>
           </button>
           <button
             onClick={() => {
               setEditLead(null);
               setShowAddLead(true);
             }}
-            className="btn-primary-solid flex items-center gap-2 text-sm font-bold min-h-[40px]"
+            className="btn-primary-solid flex items-center gap-2 text-sm font-bold !min-h-[40px]"
           >
             <Plus className="size-4" />
             {sf.addLead}
           </button>
         </div>
       </div>
-
-      {!setupError && <FollowUpIntroTip />}
 
       {/* Filters */}
       <FilterBar
@@ -633,8 +650,22 @@ export function SalesFollowUpDashboard({
         followUpFilter={followUpFilter}
         pics={pics}
         hidePicFilter={isSales}
-        onStartDateChange={setStartDate}
-        onEndDateChange={setEndDate}
+        datePreset={datePreset}
+        onDatePresetChange={(preset, newStart, newEnd) => {
+          setDatePreset(preset);
+          if (preset !== "custom") {
+            setStartDate(newStart);
+            setEndDate(newEnd);
+          }
+        }}
+        onStartDateChange={(v) => {
+          setStartDate(v);
+          setDatePreset("custom");
+        }}
+        onEndDateChange={(v) => {
+          setEndDate(v);
+          setDatePreset("custom");
+        }}
         onPicChange={setPicId}
         onStatusChange={setStatus}
         onSearchChange={setSearch}
@@ -653,50 +684,6 @@ export function SalesFollowUpDashboard({
         packages={displayPackages}
       />
 
-      {/* KPI Cards */}
-      <DashboardMetricSection>
-        <DashboardMetricTile
-          label={sf.kpiTotalLeads}
-          value={loadingStats ? "..." : stats.total_leads}
-          icon={Users}
-          accent="gray"
-        />
-        <DashboardMetricTile
-          label={sf.kpiActivities}
-          value={loadingStats ? "..." : stats.total_follow_ups}
-          icon={MessageSquare}
-          accent="info"
-        />
-        <DashboardMetricTile
-          label={sf.kpiFollowedOnce}
-          value={loadingStats ? "..." : stats.followed_up_once}
-          icon={UserCheck}
-          accent="warning"
-        />
-        <DashboardMetricTile
-          label={sf.kpiDoneThree}
-          value={loadingStats ? "..." : stats.followed_up_three}
-          icon={Award}
-          accent="success"
-          highlight
-        />
-      </DashboardMetricSection>
-
-      <DashboardMetricSection>
-        <DashboardMetricTile
-          label={sf.kpiNoFollowUp}
-          value={loadingStats ? "..." : stats.no_follow_up}
-          icon={UserX}
-          accent="error"
-        />
-        <DashboardMetricTile
-          label={sf.kpiOverdue}
-          value={loadingStats ? "..." : stats.overdue}
-          icon={AlertCircle}
-          accent="error"
-        />
-      </DashboardMetricSection>
-
       {/* Chart & Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <FollowUpChart data={chartData} />
@@ -704,6 +691,7 @@ export function SalesFollowUpDashboard({
           data={performance}
           onExportCsv={handleExportCsv}
           onExportPerfCsv={handleExportPerfCsv}
+          onExportFollowUpReport={handleExportFollowUpReport}
         />
       </div>
 
@@ -812,6 +800,13 @@ export function SalesFollowUpDashboard({
         }
       />
 
+      {/* Upload History — paling bawah, selepas Leads Table */}
+      <UploadHistoryTable
+        batches={batches}
+        loading={loadingBatches}
+        showUploader={!isSales}
+      />
+
       {/* Modals */}
       <LeadFormModal
         open={showAddLead}
@@ -868,6 +863,7 @@ export function SalesFollowUpDashboard({
           fetchLeads();
           fetchStats();
           fetchChartAndPerformance();
+          fetchBatches();
         }}
       />
 

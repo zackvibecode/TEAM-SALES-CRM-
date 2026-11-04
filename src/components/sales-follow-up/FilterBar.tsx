@@ -10,6 +10,8 @@ import {
 } from "@/lib/sales-follow-up/labels";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
+export type DatePreset = "all" | "today" | "1d" | "2d" | "3d" | "7d" | "custom";
+
 interface FilterBarProps {
   startDate: string;
   endDate: string;
@@ -19,6 +21,8 @@ interface FilterBarProps {
   followUpFilter: string;
   pics: SalesPic[];
   hidePicFilter?: boolean;
+  datePreset?: DatePreset;
+  onDatePresetChange?: (preset: DatePreset, startDate: string, endDate: string) => void;
   onStartDateChange: (v: string) => void;
   onEndDateChange: (v: string) => void;
   onPicChange: (v: string) => void;
@@ -26,6 +30,31 @@ interface FilterBarProps {
   onSearchChange: (v: string) => void;
   onFollowUpFilterChange: (v: string) => void;
 }
+
+function toISODate(d: Date): string {
+  return d.toISOString().split("T")[0]!;
+}
+
+export function presetRange(preset: DatePreset): { startDate: string; endDate: string } {
+  const today = new Date();
+  const end = toISODate(today);
+  if (preset === "all") return { startDate: "", endDate: "" };
+  if (preset === "custom") return { startDate: "", endDate: "" };
+  const days = preset === "today" ? 0 : Number(preset.replace("d", ""));
+  const from = new Date(today);
+  from.setDate(from.getDate() - days);
+  return { startDate: toISODate(from), endDate: end };
+}
+
+const PRESETS: Array<{ id: DatePreset; en: string; bm: string }> = [
+  { id: "all", en: "All", bm: "Semua" },
+  { id: "today", en: "Today", bm: "Hari Ini" },
+  { id: "1d", en: "1 Day", bm: "1 Hari" },
+  { id: "2d", en: "2 Days", bm: "2 Hari" },
+  { id: "3d", en: "3 Days", bm: "3 Hari" },
+  { id: "7d", en: "Several Days", bm: "Beberapa Hari" },
+  { id: "custom", en: "Custom", bm: "Custom" },
+];
 
 export function FilterBar({
   startDate,
@@ -36,6 +65,8 @@ export function FilterBar({
   followUpFilter,
   pics,
   hidePicFilter = false,
+  datePreset = "all",
+  onDatePresetChange,
   onStartDateChange,
   onEndDateChange,
   onPicChange,
@@ -43,7 +74,7 @@ export function FilterBar({
   onSearchChange,
   onFollowUpFilterChange,
 }: FilterBarProps) {
-  const { t } = useAppLocale();
+  const { t, locale } = useAppLocale();
   const sf = t.salesFollowUp;
   const [showFilters, setShowFilters] = useState(false);
   const hasActiveFilters =
@@ -91,6 +122,37 @@ export function FilterBar({
             </span>
           )}
         </button>
+      </div>
+
+      {/* Quick date presets — inline dengan search, always visible */}
+      <div className="flex flex-wrap items-center gap-1.5 -mt-1">
+        {PRESETS.map((p) => {
+          const isActive = datePreset === p.id;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => {
+                if (p.id === "custom") {
+                  onDatePresetChange?.("custom", startDate, endDate);
+                  setShowFilters(true);
+                  return;
+                }
+                const range = presetRange(p.id);
+                onDatePresetChange?.(p.id, range.startDate, range.endDate);
+                onStartDateChange(range.startDate);
+                onEndDateChange(range.endDate);
+              }}
+              className={cn(
+                "filter-pill text-xs px-3 py-1.5 rounded-full font-medium transition",
+                isActive ? "filter-pill-active" : "bg-[var(--surface-muted)] hover:bg-[var(--border-color)]"
+              )}
+              style={!isActive ? { color: "var(--text-secondary)" } : undefined}
+            >
+              {locale === "bm" ? p.bm : p.en}
+            </button>
+          );
+        })}
       </div>
 
       {showFilters && (

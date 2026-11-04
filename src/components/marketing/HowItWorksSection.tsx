@@ -18,7 +18,7 @@ export function HowItWorksSection() {
               <div className="m-card h-full p-7 sm:p-8 relative">
                 <span
                   className="w-10 h-10 rounded-full text-base font-extrabold flex items-center justify-center mb-6"
-                  style={{ background: "#9fe870", color: "#163300" }}
+                  style={{ background: "#2563eb", color: "#ffffff" }}
                   aria-hidden
                 >
                   {index + 1}

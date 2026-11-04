@@ -18,6 +18,7 @@ import type {
 } from "./types";
 import { PACKAGE_FILTER_NONE } from "./types";
 import { daysFromNow, todayKL } from "./dates";
+import { dateCreatedToISO } from "@/lib/lead-date-created";
 
 type DbClient = ReturnType<typeof createDbClient>;
 
@@ -27,7 +28,13 @@ type DbClient = ReturnType<typeof createDbClient>;
 
 export async function getPics(db: DbClient): Promise<SalesPic[]> {
   // Self-heal: merge active PIC rows that share the same name (case-insensitive).
-  await mergeDuplicateSalesPics(db);
+  // Best-effort — a failed merge must never break reads (it previously threw and
+  // crashed every pic-performance / leads request when one update failed).
+  try {
+    await mergeDuplicateSalesPics(db);
+  } catch (err) {
+    console.error("[sales-follow-up] mergeDuplicateSalesPics skipped:", err);
+  }
 
   const { data, error } = await db
     .from("sales_pics")
@@ -36,7 +43,30 @@ export async function getPics(db: DbClient): Promise<SalesPic[]> {
     .order("name", { ascending: true });
 
   if (error) throw new Error(`Failed to fetch PICs: ${error.message}`);
-  return data ?? [];
+
+  // Safety net: even if a merge failed, never return two active PICs that share
+  // the same normalized name. Keep the one linked to a user, else the oldest.
+  const seen = new Map<string, SalesPic>();
+  for (const pic of (data ?? []) as SalesPic[]) {
+    const key = picNameKey(pic.name);
+    if (!key) continue;
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, pic);
+      continue;
+    }
+    const preferred =
+      !existing.user_id && pic.user_id
+        ? pic
+        : existing.user_id && !pic.user_id
+          ? existing
+          : pic.created_at < existing.created_at
+            ? pic
+            : existing;
+    seen.set(key, preferred);
+  }
+
+  return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getAllPics(db: DbClient): Promise<SalesPic[]> {
@@ -358,6 +388,7 @@ export async function createLead(
       source: input.source || "",
       assigned_pic_id: input.assigned_pic_id || null,
       lead_status: input.lead_status || "New",
+      import_notes: input.notes || "",
       next_follow_up_date: input.next_follow_up_date || null,
       latest_response: "",
       total_follow_ups: 0,
@@ -372,7 +403,7 @@ export async function createLead(
     throw new Error(`Failed to create lead: ${error.message}`);
   }
 
-  if (input.notes && input.notes.trim()) {
+  if (input.notes && input.notes.trim() && !data.import_notes) {
     await createFollowUp(db, {
       lead_id: data.id,
       pic_id: input.assigned_pic_id,
@@ -783,16 +814,24 @@ export async function getDashboardStats(
       // PIC has no leads — do not count global follow-ups
       fuCount = 0;
     } else {
-      fuQuery = fuQuery.in("lead_id", leadIds);
-      if (filters.startDate) {
-        fuQuery = fuQuery.gte("follow_up_date", filters.startDate);
+      // Chunk lead IDs — .in() dengan ribuan ID menyebabkan URL terlalu panjang (Bad Request)
+      const CHUNK = 500;
+      for (let i = 0; i < leadIds.length; i += CHUNK) {
+        const chunk = leadIds.slice(i, i + CHUNK);
+        let chunkQuery = db
+          .from("lead_follow_ups")
+          .select("id", { count: "exact", head: true })
+          .in("lead_id", chunk);
+        if (filters.startDate) {
+          chunkQuery = chunkQuery.gte("follow_up_date", filters.startDate);
+        }
+        if (filters.endDate) {
+          chunkQuery = chunkQuery.lte("follow_up_date", filters.endDate);
+        }
+        const { count: fuTotal, error: fuError } = await chunkQuery;
+        if (fuError) throw new Error(`Failed to count follow-ups: ${fuError.message}`);
+        fuCount += fuTotal ?? 0;
       }
-      if (filters.endDate) {
-        fuQuery = fuQuery.lte("follow_up_date", filters.endDate);
-      }
-      const { count: fuTotal, error: fuError } = await fuQuery;
-      if (fuError) throw new Error(`Failed to count follow-ups: ${fuError.message}`);
-      fuCount = fuTotal ?? 0;
     }
   } else {
     if (filters.startDate) {
@@ -1079,6 +1118,7 @@ export interface SalesLeadImportRow {
   whatsapp: string;
   package_interest?: string;
   notes?: string;
+  date_created?: string;
 }
 
 export interface ImportSalesLeadsResult {
@@ -1090,9 +1130,178 @@ export interface ImportSalesLeadsResult {
   totalParsed: number;
   /** Package breakdown from rows that were inserted */
   packagesInserted: PackageCount[];
+  /** IDs of leads created by this import (for batch linking) */
+  insertedLeadIds: string[];
 }
 
 /** Bulk insert phone list into sales_leads for one PIC. Skips duplicate normalized phones. */
+export async function importSalesLeadsRoundRobin(
+  db: DbClient,
+  params: { rows: SalesLeadImportRow[]; source: string }
+): Promise<
+  ImportSalesLeadsResult & {
+    assignments: Array<{ picId: string; picName: string; inserted: number }>;
+  }
+> {
+  const pics = await getPics(db);
+  if (pics.length === 0) throw new Error("Tiada PIC aktif untuk auto assign.");
+
+  let skippedInvalid = 0;
+  const candidates: Array<{
+    customer_name: string;
+    phone_number: string;
+    normalized_phone_number: string;
+    destination_or_product: string;
+    source: string;
+    assigned_pic_id: string;
+    lead_status: string;
+    latest_response: string;
+    import_notes: string;
+    total_follow_ups: number;
+    created_at?: string;
+  }> = [];
+  const seenInFile = new Set<string>();
+
+  for (const row of params.rows) {
+    const phone = (row.whatsapp || "").trim();
+    const normalized = formatWhatsAppNumber(phone);
+    if (!phone || !normalized || normalized.replace(/\D/g, "").length < 8) {
+      skippedInvalid += 1;
+      continue;
+    }
+    if (seenInFile.has(normalized)) continue;
+    seenInFile.add(normalized);
+    candidates.push({
+      customer_name: (row.name || "").trim(),
+      phone_number: phone,
+      normalized_phone_number: normalized,
+      destination_or_product: "",
+      source: params.source,
+      assigned_pic_id: "",
+      lead_status: "New",
+      latest_response: "",
+      import_notes: (row.notes || "").trim(),
+      total_follow_ups: 0,
+      ...(row.date_created && dateCreatedToISO(row.date_created)
+        ? { created_at: dateCreatedToISO(row.date_created)! }
+        : {}),
+    });
+  }
+
+  const existingPhones = new Set<string>();
+  for (let i = 0; i < candidates.length; i += 200) {
+    const chunk = candidates.slice(i, i + 200).map((c) => c.normalized_phone_number);
+    const { data, error } = await db
+      .from("sales_leads")
+      .select("normalized_phone_number")
+      .in("normalized_phone_number", chunk);
+    if (error) throw new Error(`Failed to check duplicates: ${error.message}`);
+    for (const row of data ?? []) existingPhones.add(row.normalized_phone_number);
+  }
+
+  const toInsert = candidates.filter((c) => !existingPhones.has(c.normalized_phone_number));
+  const duplicateCount = params.rows.length - skippedInvalid - toInsert.length;
+  if (toInsert.length === 0) {
+    return {
+      inserted: 0,
+      skippedDuplicate: duplicateCount,
+      skippedOwnedByOther: 0,
+      skippedInvalid,
+      totalParsed: params.rows.length,
+      packagesInserted: [],
+      assignments: [],
+      insertedLeadIds: [],
+    };
+  }
+
+  // Cursor is the last PIC that received a lead. Start with the next PIC.
+  const { data: cursorRow } = await db
+    .from("app_settings")
+    .select("value")
+    .eq("key", "sales_leads_round_robin_last_pic_id")
+    .maybeSingle();
+  const cursorIndex = pics.findIndex((pic) => pic.id === cursorRow?.value);
+  const startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
+  // #region agent log
+  fetch('http://127.0.0.1:7580/ingest/054cbf78-26eb-4041-921c-54ee472d2df8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7ab8ec'},body:JSON.stringify({sessionId:'7ab8ec',runId:'auto-import',hypothesisId:'B',location:'service.ts:1215',message:'Round robin before insert',data:{picIds:pics.map(p=>p.id),hasPreviousCursor:!!cursorRow?.value,cursorIndex,startIndex,candidates:toInsert.length,duplicates:duplicateCount,invalid:skippedInvalid},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
+  const assignmentCounts = new Map<string, number>();
+  for (let i = 0; i < toInsert.length; i++) {
+    const pic = pics[(startIndex + i) % pics.length]!;
+    toInsert[i]!.assigned_pic_id = pic.id;
+    assignmentCounts.set(pic.id, (assignmentCounts.get(pic.id) ?? 0) + 1);
+  }
+
+  let inserted = 0;
+  let raceDuplicates = 0;
+  const insertedPicIds: string[] = [];
+  const insertedLeadIds: string[] = [];
+  for (let i = 0; i < toInsert.length; i += 100) {
+    const batch = toInsert.slice(i, i + 100);
+    const { data, error } = await db.from("sales_leads").insert(batch).select("id,assigned_pic_id");
+    if (!error) {
+      inserted += data?.length ?? batch.length;
+      for (const row of data ?? []) {
+        insertedPicIds.push(row.assigned_pic_id);
+        insertedLeadIds.push(row.id);
+      }
+      continue;
+    }
+    if (error.code !== "23505") throw new Error(`Failed to import leads: ${error.message}`);
+    for (const row of batch) {
+      const one = await db
+        .from("sales_leads")
+        .insert(row)
+        .select("id,assigned_pic_id")
+        .single();
+      if (!one.error && one.data) {
+        inserted += 1;
+        insertedPicIds.push(one.data.assigned_pic_id);
+        insertedLeadIds.push(one.data.id);
+      } else if (one.error?.code === "23505") {
+        raceDuplicates += 1;
+      } else if (one.error) {
+        throw new Error(`Failed to import lead: ${one.error.message}`);
+      }
+    }
+  }
+
+  if (insertedPicIds.length > 0) {
+    const lastPicId = insertedPicIds[insertedPicIds.length - 1]!;
+    const { error } = await db.from("app_settings").upsert({
+      key: "sales_leads_round_robin_last_pic_id",
+      value: lastPicId,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw new Error(`Failed to save round-robin turn: ${error.message}`);
+  }
+
+  const successfulCounts = new Map<string, number>();
+  for (const picId of insertedPicIds) {
+    successfulCounts.set(picId, (successfulCounts.get(picId) ?? 0) + 1);
+  }
+
+  // #region agent log
+  fetch('http://127.0.0.1:7580/ingest/054cbf78-26eb-4041-921c-54ee472d2df8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7ab8ec'},body:JSON.stringify({sessionId:'7ab8ec',runId:'auto-import',hypothesisId:'B',location:'service.ts:1285',message:'Round robin import result',data:{inserted,duplicates:duplicateCount+raceDuplicates,invalid:skippedInvalid,assignedPicIds:insertedPicIds,savedCursor:insertedPicIds[insertedPicIds.length-1]||null},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+  return {
+    inserted,
+    skippedDuplicate: duplicateCount + raceDuplicates,
+    skippedOwnedByOther: 0,
+    skippedInvalid,
+      totalParsed: params.rows.length,
+      packagesInserted: [],
+      assignments: pics
+        .filter((pic) => successfulCounts.has(pic.id))
+        .map((pic) => ({
+          picId: pic.id,
+          picName: pic.name,
+          inserted: successfulCounts.get(pic.id) ?? 0,
+        })),
+      insertedLeadIds,
+    };
+}
 export async function importSalesLeadsForPic(
   db: DbClient,
   params: {
@@ -1112,7 +1321,9 @@ export async function importSalesLeadsForPic(
     assigned_pic_id: string;
     lead_status: string;
     latest_response: string;
+    import_notes: string;
     total_follow_ups: number;
+    created_at?: string;
   }> = [];
 
   const seenInFile = new Set<string>();
@@ -1141,7 +1352,11 @@ export async function importSalesLeadsForPic(
       assigned_pic_id: assignedPicId,
       lead_status: "New",
       latest_response: "",
+      import_notes: (row.notes || "").trim(),
       total_follow_ups: 0,
+      ...(row.date_created && dateCreatedToISO(row.date_created)
+        ? { created_at: dateCreatedToISO(row.date_created)! }
+        : {}),
     });
   }
 
@@ -1153,6 +1368,7 @@ export async function importSalesLeadsForPic(
       skippedInvalid,
       totalParsed: rows.length,
       packagesInserted: [],
+      insertedLeadIds: [],
     };
   }
 
@@ -1186,6 +1402,7 @@ export async function importSalesLeadsForPic(
   });
 
   let inserted = 0;
+  const insertedLeadIds: string[] = [];
   for (let i = 0; i < toInsert.length; i += 100) {
     const batch = toInsert.slice(i, i + 100);
     const { error, data } = await db.from("sales_leads").insert(batch).select("id");
@@ -1193,14 +1410,17 @@ export async function importSalesLeadsForPic(
       if (error.code === "23505") {
         for (const row of batch) {
           const one = await db.from("sales_leads").insert(row).select("id").single();
-          if (!one.error && one.data) inserted += 1;
-          else skippedDuplicate += 1;
+          if (!one.error && one.data) {
+            inserted += 1;
+            insertedLeadIds.push(one.data.id);
+          } else skippedDuplicate += 1;
         }
         continue;
       }
       throw new Error(`Failed to import leads: ${error.message}`);
     }
     inserted += data?.length ?? batch.length;
+    for (const row of data ?? []) insertedLeadIds.push(row.id);
   }
 
   return {
@@ -1219,6 +1439,7 @@ export async function importSalesLeadsForPic(
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
     })(),
+    insertedLeadIds,
   };
 }
 

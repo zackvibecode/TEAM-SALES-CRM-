@@ -1,7 +1,6 @@
 "use client";
 
 import type { ChartDataPoint } from "@/lib/sales-follow-up/types";
-import { BarChart3 } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 interface FollowUpChartProps {
@@ -19,7 +18,6 @@ export function FollowUpChart({ data }: FollowUpChartProps) {
         className="surface-card rounded-xl p-8 text-center"
         style={{ color: "var(--text-muted)" }}
       >
-        <BarChart3 className="size-10 mx-auto mb-3 opacity-40" />
         <p className="text-sm font-medium">{sf.chartEmpty}</p>
         <p className="text-xs mt-1">{sf.chartEmptyHint}</p>
       </div>
@@ -28,72 +26,51 @@ export function FollowUpChart({ data }: FollowUpChartProps) {
 
   return (
     <div className="surface-card rounded-xl p-5">
-      <div className="flex items-center gap-2 mb-5">
-        <BarChart3 className="size-5" style={{ color: "var(--text-secondary)" }} />
-        <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-          {sf.chartTitle}
-        </h3>
-      </div>
+      <h3 className="text-sm font-bold mb-5" style={{ color: "var(--text-primary)" }}>
+        {sf.chartTitle}
+      </h3>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {data.map((item) => (
           <div key={item.pic_id}>
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-3 min-w-0">
-                <span
-                  className="text-sm font-semibold truncate"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {item.pic_name}
-                </span>
-              </div>
-              <div className="flex items-center gap-4 shrink-0">
-                <span
-                  className="text-xs tabular-nums"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {item.total_activities}
-                  </span>{" "}
-                  {sf.chartActivities}
-                </span>
-                <span
-                  className="text-xs tabular-nums"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {item.leads_assigned}
-                  </span>{" "}
-                  {sf.chartLeads}
-                </span>
-              </div>
+            <div className="flex items-baseline justify-between gap-3 mb-1.5">
+              <span
+                className="text-sm font-semibold truncate"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {item.pic_name}
+              </span>
+              {/* Nombor dominan — aktiviti ialah metrik utama */}
+              <span
+                className="text-lg font-bold tabular-nums leading-none shrink-0"
+                style={{ color: "var(--color-primary-600, #1d4ed8)" }}
+              >
+                {item.total_activities}
+              </span>
             </div>
 
-            <div className="relative h-7 rounded-full overflow-hidden bg-[var(--surface-muted)]">
+            {/* Bar nipis — quiet, bukan dekorasi */}
+            <div
+              className="h-1.5 rounded-full overflow-hidden"
+              style={{ backgroundColor: "var(--surface-muted)" }}
+            >
               <div
-                className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out flex items-center"
+                className="h-full rounded-full"
                 style={{
                   width: `${Math.max((item.total_activities / maxValue) * 100, 3)}%`,
-                  backgroundColor: "var(--color-brand-500, #9fe870)",
-                  minWidth: "24px",
+                  backgroundColor: "var(--color-primary-500, #3b82f6)",
                 }}
-              >
-                {item.total_activities > 0 && (
-                  <span
-                    className="text-[11px] font-bold pl-2.5 tabular-nums"
-                    style={{ color: "#163300" }}
-                  >
-                    {item.total_activities}
-                  </span>
-                )}
-              </div>
+              />
             </div>
 
-            <div className="flex gap-4 mt-1">
-              <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+            <div className="flex gap-4 mt-1.5">
+              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                <span className="font-semibold">{item.leads_assigned}</span> {sf.chartLeads}
+              </span>
+              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
                 <span className="font-semibold">{item.leads_followed_up}</span> {sf.chartFollowedUp}
               </span>
-              <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+              <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
                 <span className="font-semibold">{item.leads_three_plus}</span> {sf.chartMin3x}
               </span>
             </div>

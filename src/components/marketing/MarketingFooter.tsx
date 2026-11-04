@@ -33,7 +33,7 @@ export function MarketingFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-[15px] font-semibold transition hover:text-[#2e6b1c] dark:hover:text-[#9fe870]"
+                    className="text-[15px] font-semibold transition hover:text-[#1d4ed8] dark:hover:text-[#60a5fa]"
                     style={{ color: "var(--text-secondary)" }}
                   >
                     {link.label}
@@ -56,7 +56,7 @@ export function MarketingFooter() {
                       href={contactUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[15px] font-semibold transition hover:text-[#2e6b1c] dark:hover:text-[#9fe870]"
+                      className="text-[15px] font-semibold transition hover:text-[#1d4ed8] dark:hover:text-[#60a5fa]"
                       style={{ color: "var(--text-secondary)" }}
                     >
                       {link.label}
@@ -64,7 +64,7 @@ export function MarketingFooter() {
                   ) : (
                     <Link
                       href={link.href}
-                      className="text-[15px] font-semibold transition hover:text-[#2e6b1c] dark:hover:text-[#9fe870]"
+                      className="text-[15px] font-semibold transition hover:text-[#1d4ed8] dark:hover:text-[#60a5fa]"
                       style={{ color: "var(--text-secondary)" }}
                     >
                       {link.label}

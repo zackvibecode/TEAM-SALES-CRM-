@@ -102,7 +102,7 @@ export function LoginForm() {
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center app-shell">
-        <div className="w-10 h-10 rounded-full border-[3px] border-[#9fe870] border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-full border-[3px] border-[#2563eb] border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -112,7 +112,7 @@ export function LoginForm() {
       <div className="m-container max-w-lg w-full mx-auto pt-6 flex items-center justify-between">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold transition hover:text-[#2e6b1c] dark:hover:text-[#9fe870]"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold transition hover:text-[#1d4ed8] dark:hover:text-[#60a5fa]"
           style={{ color: "var(--text-muted)" }}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -131,7 +131,7 @@ export function LoginForm() {
 
           <form
             onSubmit={handleLogin}
-            className="m-card p-7 sm:p-9 space-y-6 shadow-[0_24px_48px_-24px_rgba(22,51,0,0.18)]"
+            className="m-card p-7 sm:p-9 space-y-6 shadow-[0_24px_48px_-24px_rgba(15,23,42,0.18)]"
           >
             <div>
               <h2 className="m-h3 !text-2xl">{login.title}</h2>
@@ -214,7 +214,7 @@ export function LoginForm() {
             </button>
 
             {serverOk && (
-              <p className="text-xs font-semibold text-center" style={{ color: "#4f9e2c" }}>
+              <p className="text-xs font-semibold text-center" style={{ color: "#2563eb" }}>
                 {login.serverOk}
               </p>
             )}
@@ -225,7 +225,7 @@ export function LoginForm() {
             <a
               href={contactUrl}
               className="font-bold transition hover:underline"
-              style={{ color: "#2e6b1c" }}
+              style={{ color: "#1d4ed8" }}
               target="_blank"
               rel="noopener noreferrer"
             >

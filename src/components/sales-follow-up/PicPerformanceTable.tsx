@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowUpDown, Download, Printer } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ArrowUpDown, Download, Printer, ChevronDown } from "lucide-react";
 import type { PicPerformanceRow } from "@/lib/sales-follow-up/types";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
@@ -8,15 +9,30 @@ interface PicPerformanceTableProps {
   data: PicPerformanceRow[];
   onExportCsv: () => void;
   onExportPerfCsv?: () => void;
+  onExportFollowUpReport?: () => void;
 }
 
 export function PicPerformanceTable({
   data,
   onExportCsv,
   onExportPerfCsv,
+  onExportFollowUpReport,
 }: PicPerformanceTableProps) {
   const { t } = useAppLocale();
   const sf = t.salesFollowUp;
+  const [showExports, setShowExports] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showExports) return;
+    const onDoc = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowExports(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [showExports]);
 
   if (data.length === 0) {
     return (
@@ -38,29 +54,73 @@ export function PicPerformanceTable({
         <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
           {sf.perfTitle}
         </h3>
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={onExportCsv}
-            className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
-          >
-            <Download className="size-3.5" />
-            {sf.exportCsv}
-          </button>
-          {onExportPerfCsv && (
+        <div className="flex items-center gap-2">
+          <div className="relative" ref={menuRef}>
             <button
-              onClick={onExportPerfCsv}
+              onClick={() => setShowExports((v) => !v)}
               className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
+              aria-expanded={showExports}
+              aria-haspopup="menu"
             >
               <Download className="size-3.5" />
-              {sf.exportPerfCsv}
+              {sf.exportCsv}
+              <ChevronDown className="size-3.5" />
             </button>
-          )}
+            {showExports && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-1 z-20 w-56 rounded-xl border shadow-lg py-1.5"
+                style={{
+                  borderColor: "var(--border-color)",
+                  backgroundColor: "var(--surface-card)",
+                }}
+              >
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    setShowExports(false);
+                    onExportCsv();
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs hover:bg-[var(--surface-muted)]"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {sf.exportCsv}
+                </button>
+                {onExportPerfCsv && (
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setShowExports(false);
+                      onExportPerfCsv();
+                    }}
+                    className="w-full text-left px-3.5 py-2 text-xs hover:bg-[var(--surface-muted)]"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {sf.exportPerfCsv}
+                  </button>
+                )}
+                {onExportFollowUpReport && (
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setShowExports(false);
+                      onExportFollowUpReport();
+                    }}
+                    className="w-full text-left px-3.5 py-2 text-xs font-semibold hover:bg-[var(--surface-muted)]"
+                    style={{ color: "var(--color-primary-600, #1d4ed8)" }}
+                  >
+                    Follow-Up Report
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => window.print()}
             className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
+            title={sf.print}
           >
             <Printer className="size-3.5" />
-            {sf.print}
           </button>
         </div>
       </div>
@@ -152,7 +212,7 @@ export function PicPerformanceTable({
 function Th({ children, align }: { children: React.ReactNode; align?: "right" }) {
   return (
     <th
-      className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider whitespace-nowrap"
+      className="px-4 py-3 text-xs font-semibold whitespace-nowrap"
       style={{
         color: "var(--text-muted)",
         textAlign: align || "left",

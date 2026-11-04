@@ -298,12 +298,10 @@ export function parseLeadRows(json: RowRecord[]): ParsedLeadRow[] {
   const notesCol = detectNotesColumn(headers);
   const noCol = detectListOrderColumn(headers);
   const linkCol = headers.find((h) => /whatsapp\s*link/i.test(h));
+  const dateCol = detectDateCreatedColumn(headers);
   const skipForScan = new Set(
-    [nameCol, waCol, linkCol, pkgCol, notesCol].filter(Boolean) as string[]
+    [nameCol, waCol, linkCol, pkgCol, notesCol, dateCol].filter(Boolean) as string[]
   );
-  const dateCol =
-    detectDateCreatedColumn(headers) ??
-    detectDateColumnByContent(headers, rows, skipForScan);
 
   const parsed: ParsedLeadRow[] = [];
 
@@ -328,10 +326,7 @@ export function parseLeadRows(json: RowRecord[]): ParsedLeadRow[] {
 
     let package_interest = pkgCol ? cellToString(row[pkgCol]) : "";
     const notes = notesCol ? cellToString(row[notesCol]) : "";
-    const skipDateScan = new Set([
-      ...skipForScan,
-      ...(noCol ? [noCol] : []),
-    ]);
+    const skipDateScan = new Set(headers.filter((h) => h !== dateCol));
     let date_created = extractDateCreatedFromRow(row, headers, dateCol, skipDateScan);
 
     if (!date_created && package_interest) {

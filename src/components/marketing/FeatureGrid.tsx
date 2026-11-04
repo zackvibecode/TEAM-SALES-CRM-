@@ -41,7 +41,7 @@ export function FeatureGrid() {
             const Icon = FEATURE_ICONS[i] ?? Upload;
             return (
               <Reveal key={item.title} delay={(i % 4) as 0 | 1 | 2 | 3} className="h-full">
-                <article className="m-card h-full p-6 sm:p-7 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_16px_36px_-20px_rgba(22,51,0,0.28)] motion-reduce:hover:translate-y-0">
+                <article className="m-card h-full p-6 sm:p-7 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_16px_36px_-20px_rgba(15,23,42,0.28)] motion-reduce:hover:translate-y-0">
                   <div className="m-icon-tile mb-5">
                     <Icon className="w-5 h-5" />
                   </div>

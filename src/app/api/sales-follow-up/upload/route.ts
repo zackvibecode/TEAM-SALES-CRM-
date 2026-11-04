@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedContext } from "@/lib/auth-context";
 import { resolveScopedPicId } from "@/lib/sales-follow-up/access";
-import { importSalesLeadsForPic, getPics } from "@/lib/sales-follow-up/service";
+import {
+  importSalesLeadsForPic,
+  importSalesLeadsRoundRobin,
+  getPics,
+} from "@/lib/sales-follow-up/service";
 import { parseLeadRows, detectPackageColumn } from "@/lib/parse-leads";
 import { readSpreadsheetRows } from "@/lib/read-spreadsheet";
 import { SF_ERROR, sfError } from "@/lib/sales-follow-up/errors";
@@ -17,6 +21,19 @@ export async function POST(request: NextRequest) {
     const form = await request.formData();
     const file = form.get("file");
     const requestedPicId = String(form.get("picId") || "").trim() || null;
+    const assignMode = form.get("assignMode") === "round_robin" ? "round_robin" : "single";
+    const batchName = String(form.get("batchName") || "").trim();
+
+    // Who performed this upload (PIC name for sales, label for admin uploads)
+    let uploaderName = "Admin";
+    if (ctx.role !== "admin") {
+      const scoped = await resolveScopedPicId(ctx.db, ctx.role, ctx.user.id, null);
+      uploaderName = scoped.pic?.name || ctx.user.email || "Sales";
+    }
+    if (assignMode === "round_robin" && ctx.role !== "admin") {
+      const e = sfError(SF_ERROR.UNAUTHORIZED, 403);
+      return NextResponse.json(e.body, { status: e.status });
+    }
 
     if (!(file instanceof File)) {
       const e = sfError(SF_ERROR.UPLOAD_FILE_REQUIRED, 400);
@@ -41,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     let assignedPicId = scoped.picId;
-    if (ctx.role === "admin") {
+    if (ctx.role === "admin" && assignMode === "single") {
       if (!requestedPicId) {
         const e = sfError(SF_ERROR.UPLOAD_PIC_REQUIRED, 400);
         return NextResponse.json(e.body, { status: e.status });
@@ -54,7 +71,7 @@ export async function POST(request: NextRequest) {
       assignedPicId = requestedPicId;
     }
 
-    if (!assignedPicId) {
+    if (!assignedPicId && assignMode === "single") {
       const e = sfError(SF_ERROR.UPLOAD_PIC_UNRESOLVED, 400);
       return NextResponse.json(e.body, { status: e.status });
     }
@@ -65,6 +82,9 @@ export async function POST(request: NextRequest) {
       sheetRows.length > 0 ? Object.keys(sheetRows[0] as Record<string, unknown>) : [];
     const packageColumnDetected = Boolean(detectPackageColumn(sampleKeys));
     const parsed = parseLeadRows(sheetRows);
+  // #region agent log
+  fetch('http://127.0.0.1:7580/ingest/054cbf78-26eb-4041-921c-54ee472d2df8',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7ab8ec'},body:JSON.stringify({sessionId:'7ab8ec',runId:'auto-import',hypothesisId:'A',location:'parse-leads.ts:290',message:'Excel import projection',data:{inputHeaders:sampleKeys,projectedFields:['name','whatsapp','date_created','notes'],rows:parsed.length,blankNames:parsed.filter(r=>!r.name).length,blankNotes:parsed.filter(r=>!r.notes).length,withDate:parsed.filter(r=>!!r.date_created).length},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 
     if (parsed.length === 0) {
       const e = sfError(SF_ERROR.UPLOAD_NO_PHONES, 400);
@@ -72,16 +92,49 @@ export async function POST(request: NextRequest) {
     }
 
     const source = `Excel Upload: ${file.name}`.slice(0, 120);
-    const result = await importSalesLeadsForPic(ctx.db, {
-      rows: parsed,
-      assignedPicId,
-      source,
-    });
+    const result =
+      assignMode === "round_robin"
+        ? await importSalesLeadsRoundRobin(ctx.db, { rows: parsed, source })
+        : await importSalesLeadsForPic(ctx.db, {
+            rows: parsed,
+            assignedPicId: assignedPicId!,
+            source,
+          });
+
+    // Record this upload as a batch and link the newly inserted leads to it
+    let batchId: string | undefined;
+    if (result.insertedLeadIds.length > 0) {
+      const { data: batchRow, error: batchErr } = await ctx.db
+        .from("sales_lead_batches")
+        .insert({
+          batch_name: batchName || file.name,
+          file_name: file.name,
+          total_leads: result.insertedLeadIds.length,
+          assign_mode: assignMode,
+          uploaded_by: uploaderName,
+        })
+        .select("id")
+        .single();
+      if (batchErr) throw new Error(`Failed to record upload batch: ${batchErr.message}`);
+      batchId = batchRow!.id;
+
+      for (let i = 0; i < result.insertedLeadIds.length; i += 200) {
+        const chunk = result.insertedLeadIds.slice(i, i + 200);
+        const { error: linkErr } = await ctx.db
+          .from("sales_leads")
+          .update({ batch_id: batchId })
+          .in("id", chunk);
+        if (linkErr) throw new Error(`Failed to link leads to batch: ${linkErr.message}`);
+      }
+    }
 
     return NextResponse.json({
       ok: true,
       fileName: file.name,
-      assignedPicId,
+      batchName: batchName || file.name,
+      batchId,
+      assignMode,
+      assignedPicId: assignMode === "single" ? assignedPicId : undefined,
       packageColumnDetected,
       detectedColumns: sampleKeys,
       ...result,

@@ -83,37 +83,30 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
       <PageHeader
         badge={t.admin.dashboard.badge}
         title={t.admin.dashboard.title}
-        subtitle={t.admin.dashboard.subtitle}
         compact
-        actions={<ActivePackagesButton href="/admin/promos" />}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              className="input-field max-w-[180px] py-2 text-sm !min-h-[40px]"
+              aria-label="View team user"
+            >
+              <option value="all">All Users</option>
+              {salesProfiles.map((sp) => (
+                <option key={sp.id} value={sp.id}>
+                  {sp.full_name}{sp.role === "admin" ? " (Admin)" : ""}
+                </option>
+              ))}
+            </select>
+            <ActivePackagesButton href="/admin/promos" />
+          </div>
+        }
       />
+
+      <AdminDashboardOverview stats={currentStats} />
 
       <DashboardSubscriptionBanner />
-
-      <AdminDashboardOverview
-        stats={currentStats}
-        showWorkspace={selectedUserId === "all"}
-        viewingLabel={
-          selectedUserId === "all"
-            ? "Team-wide metrics"
-            : `Metrics for ${selectedUserName}`
-        }
-        filterSlot={
-          <select
-            value={selectedUserId}
-            onChange={(e) => setSelectedUserId(e.target.value)}
-            className="input-field max-w-xs py-2 text-sm"
-            aria-label="View team user"
-          >
-            <option value="all">All Users</option>
-            {salesProfiles.map((sp) => (
-              <option key={sp.id} value={sp.id}>
-                {sp.full_name}{sp.role === "admin" ? " (Admin)" : ""}
-              </option>
-            ))}
-          </select>
-        }
-      />
 
       {selectedUserId === "all" ? (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
@@ -133,13 +126,9 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
           <thead>
             <tr className="table-head">
               <th className="table-th">Name</th>
-              <th className="table-th">Email</th>
               <th className="table-th text-right">Total</th>
               <th className="table-th text-right">Clicked</th>
-              <th className="table-th text-right">Pending</th>
-              <th className="table-th text-right">Today</th>
-              <th className="table-th text-right">Week</th>
-              <th className="table-th text-center">Progress</th>
+              <th className="table-th text-center w-40">Progress</th>
             </tr>
           </thead>
           <tbody>
@@ -157,11 +146,13 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
                     >
                       {p.full_name.charAt(0).toUpperCase()}
                     </span>
-                    {p.full_name}
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{p.full_name}</p>
+                      <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+                        {p.email}
+                      </p>
+                    </div>
                   </div>
-                </td>
-                <td className="px-4 py-4 text-xs" style={{ color: "var(--text-muted)" }}>
-                  {p.email}
                 </td>
                 <td className="px-4 py-4 text-right font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>
                   {p.total_data}
@@ -169,24 +160,18 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
                 <td className="px-4 py-4 text-right tabular-nums" style={{ color: "var(--text-secondary)" }}>
                   {p.clicked}
                 </td>
-                <td className="px-4 py-4 text-right tabular-nums" style={{ color: "var(--text-secondary)" }}>
-                  {p.pending}
-                </td>
-                <td className="px-4 py-4 text-right tabular-nums" style={{ color: "var(--text-secondary)" }}>
-                  {p.today_clicks}
-                </td>
-                <td className="px-4 py-4 text-right tabular-nums" style={{ color: "var(--text-secondary)" }}>
-                  {p.this_week_clicks}
-                </td>
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--surface-muted)" }}>
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--surface-muted)" }}>
                       <div
                         className="h-full rounded-full transition-all"
-                        style={{ width: `${p.progress}%`, background: "var(--text-primary)" }}
+                        style={{
+                          width: `${p.progress}%`,
+                          backgroundColor: "var(--color-primary-500, #3b82f6)",
+                        }}
                       />
                     </div>
-                    <span className="text-xs w-10 text-right" style={{ color: "var(--text-muted)" }}>
+                    <span className="text-xs w-10 text-right tabular-nums" style={{ color: "var(--text-muted)" }}>
                       {p.progress}%
                     </span>
                   </div>
@@ -195,7 +180,7 @@ export function AdminDashboardClient({ salesProfiles, performanceData, aggregate
             ))}
             {filteredPerformance.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center" style={{ color: "var(--text-muted)" }}>
+                <td colSpan={4} className="px-4 py-12 text-center" style={{ color: "var(--text-muted)" }}>
                   No data for this user.
                 </td>
               </tr>

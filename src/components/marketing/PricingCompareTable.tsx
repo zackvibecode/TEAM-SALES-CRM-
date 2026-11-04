@@ -36,7 +36,7 @@ export function PricingCompareTable() {
               {PRICING_TIERS.map((tier) => (
                 <td key={tier.id} className="p-5 text-center">
                   {tier.features[key] ? (
-                    <Check className="w-5 h-5 mx-auto" style={{ color: "#4f9e2c" }} aria-label="Yes" />
+                    <Check className="w-5 h-5 mx-auto" style={{ color: "#2563eb" }} aria-label="Yes" />
                   ) : (
                     <X className="w-5 h-5 mx-auto opacity-40" style={{ color: "var(--text-muted)" }} aria-label="No" />
                   )}

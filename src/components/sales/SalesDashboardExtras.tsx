@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { BatchProgressBar } from "@/components/shared/BatchProgressBar";
 import { ListChecks, Target } from "lucide-react";
 
 export interface SalesBatchCard {
@@ -19,6 +18,23 @@ interface Props {
   newBatchCount: number;
   kpiClicks: number | null;
   monthClicks: number;
+}
+
+function MiniBar({ pct }: { pct: number }) {
+  return (
+    <div
+      className="h-1.5 rounded-full overflow-hidden w-24 shrink-0"
+      style={{ background: "var(--surface-muted)" }}
+    >
+      <div
+        className="h-full rounded-full"
+        style={{
+          width: `${pct}%`,
+          backgroundColor: "var(--color-primary-500, #3b82f6)",
+        }}
+      />
+    </div>
+  );
 }
 
 export function SalesDashboardExtras({
@@ -43,48 +59,56 @@ export function SalesDashboardExtras({
         </div>
       )}
 
-      {kpiClicks != null && kpiClicks > 0 && (
-        <div className="card-padded-sm">
-          <h2 className="font-semibold flex items-center gap-2 mb-3 text-sm" style={{ color: "var(--text-primary)" }}>
-            <Target className="w-4 h-4 text-[#9fe870]" />
-            Monthly click target
-          </h2>
-          <div>
-            <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>Clicks target: {kpiClicks}</p>
-            <BatchProgressBar
-              progress={Math.min(100, Math.round((monthClicks / kpiClicks) * 100))}
-              pending={Math.max(0, kpiClicks - monthClicks)}
-              total={kpiClicks}
-            />
-            <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{monthClicks} clicks this month</p>
-          </div>
-        </div>
-      )}
+      {(kpiClicks != null && kpiClicks > 0 || activeBatches.length > 0) && (
+        <div className="card-padded-sm space-y-5">
+          {kpiClicks != null && kpiClicks > 0 && (
+            <div>
+              <h2 className="font-semibold flex items-center gap-2 mb-3 text-sm" style={{ color: "var(--text-primary)" }}>
+                <Target className="w-4 h-4 text-[#2563eb]" />
+                Monthly click target
+              </h2>
+              <div className="flex items-center gap-3">
+                <p className="text-sm font-bold tabular-nums" style={{ color: "var(--text-primary)" }}>
+                  {monthClicks}
+                  <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
+                    {" "}/ {kpiClicks} clicks
+                  </span>
+                </p>
+                <MiniBar pct={Math.min(100, Math.round((monthClicks / kpiClicks) * 100))} />
+              </div>
+            </div>
+          )}
 
-      {activeBatches.length > 0 && (
-        <div className="card-padded-sm">
-          <h2 className="font-semibold mb-4 text-sm" style={{ color: "var(--text-primary)" }}>
-            My assigned batches
-          </h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {activeBatches.map((b) => (
-              <Link
-                key={b.id}
-                href="/dashboard/sales/tasks"
-                className="block p-4 rounded-xl border transition hover:shadow-md"
-                style={{ background: "var(--surface-card)", borderColor: "var(--border-color)" }}
-              >
-                <div className="font-medium text-sm" style={{ color: "var(--text-primary)" }}>{b.label}</div>
-                {b.source_tag && (
-                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>{b.source_tag}</span>
-                )}
-                <div className="mt-3">
-                  <BatchProgressBar progress={b.progress} pending={b.pending} total={b.total} compact />
-                </div>
-                <p className="text-xs text-[#9fe870] mt-2 font-semibold">{b.pending} pending → work now</p>
-              </Link>
-            ))}
-          </div>
+          {activeBatches.length > 0 && (
+            <div>
+              <h2 className="font-semibold mb-3 text-sm" style={{ color: "var(--text-primary)" }}>
+                My assigned batches
+              </h2>
+              <div className="flex flex-col gap-1">
+                {activeBatches.map((b) => (
+                  <Link
+                    key={b.id}
+                    href="/dashboard/sales/tasks"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition hover:bg-[var(--surface-hover)] group"
+                  >
+                    <span
+                      className="text-sm font-medium truncate flex-1 min-w-0"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {b.label}
+                    </span>
+                    <MiniBar pct={b.progress} />
+                    <span
+                      className="text-xs font-semibold tabular-nums shrink-0"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      {b.pending} pending
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

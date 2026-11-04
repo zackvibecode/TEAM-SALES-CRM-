@@ -28,6 +28,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: scoped.error }, { status: 403 });
   }
 
+  // PIC name lookup for the follow-up activity report
+  const { data: allPics } = await ctx.db.from("sales_pics").select("id, name");
+  const picsById = new Map(
+    ((allPics ?? []) as Array<{ id: string; name: string }>).map((p) => [p.id, p.name])
+  );
+
   const filters: FollowUpFilterParams = {
     startDate: searchParams.get("startDate") || undefined,
     endDate: searchParams.get("endDate") || undefined,
@@ -84,6 +90,98 @@ export async function GET(request: Request) {
     }
 
     const leads = await getLeads(ctx.db, filters);
+
+    // Follow-up activity report: one row per follow-up with date and time split
+    // into separate columns for easy Excel/CSV filtering.
+    if (report === "followups") {
+      const leadIds = leads.map((l) => l.id);
+      const rows: Array<{
+        lead_id: string;
+        follow_up_number: number;
+        status: string;
+        created_at: string;
+        follow_up_date: string;
+        notes: string;
+        pic: string;
+      }> = [];
+      for (let i = 0; i < leadIds.length; i += 200) {
+        const chunk = leadIds.slice(i, i + 200);
+        const { data: fuRows, error: fuErr } = await ctx.db
+          .from("lead_follow_ups")
+          .select("lead_id, follow_up_number, status, created_at, follow_up_date, notes, pic_id")
+          .in("lead_id", chunk)
+          .order("created_at", { ascending: true });
+        if (fuErr) throw new Error(`Failed to fetch follow-ups: ${fuErr.message}`);
+        for (const r of (fuRows ?? []) as Array<{
+          lead_id: string;
+          follow_up_number: number;
+          status: string;
+          created_at: string;
+          follow_up_date: string;
+          notes: string;
+          pic_id: string | null;
+        }>) {
+          rows.push({
+            lead_id: r.lead_id,
+            follow_up_number: r.follow_up_number,
+            status: r.status,
+            created_at: r.created_at,
+            follow_up_date: r.follow_up_date,
+            notes: r.notes ?? "",
+            pic: picsById.get(r.pic_id ?? "") ?? "",
+          });
+        }
+      }
+
+      const leadById = new Map(leads.map((l) => [l.id, l]));
+      const headers = [
+        "Customer Name",
+        "Phone Number",
+        "PIC",
+        "Lead Status",
+        "Follow-Up #",
+        "Follow-Up Response",
+        "Notes",
+        "Date",
+        "Time",
+        "Follow-Up Date (scheduled)",
+        "Lead Created Date",
+        "Lead Created Time",
+      ];
+
+      const csvRows = rows.map((r) => {
+        const lead = leadById.get(r.lead_id);
+        const created = new Date(r.created_at);
+        const leadCreated = new Date(lead?.created_at ?? "");
+        return [
+          lead?.customer_name ?? "",
+          lead?.phone_number ?? "",
+          r.pic || lead?.assigned_pic?.name || "",
+          lead?.lead_status ?? "",
+          r.follow_up_number,
+          r.status,
+          r.notes,
+          created.toLocaleDateString("en-GB"),
+          created.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }),
+          r.follow_up_date ?? "",
+          Number.isNaN(leadCreated.getTime()) ? "" : leadCreated.toLocaleDateString("en-GB"),
+          Number.isNaN(leadCreated.getTime())
+            ? ""
+            : leadCreated.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }),
+        ];
+      });
+
+      const csvContent = [headers, ...csvRows]
+        .map((row) => row.map((cell) => csvEscape(cell)).join(","))
+        .join("\n");
+
+      return new NextResponse(csvContent, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="follow-up-activities-${new Date().toISOString().split("T")[0]}.csv"`,
+        },
+      });
+    }
 
     if (format === "csv") {
       const headers = [

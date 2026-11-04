@@ -18,7 +18,7 @@ export function StatsSection() {
               <div className="m-card h-full p-6 sm:p-8 text-center">
                 <p
                   className="text-2xl sm:text-3xl font-extrabold tracking-tight tabular-nums"
-                  style={{ color: "#2e6b1c" }}
+                  style={{ color: "#1d4ed8" }}
                 >
                   {stat.value}
                 </p>

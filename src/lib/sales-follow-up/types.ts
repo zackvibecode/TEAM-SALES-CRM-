@@ -41,6 +41,8 @@ export interface SalesLead {
   assigned_pic_id: string | null;
   lead_status: LeadStatus;
   latest_response: string;
+  /** Original Notes column from Excel import (not a follow-up activity) */
+  import_notes?: string;
   next_follow_up_date: string | null;
   total_follow_ups: number;
   created_at: string;

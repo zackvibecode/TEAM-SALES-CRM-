@@ -93,7 +93,32 @@ export async function resolvePicForSalesUser(
     }
   }
 
-  // 4) Auto-create only when no active PIC matches
+  // 4) Auto-create only when no active PIC matches.
+  // Guard against re-creating a PIC that already exists under ANY status
+  // (active/inactive) with the same normalized name — this previously caused
+  // endless duplicates when an old row was deactivated but the user kept logging in.
+  {
+    const { data: anyStatus } = await db
+      .from("sales_pics")
+      .select("*")
+      .order("created_at", { ascending: true })
+      .limit(500);
+
+    const nameKey = name.trim().toLowerCase().replace(/\s+/g, " ");
+    const matches = ((anyStatus ?? []) as SalesPic[]).filter(
+      (p) => (p.name ?? "").trim().toLowerCase().replace(/\s+/g, " ") === nameKey
+    );
+    const existing = pickBestPic(matches, userId);
+    if (existing) {
+      // Revive + link the existing row instead of inserting a duplicate.
+      await db
+        .from("sales_pics")
+        .update({ status: "active", user_id: userId, updated_at: new Date().toISOString() })
+        .eq("id", existing.id);
+      return { ...existing, status: "active", user_id: userId } as SalesPic;
+    }
+  }
+
   const insertPayload: Record<string, unknown> = {
     name,
     email: profile.email,

@@ -16,7 +16,7 @@ export function FinalCtaSection() {
         <Reveal>
           <div
             className="relative overflow-hidden rounded-[2rem] px-6 py-14 sm:px-12 sm:py-20 text-center"
-            style={{ background: "#163300" }}
+            style={{ background: "#1e3a8a" }}
           >
             {/* subtle brand glow */}
             <div
@@ -24,14 +24,14 @@ export function FinalCtaSection() {
               aria-hidden
               style={{
                 background:
-                  "radial-gradient(ellipse 55% 60% at 50% -10%, rgba(159,232,112,0.28), transparent 60%)",
+                  "radial-gradient(ellipse 55% 60% at 50% -10%, rgba(96,165,250,0.28), transparent 60%)",
               }}
             />
             <div className="relative">
-              <h2 className="m-h2" style={{ color: "#f4fbec" }}>
+              <h2 className="m-h2" style={{ color: "#eff6ff" }}>
                 {copy.finalCta.title}
               </h2>
-              <p className="mt-4 max-w-xl mx-auto text-base sm:text-lg leading-relaxed" style={{ color: "#c2e894" }}>
+              <p className="mt-4 max-w-xl mx-auto text-base sm:text-lg leading-relaxed" style={{ color: "#bfdbfe" }}>
                 {copy.finalCta.subtitle}
               </p>
               <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -44,7 +44,7 @@ export function FinalCtaSection() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 font-semibold text-[15px] rounded-full px-6 py-3 min-h-[48px] w-full sm:w-auto border transition"
-                  style={{ borderColor: "rgba(194,232,148,0.4)", color: "#f4fbec" }}
+                  style={{ borderColor: "rgba(191,219,254,0.4)", color: "#eff6ff" }}
                 >
                   {copy.finalCta.ctaContact}
                 </a>

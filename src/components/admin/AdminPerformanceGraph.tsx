@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/layout/ThemeProvider";
-import { StatCard } from "@/components/shared/StatCard";
 import {
   DATE_PRESET_LABELS,
   SORT_LABELS,
@@ -11,14 +10,7 @@ import {
   type SalesClickPerformanceResult,
   type SalesClickSortKey,
 } from "@/lib/admin/sales-click-performance";
-import {
-  BarChart3,
-  Crown,
-  Loader2,
-  MousePointerClick,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { Crown, Loader2 } from "lucide-react";
 
 const PRESETS: SalesClickDatePreset[] = [
   "today",
@@ -85,20 +77,10 @@ export function AdminPerformanceGraph() {
 
   return (
     <section className="card-padded-sm flex flex-col gap-5 h-full min-h-0">
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="icon-stat">
-            <BarChart3 />
-          </span>
-          <div>
-            <h2 className="font-bold flex items-center gap-2 text-base" style={{ color: "var(--text-primary)" }}>
-              Overall sales clicks
-            </h2>
-            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-              WhatsApp clicks by sales team for the selected date range.
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 shrink-0">
+        <h2 className="font-bold text-base" style={{ color: "var(--text-primary)" }}>
+          Sales Clicks
+        </h2>
         <select
           className="input-field max-w-[220px] py-2 text-sm shrink-0"
           value={sortBy}
@@ -151,21 +133,6 @@ export function AdminPerformanceGraph() {
           <button type="button" onClick={load} className="btn-primary-solid px-4 py-2 text-sm">
             Apply
           </button>
-        </div>
-      )}
-
-      {data && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
-          <StatCard label="Total Clicks" value={data.summary.total_clicks} icon={MousePointerClick} accent="brand" />
-          <StatCard
-            label="Top Sales User"
-            value={data.summary.top_sales_user ?? "—"}
-            icon={Crown}
-            accent="warning"
-            valueSize="compact"
-          />
-          <StatCard label="Active Sales Users" value={data.summary.active_sales_users} icon={Users} accent="info" />
-          <StatCard label="Average Clicks" value={data.summary.average_clicks} icon={TrendingUp} accent="success" />
         </div>
       )}
 
@@ -225,7 +192,7 @@ export function AdminPerformanceGraph() {
                       <div
                         className={cn(
                           "w-full max-w-[44px] rounded-t-xl rounded-b-sm transition-all duration-300 relative mt-12",
-                          isTop && (isDark ? "ring-1 ring-[var(--border-color)]" : "ring-2 ring-[#9fe870]/40 ring-offset-2")
+                          isTop && (isDark ? "ring-1 ring-[var(--border-color)]" : "ring-2 ring-[#2563eb]/40 ring-offset-2")
                         )}
                         style={{
                           height: `${heightPct}%`,
@@ -235,8 +202,8 @@ export function AdminPerformanceGraph() {
                               ? "linear-gradient(180deg, #ededed 0%, #a1a1a1 100%)"
                               : "linear-gradient(180deg, #525252 0%, #333333 100%)"
                             : isTop
-                              ? "linear-gradient(180deg, #c2e894 0%, #9fe870 55%, #8fd95f 100%)"
-                              : "linear-gradient(180deg, #c2e894 0%, #9fe870 70%, #8fd95f 100%)",
+                              ? "linear-gradient(180deg, #93c5fd 0%, #2563eb 55%, #1d4ed8 100%)"
+                              : "linear-gradient(180deg, #93c5fd 0%, #2563eb 70%, #1d4ed8 100%)",
                           boxShadow: isDark
                             ? "none"
                             : isHovered
@@ -255,7 +222,7 @@ export function AdminPerformanceGraph() {
                     <p
                       className={cn(
                         "mt-3 text-xs font-semibold text-center truncate w-full px-1",
-                        isTop && !isDark ? "text-[#9fe870]" : ""
+                        isTop && !isDark ? "text-[#2563eb]" : ""
                       )}
                       style={{ color: "var(--text-primary)" }}
                       title={row.sales_user_name}

@@ -11,16 +11,6 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden">
-      {/* Soft brand wash */}
-      <div
-        className="absolute inset-0 -z-10"
-        aria-hidden
-        style={{
-          background:
-            "radial-gradient(ellipse 60% 50% at 80% 0%, rgba(159, 232, 112, 0.22), transparent 60%), radial-gradient(ellipse 45% 40% at 0% 30%, rgba(159, 232, 112, 0.1), transparent 55%)",
-        }}
-      />
-
       <div className="m-container pt-14 pb-16 sm:pt-20 sm:pb-24 lg:pt-24 lg:pb-32">
         <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-center">
           {/* Left: headline */}
@@ -51,28 +41,28 @@ export function HeroSection() {
                   className="flex items-center gap-2 text-sm font-semibold"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#4f9e2c" }} />
+                  <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#2563eb" }} />
                   Excel / CSV
                 </li>
                 <li
                   className="flex items-center gap-2 text-sm font-semibold"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  <MessageCircle className="w-4 h-4 shrink-0" style={{ color: "#4f9e2c" }} />
+                  <MessageCircle className="w-4 h-4 shrink-0" style={{ color: "#2563eb" }} />
                   WhatsApp
                 </li>
                 <li
                   className="flex items-center gap-2 text-sm font-semibold"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: "#4f9e2c" }} />
+                  <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: "#2563eb" }} />
                   RLS
                 </li>
                 <li
                   className="flex items-center gap-2 text-sm font-semibold"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  <Clock className="w-4 h-4 shrink-0" style={{ color: "#4f9e2c" }} />
+                  <Clock className="w-4 h-4 shrink-0" style={{ color: "#2563eb" }} />
                   KPI
                 </li>
               </ul>

@@ -21,7 +21,7 @@ export function LeadPreviewCard() {
       >
         <span
           className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: "#e9f7da", color: "#2e6b1c" }}
+          style={{ background: "#dbeafe", color: "#1d4ed8" }}
         >
           <CheckCircle2 className="w-4 h-4" />
         </span>
@@ -33,7 +33,7 @@ export function LeadPreviewCard() {
       >
         <span
           className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: "#e9f7da", color: "#2e6b1c" }}
+          style={{ background: "#dbeafe", color: "#1d4ed8" }}
         >
           <CalendarClock className="w-4 h-4" />
         </span>
@@ -51,9 +51,9 @@ export function LeadPreviewCard() {
           </p>
           <span
             className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
-            style={{ background: "#e9f7da", color: "#2e6b1c" }}
+            style={{ background: "#dbeafe", color: "#1d4ed8" }}
           >
-            <span className="w-1.5 h-1.5 rounded-full animate-hero-pulse" style={{ background: "#4f9e2c" }} />
+            <span className="w-1.5 h-1.5 rounded-full animate-hero-pulse" style={{ background: "#2563eb" }} />
             Live
           </span>
         </div>
@@ -97,11 +97,11 @@ export function LeadPreviewCard() {
           {/* WhatsApp message preview */}
           <div
             className="rounded-2xl border p-4"
-            style={{ borderColor: "#c2e894", background: "rgba(233, 247, 218, 0.45)" }}
+            style={{ borderColor: "#bfdbfe", background: "rgba(219, 234, 254, 0.45)" }}
           >
             <div className="flex items-center gap-2 mb-2.5">
-              <MessageCircle className="w-4 h-4" style={{ color: "#2e6b1c" }} />
-              <p className="text-xs font-bold" style={{ color: "#2e6b1c" }}>
+              <MessageCircle className="w-4 h-4" style={{ color: "#1d4ed8" }} />
+              <p className="text-xs font-bold" style={{ color: "#1d4ed8" }}>
                 {demo.chatBrand} · {demo.chatContact}
               </p>
             </div>

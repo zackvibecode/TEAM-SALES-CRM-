@@ -217,13 +217,13 @@ export function PaymentPageClient({ role }: { role: "admin" | "sales" }) {
       {/* PRO plan card */}
       <section
         className="surface-card overflow-hidden border"
-        style={{ borderColor: "color-mix(in srgb, #9fe870 45%, var(--border-color))" }}
+        style={{ borderColor: "color-mix(in srgb, #2563eb 45%, var(--border-color))" }}
       >
         <div
           className="px-5 py-4 flex flex-wrap items-end justify-between gap-3"
           style={{
             background:
-              "linear-gradient(135deg, color-mix(in srgb, #9fe870 22%, transparent), transparent)",
+              "linear-gradient(135deg, color-mix(in srgb, #2563eb 22%, transparent), transparent)",
           }}
         >
           <div>

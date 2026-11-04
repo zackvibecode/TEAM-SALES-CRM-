@@ -63,12 +63,12 @@ export function DailyGoalPanel({ onGoalReached }: { onGoalReached?: () => void }
 
   return (
     <>
-      <div className="card-padded-sm h-full min-h-[280px] flex flex-col justify-center">
+      <div className="card-padded-sm flex flex-col justify-center">
         <div className="flex flex-col md:flex-row md:items-center gap-5">
           <div className="flex-1 space-y-3">
             <div className="flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
               <Target className="w-4 h-4" />
-              <span className="text-xs font-semibold uppercase tracking-wide">Today&apos;s mission</span>
+              <span className="text-xs font-semibold">Today&apos;s mission</span>
             </div>
             <p className="text-2xl font-bold tabular-nums" style={{ color: "var(--text-primary)" }}>
               {stats.todayCompleted}
@@ -79,10 +79,10 @@ export function DailyGoalPanel({ onGoalReached }: { onGoalReached?: () => void }
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
               {stats.pendingLeads.toLocaleString()} pending in your book · {stats.totalLeads.toLocaleString()} total leads
             </p>
-            <div className="h-2.5 rounded-full overflow-hidden" style={{ background: "var(--surface-muted)" }}>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--surface-muted)" }}>
               <div
                 className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${pct}%`, background: "var(--text-primary)" }}
+                style={{ width: `${pct}%`, backgroundColor: "var(--color-primary-500, #3b82f6)" }}
               />
             </div>
           </div>
