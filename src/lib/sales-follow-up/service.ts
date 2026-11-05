@@ -969,7 +969,8 @@ export async function getPicPerformance(
   const today = todayKL();
 
   // Bulk fetch ALL leads and follow-ups in 2 paginated queries (PostgREST caps at 1000 rows per request)
-  const leads = await fetchAllPages<{ id: string; assigned_pic_id: string; lead_status: string; total_follow_ups: number; next_follow_up_date: string | null }>((offset, limit) => {
+  const leads = await fetchAllPages<{ id: string; assigned_pic_id: string; lead_status: string; total_follow_ups: number; next_follow_up_date: string | null }>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q: any = db
       .from("sales_leads")
       .select("id, assigned_pic_id, lead_status, total_follow_ups, next_follow_up_date, created_at")
@@ -980,7 +981,8 @@ export async function getPicPerformance(
     return q;
   });
 
-  const followUps = await fetchAllPages<{ lead_id: string; pic_id: string; follow_up_date: string }>((offset, limit) => {
+  const followUps = await fetchAllPages<{ lead_id: string; pic_id: string; follow_up_date: string }>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q: any = db
       .from("lead_follow_ups")
       .select("id, lead_id, pic_id, follow_up_date")
@@ -1049,6 +1051,7 @@ export async function getChartData(
 
   // Bulk fetch ALL leads and follow-ups in 2 paginated queries (PostgREST caps at 1000 rows per request)
   const leads = await fetchAllPages<{ id: string; assigned_pic_id: string; total_follow_ups: number }>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q: any = db
       .from("sales_leads")
       .select("id, assigned_pic_id, total_follow_ups, created_at")
@@ -1060,6 +1063,7 @@ export async function getChartData(
   });
 
   const followUps = await fetchAllPages<{ lead_id: string; pic_id: string }>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q: any = db
       .from("lead_follow_ups")
       .select("id, lead_id, pic_id, follow_up_date")
