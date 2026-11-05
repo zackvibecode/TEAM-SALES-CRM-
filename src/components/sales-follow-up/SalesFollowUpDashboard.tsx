@@ -15,7 +15,7 @@ import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { sfReplace } from "@/lib/i18n/en/salesFollowUp";
 import { FilterBar, type DatePreset } from "./FilterBar";
 import { FollowUpChart } from "./FollowUpChart";
-import { LeadTable, type PendingQuickState } from "./LeadTable";
+import { LeadTable, type PendingQuickState, type SortKey, type SortDir } from "./LeadTable";
 import { LeadFormModal } from "./LeadFormModal";
 import { PicPerformanceTable } from "./PicPerformanceTable";
 import { UploadExcelModal } from "./UploadExcelModal";
@@ -106,6 +106,46 @@ export function SalesFollowUpDashboard({
   const [setupError, setSetupError] = useState<string | null>(null);
   const [dbReady, setDbReady] = useState(false);
   const [sqlCopied, setSqlCopied] = useState(false);
+  // Sorting leads — default: terbaru dulu
+  const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
+    key: "created_at",
+    dir: "desc",
+  });
+
+  function handleSortChange(key: SortKey) {
+    setSort((prev) =>
+      prev.key === key
+        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: "asc" }
+    );
+  }
+
+  /** Leads sorted ikut kolum aktif */
+  const sortedLeads = useMemo(() => {
+    const dir = sort.dir === "asc" ? 1 : -1;
+    const phoneOf = (l: SalesLeadWithLastFollowUp) =>
+      (l.normalized_phone_number || l.phone_number || "").replace(/\D/g, "");
+    const cmp = (a: SalesLeadWithLastFollowUp, b: SalesLeadWithLastFollowUp) => {
+      switch (sort.key) {
+        case "customer_name":
+          return (a.customer_name || "").localeCompare(b.customer_name || "", undefined, { sensitivity: "base" }) * dir;
+        case "phone":
+          return phoneOf(a).localeCompare(phoneOf(b)) * dir;
+        case "pic":
+          return ((a.assigned_pic?.name || "").localeCompare(b.assigned_pic?.name || "", undefined, { sensitivity: "base" })) * dir;
+        case "notes":
+          return ((a.import_notes || "").localeCompare(b.import_notes || "", undefined, { sensitivity: "base" })) * dir;
+        case "follow_ups":
+          return ((a.total_follow_ups ?? 0) - (b.total_follow_ups ?? 0)) * dir;
+        case "status":
+          return (a.lead_status || "").localeCompare(b.lead_status || "") * dir;
+        case "created_at":
+        default:
+          return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
+      }
+    };
+    return [...leads].sort(cmp);
+  }, [leads, sort]);
 
   const checkHealth = useCallback(async () => {
     try {
@@ -640,6 +680,15 @@ export function SalesFollowUpDashboard({
         </div>
       </div>
 
+      {/* Upload History / Batch — bahagian ATAS, selepas header */}
+      <UploadHistoryTable
+        batches={batches}
+        loading={loadingBatches}
+        showUploader={!isSales}
+        isAdmin={!isSales}
+        onChanged={() => void fetchBatches()}
+      />
+
       {/* Filters */}
       <FilterBar
         startDate={startDate}
@@ -757,7 +806,7 @@ export function SalesFollowUpDashboard({
 
       {/* Leads Table */}
       <LeadTable
-        leads={leads}
+        leads={sortedLeads}
         loading={loadingLeads}
         canDelete
         showPicSelect={!isSales}
@@ -766,6 +815,8 @@ export function SalesFollowUpDashboard({
         pendingQuick={pendingQuick}
         selectedIds={selectedIds}
         statusUpdatingId={statusUpdatingId}
+        sort={sort}
+        onSortChange={handleSortChange}
         onToggleSelect={(id) =>
           setSelectedIds((prev) =>
             prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -798,13 +849,6 @@ export function SalesFollowUpDashboard({
             return next;
           })
         }
-      />
-
-      {/* Upload History — paling bawah, selepas Leads Table */}
-      <UploadHistoryTable
-        batches={batches}
-        loading={loadingBatches}
-        showUploader={!isSales}
       />
 
       {/* Modals */}

@@ -12,6 +12,9 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
@@ -41,6 +44,17 @@ export type PendingQuickState = {
   totalFollowUps: number;
 };
 
+export type SortKey =
+  | "customer_name"
+  | "phone"
+  | "pic"
+  | "notes"
+  | "follow_ups"
+  | "status"
+  | "created_at";
+
+export type SortDir = "asc" | "desc";
+
 interface LeadTableProps {
   leads: SalesLeadWithLastFollowUp[];
   loading: boolean;
@@ -51,6 +65,8 @@ interface LeadTableProps {
   pendingQuick?: Record<string, PendingQuickState>;
   selectedIds?: string[];
   statusUpdatingId?: string | null;
+  sort?: { key: SortKey; dir: SortDir };
+  onSortChange?: (key: SortKey) => void;
   onToggleSelect?: (leadId: string) => void;
   onToggleSelectAll?: () => void;
   onView: (lead: SalesLeadWithLastFollowUp) => void;
@@ -86,6 +102,8 @@ export function LeadTable({
   pendingQuick = {},
   selectedIds = [],
   statusUpdatingId = null,
+  sort,
+  onSortChange,
   onToggleSelect,
   onToggleSelectAll,
   onView,
@@ -157,6 +175,42 @@ export function LeadTable({
 
   const allSelected = leads.length > 0 && selectedIds.length === leads.length;
 
+  /** Header kolum sortable — klik toggle asc/desc, icon tunjuk arah */
+  function SortHeader({
+    label,
+    sortKey,
+    align = "left",
+    width,
+  }: {
+    label: string;
+    sortKey: SortKey;
+    align?: "left" | "center";
+    width?: string;
+  }) {
+    const active = sort?.key === sortKey;
+    const Icon = active && sort?.dir === "asc" ? ArrowUp : ArrowDown;
+    return (
+      <th
+        className={`px-3 py-3 text-${align} text-xs font-semibold ${width ?? ""}`}
+        style={{ color: "var(--text-muted)" }}
+      >
+        <button
+          type="button"
+          onClick={() => onSortChange?.(sortKey)}
+          className="inline-flex items-center gap-1 hover:text-[var(--text-secondary)] transition"
+          title={active ? (sort?.dir === "asc" ? label + " ↑" : label + " ↓") : label}
+        >
+          {label}
+          {active ? (
+            <Icon className="size-3 shrink-0" />
+          ) : (
+            <ArrowUpDown className="size-3 shrink-0 opacity-30" />
+          )}
+        </button>
+      </th>
+    );
+  }
+
   return (
     <div className="surface-card rounded-xl overflow-hidden">
       {/* Table-fixed + width kolum tetap — semua kolum muat dalam satu container tanpa scroll tepi */}
@@ -173,26 +227,14 @@ export function LeadTable({
                 />
               </th>
             )}
-            <th className="w-[20%] px-3 py-3 text-left text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-              {sf.colCustomer}
-            </th>
-            <th className="w-[13%] px-3 py-3 text-left text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-              {sf.colPhone}
-            </th>
+            <SortHeader label={sf.colCustomer} sortKey="customer_name" width="w-[20%]" />
+            <SortHeader label={sf.colPhone} sortKey="phone" width="w-[13%]" />
             {showPicSelect && (
-              <th className="w-[9%] px-3 py-3 text-left text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-                {sf.colPic}
-              </th>
+              <SortHeader label={sf.colPic} sortKey="pic" width="w-[9%]" />
             )}
-            <th className="w-[15%] px-3 py-3 text-left text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-              {sf.colProduct}
-            </th>
-            <th className="w-[9%] px-3 py-3 text-center text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-              {sf.colFollowUps}
-            </th>
-            <th className="w-[11%] px-3 py-3 text-left text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-              {sf.colStatus}
-            </th>
+            <SortHeader label={sf.colProduct} sortKey="notes" width="w-[15%]" />
+            <SortHeader label={sf.colFollowUps} sortKey="follow_ups" align="center" width="w-[9%]" />
+            <SortHeader label={sf.colStatus} sortKey="status" width="w-[11%]" />
             <th className="w-[23%] px-3 py-3 text-center text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
               {sf.colActions}
             </th>

@@ -33,7 +33,7 @@ export function UploadExcelModal({
   pics,
   lockPic = false,
 }: UploadExcelModalProps) {
-  const { t } = useAppLocale();
+  const { t, locale } = useAppLocale();
   const sf = t.salesFollowUp;
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -42,6 +42,16 @@ export function UploadExcelModal({
   const [batchName, setBatchName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  // Progress stages — text bertukar masa upload berjalan
+  const [progressStage, setProgressStage] = useState(0);
+
+  const UPLOAD_STAGES = [
+    { en: "Uploading file...", bm: "Muat naik fail..." },
+    { en: "Reading Excel rows...", bm: "Membaca baris Excel..." },
+    { en: "Checking duplicates...", bm: "Memeriksa pendua..." },
+    { en: "Assigning to PIC...", bm: "Mengagih kepada PIC..." },
+    { en: "Saving leads...", bm: "Menyimpan leads..." },
+  ];
 
   if (!open) return null;
 
@@ -67,6 +77,11 @@ export function UploadExcelModal({
     }
 
     setUploading(true);
+    setProgressStage(0);
+    // Stage timer — tukar teks progress setiap 2.5s selagi fetch berjalan
+    const stageTimer = window.setInterval(() => {
+      setProgressStage((s) => Math.min(s + 1, UPLOAD_STAGES.length - 1));
+    }, 2500);
     try {
       const form = new FormData();
       form.append("file", file);
@@ -102,6 +117,8 @@ export function UploadExcelModal({
     } catch (err) {
       setError(err instanceof Error ? err.message : sf.uploadFail);
     } finally {
+      window.clearInterval(stageTimer);
+      setProgressStage(0);
       setUploading(false);
     }
   }
@@ -256,6 +273,46 @@ export function UploadExcelModal({
               onChange={handleFileChange}
             />
           </div>
+
+          {/* Progress stages — loading status berfungsi semasa upload */}
+          {uploading && (
+            <div
+              className="rounded-xl px-4 py-4 space-y-3"
+              style={{ backgroundColor: "var(--surface-muted)" }}
+            >
+              <div className="flex items-center gap-3">
+                <Loader2 className="size-5 animate-spin shrink-0" style={{ color: "var(--color-primary-600, #2563eb)" }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                    {locale === "bm" ? UPLOAD_STAGES[progressStage].bm : UPLOAD_STAGES[progressStage].en}
+                  </p>
+                  <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                    {locale === "bm"
+                      ? "Sedang diproses — jangan tutup tetingkap ini."
+                      : "Processing — please keep this window open."}
+                  </p>
+                </div>
+              </div>
+              {/* Progress bar — stage steps */}
+              <div className="flex items-center gap-1">
+                {UPLOAD_STAGES.map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-1 flex-1 rounded-full transition-all duration-500"
+                    style={{
+                      backgroundColor:
+                        i <= progressStage
+                          ? "var(--color-primary-500, #3b82f6)"
+                          : "var(--border-color)",
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="text-[10px] tabular-nums" style={{ color: "var(--text-muted)" }}>
+                {progressStage + 1} / {UPLOAD_STAGES.length}
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center gap-3 pt-2">
             <button type="button" onClick={onClose} className="btn-secondary flex-1" disabled={uploading}>
