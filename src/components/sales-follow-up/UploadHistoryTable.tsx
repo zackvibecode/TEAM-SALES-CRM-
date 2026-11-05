@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Loader2, Pencil, Trash2, Check, X } from "lucide-react";
+import { CheckCircle2, Loader2, Pencil, Trash2, Check, X, Clock } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 
 export interface UploadBatchRow {
@@ -276,7 +276,7 @@ export function UploadHistoryTable({
                             color: "var(--text-secondary)",
                           }}
                         >
-                          <Loader2 className="size-3 animate-spin" />
+                          <Clock className="size-3" />
                           {pct}%
                         </span>
                       )}
