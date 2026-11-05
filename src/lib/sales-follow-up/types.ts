@@ -126,6 +126,8 @@ export interface FollowUpFilterParams {
   picId?: string;
   status?: LeadStatus;
   search?: string;
+  /** Filter leads by upload batch */
+  batchId?: string;
   followUpFilter?:
     | "all"
     | "0"

@@ -37,6 +37,7 @@ export async function GET(request: Request) {
     followUpFilter:
       (searchParams.get("followUpFilter") as FollowUpFilterParams["followUpFilter"]) || "all",
     packageFilter: searchParams.get("packageFilter") || undefined,
+    batchId: searchParams.get("batchId") || undefined,
   };
 
   try {

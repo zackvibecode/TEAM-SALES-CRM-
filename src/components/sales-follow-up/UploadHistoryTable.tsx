@@ -22,6 +22,10 @@ interface UploadHistoryTableProps {
   loading: boolean;
   showUploader?: boolean;
   isAdmin?: boolean;
+  /** Batch yang sedang dipilih (filter leads) */
+  selectedBatchId?: string;
+  /** Klik row batch — toggle select/deselect */
+  onSelectBatch?: (batchId: string) => void;
   /** Dipanggil selepas rename/delete supaya parent refresh senarai */
   onChanged?: () => void;
 }
@@ -53,6 +57,8 @@ export function UploadHistoryTable({
   loading,
   showUploader = false,
   isAdmin = false,
+  selectedBatchId,
+  onSelectBatch,
   onChanged,
 }: UploadHistoryTableProps) {
   const { locale } = useAppLocale();
@@ -162,8 +168,33 @@ export function UploadHistoryTable({
                 const pct = b.totalLeads > 0 ? Math.round((b.completedLeads / b.totalLeads) * 100) : 0;
                 const isDone = b.status === "Complete";
                 const isRenaming = renamingId === b.id;
+                const isActive = selectedBatchId === b.id;
+                const isSelectable = !!onSelectBatch && !isRenaming;
                 return (
-                  <tr key={b.id} className="table-row">
+                  <tr
+                    key={b.id}
+                    onClick={isSelectable ? () => onSelectBatch!(b.id) : undefined}
+                    title={
+                      isSelectable
+                        ? isActive
+                          ? bm
+                            ? "Klik untuk tunjuk semua leads"
+                            : "Click to show all leads"
+                          : bm
+                            ? "Klik untuk tunjuk leads batch ini"
+                            : "Click to show leads from this batch"
+                        : undefined
+                    }
+                    className={isSelectable ? "cursor-pointer" : ""}
+                    style={
+                      isActive
+                        ? {
+                            backgroundColor: "color-mix(in srgb, var(--color-primary-500, #3b82f6) 10%, transparent)",
+                            boxShadow: "inset 3px 0 0 var(--color-primary-500, #3b82f6)",
+                          }
+                        : undefined
+                    }
+                  >
                     {showUploader && (
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
@@ -189,7 +220,10 @@ export function UploadHistoryTable({
                           <button
                             type="button"
                             disabled={renameBusy}
-                            onClick={() => void saveRename(b.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void saveRename(b.id);
+                            }}
                             className="inline-flex items-center justify-center size-7 rounded-lg btn-primary-solid shrink-0"
                             title={bm ? "Simpan" : "Save"}
                           >
@@ -197,7 +231,10 @@ export function UploadHistoryTable({
                           </button>
                           <button
                             type="button"
-                            onClick={() => setRenamingId(null)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRenamingId(null);
+                            }}
                             className="inline-flex items-center justify-center size-7 rounded-lg border shrink-0"
                             style={{ borderColor: "var(--border-color)", color: "var(--text-muted)" }}
                             title={bm ? "Batal" : "Cancel"}
@@ -208,10 +245,14 @@ export function UploadHistoryTable({
                       ) : (
                         <>
                           <p
-                            className="text-sm font-semibold truncate max-w-[220px]"
+                            className="text-sm truncate max-w-[220px]"
                             title={b.batchName}
-                            style={{ color: "var(--text-primary)" }}
+                            style={{
+                              color: "var(--text-primary)",
+                              fontWeight: isActive ? 800 : 600,
+                            }}
                           >
+                            {isActive && <span className="mr-1">●</span>}
                             {b.batchName}
                           </p>
                           <p className="text-[11px] mt-0.5 truncate max-w-[220px]" title={b.fileName} style={{ color: "var(--text-muted)" }}>
@@ -286,7 +327,8 @@ export function UploadHistoryTable({
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setRenamingId(b.id);
                               setRenameValue(b.batchName);
                             }}
@@ -302,7 +344,10 @@ export function UploadHistoryTable({
                           </button>
                           <button
                             type="button"
-                            onClick={() => setDeleteId(b.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteId(b.id);
+                            }}
                             className="inline-flex items-center justify-center size-8 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition shrink-0"
                             style={{ color: "#dc2626" }}
                             title={bm ? "Padam batch (leads kekal)" : "Delete batch (leads kept)"}

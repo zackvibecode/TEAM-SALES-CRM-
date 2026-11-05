@@ -185,6 +185,9 @@ function buildLeadFilters(
 ): LeadFilterQuery {
   let q = query;
 
+  if (filters.batchId) {
+    q = q.eq("batch_id", filters.batchId);
+  }
   if (filters.startDate) {
     q = q.gte("created_at", `${filters.startDate}T00:00:00`);
   }

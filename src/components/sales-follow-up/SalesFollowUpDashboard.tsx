@@ -10,6 +10,8 @@ import {
   Check,
   Upload,
   MessageCircle,
+  FolderOpen,
+  X,
 } from "lucide-react";
 import { useAppLocale } from "@/components/i18n/AppLocaleProvider";
 import { sfReplace } from "@/lib/i18n/en/salesFollowUp";
@@ -111,6 +113,8 @@ export function SalesFollowUpDashboard({
     key: "created_at",
     dir: "desc",
   });
+  // Batch dipilih dari Upload History — kosong = semua leads
+  const [selectedBatchId, setSelectedBatchId] = useState("");
 
   function handleSortChange(key: SortKey) {
     setSort((prev) =>
@@ -186,8 +190,9 @@ export function SalesFollowUpDashboard({
     if (search) params.set("search", search);
     if (followUpFilter && followUpFilter !== "all") params.set("followUpFilter", followUpFilter);
     if (packageFilter && packageFilter !== "all") params.set("packageFilter", packageFilter);
+    if (selectedBatchId) params.set("batchId", selectedBatchId);
     return params.toString();
-  }, [startDate, endDate, picId, status, search, followUpFilter, packageFilter]);
+  }, [startDate, endDate, picId, status, search, followUpFilter, packageFilter, selectedBatchId]);
 
   const fetchPics = useCallback(async () => {
     try {
@@ -541,6 +546,7 @@ export function SalesFollowUpDashboard({
     if (status) params.set("status", status);
     if (followUpFilter && followUpFilter !== "all") params.set("followUpFilter", followUpFilter);
     if (packageFilter && packageFilter !== "all") params.set("packageFilter", packageFilter);
+    if (selectedBatchId) params.set("batchId", selectedBatchId);
     params.set("format", "csv");
     window.open(`/api/sales-follow-up/export?${params.toString()}`, "_blank");
   }
@@ -686,8 +692,31 @@ export function SalesFollowUpDashboard({
         loading={loadingBatches}
         showUploader={!isSales}
         isAdmin={!isSales}
+        selectedBatchId={selectedBatchId || undefined}
+        onSelectBatch={(batchId) => {
+          // Toggle: klik batch aktif semula = clear (papar semua)
+          setSelectedBatchId((prev) => (prev === batchId ? "" : batchId));
+        }}
         onChanged={() => void fetchBatches()}
       />
+
+      {/* Chip batch aktif — clear untuk papar semua */}
+      {selectedBatchId && (
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            <FolderOpen className="size-3.5" />
+            {batches.find((b) => b.id === selectedBatchId)?.batchName || "Batch dipilih"}
+            <button
+              onClick={() => setSelectedBatchId("")}
+              title="Tunjuk semua leads"
+              className="ml-0.5 rounded-full p-0.5 hover:bg-primary/20"
+            >
+              <X className="size-3.5" />
+            </button>
+          </span>
+          <span className="text-xs text-muted-foreground">Jadual &amp; statistik di bawah mengikut batch ini</span>
+        </div>
+      )}
 
       {/* Filters */}
       <FilterBar
