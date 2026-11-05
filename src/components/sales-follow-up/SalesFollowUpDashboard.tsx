@@ -698,6 +698,16 @@ export function SalesFollowUpDashboard({
           setSelectedBatchId((prev) => (prev === batchId ? "" : batchId));
         }}
         onChanged={() => void fetchBatches()}
+        onDeleteResult={({ id, scope, deletedLeads }) => {
+          // Batch yang sedang dipilih dipadam — clear filter
+          if (id === selectedBatchId) setSelectedBatchId("");
+          if (scope === "with_leads" && deletedLeads > 0) {
+            // Leads berubah — refresh semua data
+            fetchLeads();
+            fetchStats();
+            fetchChartAndPerformance();
+          }
+        }}
       />
 
       {/* Chip batch aktif — clear untuk papar semua */}

@@ -10,6 +10,8 @@ export interface UploadBatchRow {
   fileName: string;
   assignMode: string;
   uploadedBy: string;
+  /** Admin atau user yang upload batch ini — boleh rename/delete */
+  isOwner?: boolean;
   createdAt: string;
   totalLeads: number;
   completedLeads: number;
@@ -28,6 +30,12 @@ interface UploadHistoryTableProps {
   onSelectBatch?: (batchId: string) => void;
   /** Dipanggil selepas rename/delete supaya parent refresh senarai */
   onChanged?: () => void;
+  /** Dipanggil selepas delete berjaya dengan id, scope & jumlah leads padam */
+  onDeleteResult?: (result: {
+    id: string;
+    scope: "batch_only" | "with_leads";
+    deletedLeads: number;
+  }) => void;
 }
 
 function Th({
@@ -60,6 +68,7 @@ export function UploadHistoryTable({
   selectedBatchId,
   onSelectBatch,
   onChanged,
+  onDeleteResult,
 }: UploadHistoryTableProps) {
   const { locale } = useAppLocale();
   const bm = locale === "bm";
@@ -72,6 +81,8 @@ export function UploadHistoryTable({
   // Delete state
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteScope, setDeleteScope] = useState<"batch_only" | "with_leads">("batch_only");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function saveRename(id: string) {
     const name = renameValue.trim();
@@ -96,15 +107,32 @@ export function UploadHistoryTable({
   async function confirmDelete() {
     if (!deleteId || deleteBusy) return;
     setDeleteBusy(true);
+    setDeleteError(null);
     try {
-      const res = await fetch(`/api/sales-follow-up/batches/${deleteId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error();
+      const res = await fetch(
+        `/api/sales-follow-up/batches/${deleteId}?scope=${deleteScope}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(data?.message || "");
+      }
+      const data = (await res.json()) as { deletedLeads?: number };
       setDeleteId(null);
+      onDeleteResult?.({
+        id: deleteId,
+        scope: deleteScope,
+        deletedLeads: data.deletedLeads ?? 0,
+      });
       onChanged?.();
-    } catch {
-      // stay on confirm
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error && err.message
+          ? err.message
+          : bm
+            ? "Gagal padam batch. Cuba lagi."
+            : "Failed to delete batch. Try again."
+      );
     } finally {
       setDeleteBusy(false);
     }
@@ -160,7 +188,9 @@ export function UploadHistoryTable({
                   {bm ? "Progress" : "Progress"}
                 </Th>
                 <Th align="center">{bm ? "Status" : "Status"}</Th>
-                {isAdmin && <Th align="center">{bm ? "Tindakan" : "Actions"}</Th>}
+                {(isAdmin || batches.some((b) => b.isOwner)) && (
+                  <Th align="center">{bm ? "Tindakan" : "Actions"}</Th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -322,7 +352,7 @@ export function UploadHistoryTable({
                         </span>
                       )}
                     </td>
-                    {isAdmin && (
+                    {(isAdmin || b.isOwner) && (
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
@@ -347,10 +377,12 @@ export function UploadHistoryTable({
                             onClick={(e) => {
                               e.stopPropagation();
                               setDeleteId(b.id);
+                              setDeleteScope("batch_only");
+                              setDeleteError(null);
                             }}
                             className="inline-flex items-center justify-center size-8 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition shrink-0"
                             style={{ color: "#dc2626" }}
-                            title={bm ? "Padam batch (leads kekal)" : "Delete batch (leads kept)"}
+                            title={bm ? "Padam batch" : "Delete batch"}
                           >
                             <Trash2 className="size-4" />
                           </button>
@@ -380,11 +412,81 @@ export function UploadHistoryTable({
               {bm ? "Padam batch ini?" : "Delete this batch?"}
             </h3>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-              {bm ? "Rekod batch" : "Batch record"} <strong>{deletingBatch.batchName}</strong>{" "}
-              {bm
-                ? "sahaja akan dipadam. Semua leads kekal dalam sistem."
-                : "will be deleted only. All leads stay in the system."}
+              {bm ? "Rekod batch" : "Batch record"} <strong>{deletingBatch.batchName}</strong>
             </p>
+
+            {/* Pilihan scope delete */}
+            <div className="space-y-2">
+              <label
+                className="flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer transition"
+                style={{
+                  borderColor:
+                    deleteScope === "batch_only"
+                      ? "var(--color-primary-500, #3b82f6)"
+                      : "var(--border-color)",
+                  backgroundColor:
+                    deleteScope === "batch_only"
+                      ? "color-mix(in srgb, var(--color-primary-500, #3b82f6) 8%, transparent)"
+                      : "transparent",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="delete-scope"
+                  checked={deleteScope === "batch_only"}
+                  onChange={() => setDeleteScope("batch_only")}
+                  disabled={deleteBusy}
+                  className="mt-0.5"
+                />
+                <span>
+                  <span className="block text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                    {bm ? "Batch sahaja — leads kekal" : "Batch only — leads kept"}
+                  </span>
+                  <span className="block text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                    {bm
+                      ? `${deletingBatch.totalLeads} leads kekal dalam sistem (batch_id dikosongkan).`
+                      : `${deletingBatch.totalLeads} leads stay in the system (batch_id cleared).`}
+                  </span>
+                </span>
+              </label>
+              <label
+                className="flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer transition"
+                style={{
+                  borderColor:
+                    deleteScope === "with_leads" ? "#dc2626" : "var(--border-color)",
+                  backgroundColor:
+                    deleteScope === "with_leads"
+                      ? "color-mix(in srgb, #dc2626 8%, transparent)"
+                      : "transparent",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="delete-scope"
+                  checked={deleteScope === "with_leads"}
+                  onChange={() => setDeleteScope("with_leads")}
+                  disabled={deleteBusy}
+                  className="mt-0.5"
+                />
+                <span>
+                  <span className="block text-sm font-semibold" style={{ color: "#dc2626" }}>
+                    {bm ? "Batch + semua leads" : "Batch + all leads"}
+                  </span>
+                  <span className="block text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                    {bm
+                      ? `${deletingBatch.totalLeads} leads dalam batch ini akan dipadam kekal.`
+                      : `${deletingBatch.totalLeads} leads in this batch will be permanently deleted.`}
+                  </span>
+                </span>
+              </label>
+            </div>
+
+            {deleteError && (
+              <p className="text-xs font-semibold" style={{ color: "#dc2626" }}>
+                {deleteError}
+              </p>
+            )}
+
             <div className="flex justify-end gap-2">
               <button
                 type="button"

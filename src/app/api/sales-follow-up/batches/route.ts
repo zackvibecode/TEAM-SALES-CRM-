@@ -22,12 +22,38 @@ export async function GET() {
       }
       scopePicId = scoped.picId;
     }
-    const { data: batches, error } = await ctx.db
+    // uploaded_by_user_id (migration 023) mungkin belum wujud — fallback tanpa owner
+    interface BatchRow {
+      id: string;
+      batch_name: string;
+      file_name: string;
+      total_leads: number;
+      assign_mode: string;
+      uploaded_by: string | null;
+      uploaded_by_user_id?: string | null;
+      created_at: string;
+    }
+    let batches: BatchRow[] | null = null;
+    const withOwner = await ctx.db
       .from("sales_lead_batches")
-      .select("id, batch_name, file_name, total_leads, assign_mode, uploaded_by, created_at")
+      .select(
+        "id, batch_name, file_name, total_leads, assign_mode, uploaded_by, uploaded_by_user_id, created_at"
+      )
       .order("created_at", { ascending: false })
       .limit(50);
-    if (error) throw new Error(`Failed to fetch batches: ${error.message}`);
+    if (withOwner.error && /uploaded_by_user_id/.test(withOwner.error.message)) {
+      const retry = await ctx.db
+        .from("sales_lead_batches")
+        .select("id, batch_name, file_name, total_leads, assign_mode, uploaded_by, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (retry.error) throw new Error(`Failed to fetch batches: ${retry.error.message}`);
+      batches = retry.data as unknown as BatchRow[];
+    } else if (withOwner.error) {
+      throw new Error(`Failed to fetch batches: ${withOwner.error.message}`);
+    } else {
+      batches = withOwner.data as unknown as BatchRow[];
+    }
 
     // Count completed (>=3 follow-ups) and total linked leads per batch.
     // Kept as one query over sales_leads grouped in JS to stay RLS-friendly.
@@ -67,6 +93,9 @@ export async function GET() {
           fileName: b.file_name,
           assignMode: b.assign_mode,
           uploadedBy: (b.uploaded_by as string) || "",
+          isOwner:
+            ctx.role === "admin" ||
+            (b.uploaded_by_user_id ?? null) === ctx.user.id,
           createdAt: b.created_at,
           totalLeads: total,
           completedLeads: completed,

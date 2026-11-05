@@ -101,15 +101,32 @@ export async function POST(request: NextRequest) {
     // Record this upload as a batch and link the newly inserted leads to it
     let batchId: string | undefined;
     if (result.insertedLeadIds.length > 0) {
+      // uploaded_by_user_id hanya jika kolum wujud (migration 023 mungkin belum dijalankan)
+      const { error: probeErr } = await ctx.db
+        .from("sales_lead_batches")
+        .select("uploaded_by_user_id")
+        .limit(1);
+      const hasOwnerCol = !probeErr;
       const { data: batchRow, error: batchErr } = await ctx.db
         .from("sales_lead_batches")
-        .insert({
-          batch_name: batchName || file.name,
-          file_name: file.name,
-          total_leads: result.insertedLeadIds.length,
-          assign_mode: assignMode,
-          uploaded_by: uploaderName,
-        })
+        .insert(
+          hasOwnerCol
+            ? {
+                batch_name: batchName || file.name,
+                file_name: file.name,
+                total_leads: result.insertedLeadIds.length,
+                assign_mode: assignMode,
+                uploaded_by: uploaderName,
+                uploaded_by_user_id: ctx.user.id,
+              }
+            : {
+                batch_name: batchName || file.name,
+                file_name: file.name,
+                total_leads: result.insertedLeadIds.length,
+                assign_mode: assignMode,
+                uploaded_by: uploaderName,
+              }
+        )
         .select("id")
         .single();
       if (batchErr) throw new Error(`Failed to record upload batch: ${batchErr.message}`);
